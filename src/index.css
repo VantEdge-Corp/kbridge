@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  background: #0e0d0b;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
