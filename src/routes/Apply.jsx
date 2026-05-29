@@ -33,9 +33,6 @@ function validate(fields) {
 
   if (!fields.profession?.trim()) errs.profession = "Required.";
   if (!fields.company?.trim()) errs.company = "Required.";
-  if (fields.linkedin_url && !/^https?:\/\//i.test(fields.linkedin_url)) {
-    errs.linkedin_url = "Include the full URL (https://…).";
-  }
   if (fields.years_experience && (fields.years_experience < 0 || fields.years_experience > 80)) {
     errs.years_experience = "Out of range.";
   }
@@ -44,7 +41,6 @@ function validate(fields) {
   if (!fields.passportPhotoFile) errs.passportPhotoFile = "Required.";
 
   if (!fields.why?.trim()) errs.why = "Required.";
-  else if (fields.why.length < 40) errs.why = "A few sentences, at least.";
 
   return errs;
 }
@@ -371,7 +367,6 @@ export default function Apply() {
                   onChange={v => update("linkedin_url", v)}
                   placeholder="https://linkedin.com/in/…"
                 />
-                {touched && errors.linkedin_url && <p className="font-mono text-[10px] text-[#d4928f] mt-1">{errors.linkedin_url}</p>}
               </div>
             </div>
 
