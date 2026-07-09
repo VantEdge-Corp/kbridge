@@ -18,6 +18,7 @@ import Legal from "./routes/Legal.jsx";
 import { supabase } from "./lib/supabase.js";
 import { TIERS, canSendIntro, canSendInvite, canAccessEvents } from "./lib/tiers.js";
 import { displayProfile } from "./lib/profile.js";
+import { uploadProfilePhoto, removeProfilePhoto, publicUrl, PHOTO_LIMIT } from "./lib/photos.js";
 import {
   listCorrespondences, getCorrespondence, sendMessage as sendChatMessage,
   markCorrespondenceRead, subscribeToCorrespondence, subscribeToInbox,
@@ -1026,7 +1027,7 @@ const DiscoverPage = () => {
       try {
         const [{data: members, error: mErr}, {data: outgoing}] = await Promise.all([
           supabase.from("profiles")
-            .select("id, first_name, age, city, occupation, school, degree, bio, communities, member_number, identity_verified, education_verified, photos_uploaded")
+            .select("id, first_name, age, city, occupation, school, degree, bio, communities, member_number, identity_verified, education_verified, photos_uploaded, photo_paths")
             .eq("onboarding_complete", true)
             .neq("id", user.id),
           supabase.from("introduction_requests")
@@ -1600,6 +1601,26 @@ const ProfilePage = () => {
   const [upgrade,setUpgrade]=useState(null);
   const tier=TIERS[profile?.tier]??TIERS.observer;
 
+  const [photoPaths,setPhotoPaths]=useState(profile?.photo_paths||[]);
+  const [photoBusy,setPhotoBusy]=useState(false);
+  const [photoErr,setPhotoErr]=useState("");
+  const fileRef=useRef(null);
+  useEffect(()=>{ setPhotoPaths(profile?.photo_paths||[]); },[(profile?.photo_paths||[]).join(",")]);
+  const onPickFile=async e=>{
+    const file=e.target.files?.[0]; if(fileRef.current) fileRef.current.value="";
+    if(!file) return;
+    setPhotoErr(""); setPhotoBusy(true);
+    try{ setPhotoPaths(await uploadProfilePhoto(user.id,file,photoPaths)); }
+    catch(err){ setPhotoErr(err.message||"Upload failed."); }
+    finally{ setPhotoBusy(false); }
+  };
+  const onRemovePhoto=async path=>{
+    setPhotoErr(""); setPhotoBusy(true);
+    try{ setPhotoPaths(await removeProfilePhoto(user.id,path,photoPaths)); }
+    catch(err){ setPhotoErr(err.message||"Could not remove."); }
+    finally{ setPhotoBusy(false); }
+  };
+
   useEffect(()=>{ if(profile?.tier==="founding") loadInvites(); },[profile?.tier]);
 
   const loadInvites=async()=>{
@@ -1629,7 +1650,27 @@ const ProfilePage = () => {
             <Link to="/settings" className="text-[#8a7f6a] hover:text-[#c4956c] p-1"><Settings size={18}/></Link>
           </div>
 
-          <div className="aspect-[4/3] portrait-gradient-7 grain relative mb-8"><div className="absolute bottom-4 left-4"><Label className="text-[#e8e0d0]/70">Primary Portrait</Label></div></div>
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <Label>Photographs</Label>
+              <Label className="text-[#5a5349]">{photoPaths.length}/{PHOTO_LIMIT}</Label>
+            </div>
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onPickFile}/>
+            <div className="grid grid-cols-3 gap-3">
+              {photoPaths.map(path=>(
+                <div key={path} className="relative aspect-[3/4] bg-[#1a1410] overflow-hidden">
+                  <img src={publicUrl(path)} alt="" className="w-full h-full object-cover"/>
+                  <button onClick={()=>onRemovePhoto(path)} disabled={photoBusy} className="absolute top-1.5 right-1.5 w-6 h-6 bg-[#0e0d0b]/80 flex items-center justify-center text-[#e8e0d0] hover:text-[#d4928f] disabled:opacity-40"><X size={12}/></button>
+                </div>
+              ))}
+              {photoPaths.length<PHOTO_LIMIT&&(
+                <button onClick={()=>fileRef.current?.click()} disabled={photoBusy} className="aspect-[3/4] border border-dashed border-[#3a352d] hover:border-[#c4956c] flex flex-col items-center justify-center gap-2 text-[#8a7f6a] hover:text-[#c4956c] disabled:opacity-40">
+                  {photoBusy?<span className="font-mono text-[9px] uppercase tracking-[0.2em]">Uploading…</span>:<><Upload size={16}/><span className="font-mono text-[9px] uppercase tracking-[0.2em]">Add</span></>}
+                </button>
+              )}
+            </div>
+            {photoErr&&<p className="font-mono text-[10px] text-[#d4928f] mt-2">{photoErr}</p>}
+          </div>
 
           <div className="space-y-5">
             <div><Label>Profession</Label><div className="font-display text-xl mt-1">{profile?.occupation||"—"}</div></div>
