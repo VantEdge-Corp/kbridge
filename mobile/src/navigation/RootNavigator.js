@@ -13,6 +13,7 @@ import DiscoverScreen from '../screens/DiscoverScreen.js';
 import MatchesScreen from '../screens/MatchesScreen.js';
 import ProfileScreen from '../screens/ProfileScreen.js';
 import ChatScreen from '../screens/ChatScreen.js';
+import UpgradeScreen from '../screens/UpgradeScreen.js';
 import { colors, fonts } from '../theme.js';
 
 const Stack = createNativeStackNavigator();
@@ -93,6 +94,7 @@ export default function RootNavigator() {
           <>
             <Stack.Screen name="Tabs" component={MemberTabs} />
             <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Upgrade" component={UpgradeScreen} />
           </>
         ) : (
           <>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, Pressable, ScrollView, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { Screen, ScreenHeader, Portrait, Label, Rule, Badge, Button, Loading, ErrorText } from '../components/ui.js';
 import { useAuth } from '../auth/AuthContext.js';
@@ -11,6 +12,7 @@ import { colors, fonts, spacing } from '../theme.js';
 const TIER_LABELS = { observer: 'Observer', member: 'Member', founding: 'Founding' };
 
 export default function ProfileScreen() {
+  const navigation = useNavigation();
   const { user, profile, refreshProfile, signOut } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -117,6 +119,13 @@ export default function ProfileScreen() {
           {p.photoVerified ? <Badge tone="accent">Photo verified</Badge> : null}
           {p.identityVerified ? <Badge>Identity verified</Badge> : null}
         </View>
+
+        <Button
+          title="View membership tiers"
+          variant="ghost"
+          onPress={() => navigation.navigate('Upgrade')}
+          style={{ marginTop: spacing(2.5) }}
+        />
 
         <Rule style={{ marginVertical: spacing(3) }} />
 
