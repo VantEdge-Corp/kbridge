@@ -5,6 +5,15 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "kbridge uses your photo library for the application's identity photos.",
+          "cameraPermission": "kbridge uses the camera to take the application's identity photos."
+        }
+      ]
+    ],
     "scheme": "kbridge",
     "backgroundColor": "#0e0d0b",
     "splash": {

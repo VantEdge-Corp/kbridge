@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 import { colors, fonts, spacing } from '../theme.js';
 
 export function Screen({ children, scroll = false, refreshing = false, onRefresh, edges = ['top'], style }) {
@@ -75,10 +76,15 @@ export function Button({ title, onPress, variant = 'primary', disabled = false, 
   );
 }
 
-export function Field({ label, value, onChangeText, placeholder, secureTextEntry, autoCapitalize = 'none', keyboardType = 'default', style }) {
+export function Field({
+  label, value, onChangeText, placeholder, secureTextEntry,
+  autoCapitalize = 'none', keyboardType = 'default',
+  multiline = false, maxLength, error, hint, style,
+}) {
   return (
     <View style={[{ marginBottom: spacing(3) }, style]}>
       {label ? <Label style={{ marginBottom: spacing(1) }}>{label}</Label> : null}
+      {hint ? <Text style={styles.fieldHint}>{hint}</Text> : null}
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -87,8 +93,30 @@ export function Field({ label, value, onChangeText, placeholder, secureTextEntry
         secureTextEntry={secureTextEntry}
         autoCapitalize={autoCapitalize}
         keyboardType={keyboardType}
-        style={styles.input}
+        multiline={multiline}
+        maxLength={maxLength}
+        style={[styles.input, multiline && styles.inputMultiline]}
       />
+      {(error || (multiline && maxLength)) ? (
+        <View style={styles.fieldFooter}>
+          <Text style={styles.fieldError}>{error || ''}</Text>
+          {multiline && maxLength ? (
+            <Text style={styles.fieldCount}>{(value || '').length}/{maxLength}</Text>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+export function BackBar({ onBack, right }) {
+  return (
+    <View style={styles.backBar}>
+      <Pressable onPress={onBack} hitSlop={12} style={styles.backLink}>
+        <Feather name="arrow-left" size={14} color={colors.muted} />
+        <Text style={styles.label}>Back</Text>
+      </Pressable>
+      {right}
     </View>
   );
 }
@@ -197,6 +225,51 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.line,
     paddingVertical: spacing(1),
+  },
+  inputMultiline: {
+    minHeight: 96,
+    textAlignVertical: 'top',
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderBottomWidth: 1,
+    padding: spacing(1.5),
+  },
+  fieldHint: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    lineHeight: 15,
+    letterSpacing: 0.5,
+    color: colors.faint,
+    marginBottom: spacing(1),
+  },
+  fieldFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing(0.75),
+  },
+  fieldError: {
+    flex: 1,
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.danger,
+  },
+  fieldCount: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    color: colors.faint,
+    marginLeft: spacing(1),
+  },
+  backBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing(2),
+  },
+  backLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   error: {
     fontFamily: fonts.mono,

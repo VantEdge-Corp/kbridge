@@ -1,9 +1,11 @@
 # kbridge mobile
 
-The members' app: swipe through the Discover deck, match when the interest
-is mutual, and message your matches directly. Expo (managed) + React
-Navigation, talking to the **same Supabase project as the web app** — same
-tables, same RLS, same realtime chat. There is no separate backend.
+The kbridge app: apply for membership from your phone (with camera/library
+photo upload), track your application, claim your account once admitted —
+then swipe through the Discover deck, match when the interest is mutual,
+and message your matches directly. Expo (managed) + React Navigation,
+talking to the **same Supabase project as the web app** — same tables,
+same RLS, same realtime chat. There is no separate backend.
 
 ## One-time setup
 
@@ -34,10 +36,23 @@ tables, same RLS, same realtime chat. There is no separate backend.
    for a simulator. Every dependency here runs inside Expo Go — no dev
    build needed.
 
-## Signing in
+## Applying & signing in
 
-Accounts are created on the web (application → approval → set password).
-The mobile app is members-only: sign in with the same email + password.
+The full admission flow works on the phone, mirroring the web contract
+exactly (same table, same RPCs, same silent-decline policy):
+
+1. **Apply** (from the login screen) — the same form as the web `/apply`,
+   with face + passport photos from the camera or library, uploaded to the
+   private `verifications` bucket. On submit you get a **reference token**;
+   it's shown once and also saved on the device.
+2. **Check your status** — enter (or auto-load) the token. Pending /
+   deferred / admitted / claimed, with the same wording as the web.
+3. **Create your account** — once admitted, choose a password right there.
+   The `handle_new_user` trigger enforces the approval gate server-side,
+   and a session drops you straight into the member tabs.
+
+Accounts created on the web work here too — it's the same email + password
+either way. The admin review queue stays web-only (`/admin`).
 
 ## How matching works
 
@@ -59,11 +74,12 @@ The mobile app is members-only: sign in with the same email + password.
 App.js                       providers + status bar
 src/theme.js                 palette / type / portrait gradients (mirrors web)
 src/lib/supabase.js          client (AsyncStorage sessions, AppState token refresh)
-src/lib/{chat,swipes,profile,format}.js
+src/lib/{chat,swipes,profile,applications,storage,format}.js
 src/auth/AuthContext.js      session + own profile
 src/navigation/RootNavigator.js   login gate → tabs (+ Chat above tabs)
 src/components/ui.js         editorial primitives (Screen, Button, Portrait…)
 src/components/SwipeDeck.js  PanResponder card deck
 src/components/MatchModal.js "a mutual interest"
-src/screens/                 Login, Discover, Matches, Chat, Profile
+src/screens/                 Login, Apply, Status, Signup,
+                             Discover, Matches, Chat, Profile
 ```

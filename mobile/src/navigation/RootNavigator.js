@@ -6,6 +6,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../auth/AuthContext.js';
 import LoginScreen from '../screens/LoginScreen.js';
+import ApplyScreen from '../screens/ApplyScreen.js';
+import StatusScreen from '../screens/StatusScreen.js';
+import SignupScreen from '../screens/SignupScreen.js';
 import DiscoverScreen from '../screens/DiscoverScreen.js';
 import MatchesScreen from '../screens/MatchesScreen.js';
 import ProfileScreen from '../screens/ProfileScreen.js';
@@ -92,7 +95,12 @@ export default function RootNavigator() {
             <Stack.Screen name="Chat" component={ChatScreen} />
           </>
         ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Apply" component={ApplyScreen} />
+            <Stack.Screen name="Status" component={StatusScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
