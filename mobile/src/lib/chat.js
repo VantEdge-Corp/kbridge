@@ -5,7 +5,7 @@
 
 import { supabase } from './supabase.js';
 
-const PROFILE_COLS = 'id, first_name, age, city, occupation, school, degree, bio, member_number, identity_verified, education_verified';
+const PROFILE_COLS = 'id, first_name, age, city, occupation, school, degree, bio, member_number, identity_verified, education_verified, photo_paths';
 
 export async function listCorrespondences(userId) {
   const { data: matchRows, error: matchErr } = await supabase

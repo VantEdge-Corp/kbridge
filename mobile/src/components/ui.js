@@ -7,7 +7,7 @@
 import React from 'react';
 import {
   View, Text, TextInput, Pressable, ScrollView, ActivityIndicator,
-  RefreshControl, StyleSheet,
+  RefreshControl, Image, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -177,6 +177,19 @@ export function Badge({ children, tone = 'muted', style }) {
 // the web. width + aspectRatio (3:4 default) instead of fixed heights.
 export function Portrait({ profile, width = 96, ratio = 3 / 4, fontSize, style, children }) {
   const p = profile || {};
+
+  // Real photo when the member has one; the gradient + initial is the fallback.
+  if (p.photoUrl) {
+    return (
+      <View
+        style={[{ width, aspectRatio: ratio, overflow: 'hidden', backgroundColor: colors.raised }, style]}
+      >
+        <Image source={{ uri: p.photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+        {children}
+      </View>
+    );
+  }
+
   const gradient = p.gradient || ['#1e2a3a', '#2a4055', '#4a6d8a'];
   return (
     <LinearGradient

@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { GRADIENTS } from '../theme.js';
+import { publicUrl } from './photos.js';
 
 function hashStringToIndex(str, mod) {
   let h = 0;
@@ -22,6 +23,8 @@ export function displayProfile(row) {
   const education =
     row.degree && row.school ? `${row.degree}, ${row.school}`
     : row.degree || row.school || '';
+  const photoPaths = Array.isArray(row.photo_paths) ? row.photo_paths : [];
+  const photos = photoPaths.map(publicUrl).filter(Boolean);
   return {
     id: row.id,
     name,
@@ -33,6 +36,10 @@ export function displayProfile(row) {
     communities: row.communities || [],
     memberNumber: row.member_number || '№ ——',
     tier: row.tier || 'observer',
+    photoPaths,
+    photos,
+    photoUrl: photos[0] || null,
+    photoVerified: !!row.photo_verified,
     initials,
     gradient,
     identityVerified: !!row.identity_verified,
