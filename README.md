@@ -34,6 +34,8 @@ In the Supabase SQL editor, run these in order:
 3. `supabase/migrations/003_signup_flow.sql` — `get_application_for_signup` RPC used by `/signup/:token`
 4. `supabase/migrations/004_rls_no_recursion.sql` — replaces the admin RLS policies with a SECURITY DEFINER `is_admin()` helper. Without this, sign-in succeeds but `/discover` hangs because the profile query trips infinite RLS recursion.
 5. `supabase/migrations/005_verifications.sql` — profession/company/LinkedIn/years columns on applications, plus a private `verifications` storage bucket with policies (anon insert, admin select). After running, confirm in Supabase Dashboard → Storage that a bucket named `verifications` exists and is **not** marked public.
+6. `supabase/migrations/006_introductions.sql` — `introduction_requests` table + trigger that opens a match on accept, message read-receipts policy
+7. `supabase/migrations/007_swipes.sql` — `swipes` table + trigger that opens a match on a mutual like, `get_swipe_candidates` RPC, realtime on swipes. Required by the mobile app's Discover deck.
 
 > The loose `supabase/migration_ai_scoring.sql` outside the `migrations/` folder is from the older prototype model and is no longer required. You can ignore it or delete it.
 
@@ -145,11 +147,20 @@ To change this policy (e.g. send a polite decline email instead), edit the RPCs 
 
 These are post-login features and are not on the critical path for the application gate.
 
+## Mobile app
+
+`mobile/` holds the members' iOS/Android app (Expo + React Navigation): a
+swipeable Discover deck, mutual-like matching, and direct messaging with
+matches. It talks to the same Supabase project — no separate backend. See
+[`mobile/README.md`](mobile/README.md) for setup; migration 007 must be run
+first.
+
 ## Tech stack
 
 - React 18 + Vite + Tailwind
 - React Router v6
 - Supabase (Auth + Postgres + RLS)
 - lucide-react
+- Mobile: Expo SDK 54 (React Native), React Navigation v7, same Supabase project
 
-Deploy target: Vercel (`vercel.json` is included).
+Deploy target: Vercel (`vercel.json` is included). The mobile app ships via Expo/EAS and does not touch Vercel.

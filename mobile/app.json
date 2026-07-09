@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "kbridge",
+    "slug": "kbridge-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "kbridge",
+    "backgroundColor": "#0e0d0b",
+    "splash": {
+      "backgroundColor": "#0e0d0b",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kbridge.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.kbridge.mobile"
+    }
+  }
+}
