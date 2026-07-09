@@ -7,16 +7,18 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, FlatList, Pressable, KeyboardAvoidingView,
-  Platform, StyleSheet,
+  Platform, Alert, StyleSheet,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Portrait, Loading, Rule, Label } from '../components/ui.js';
+import SafetySheet from '../components/SafetySheet.js';
 import { useAuth } from '../auth/AuthContext.js';
 import { displayProfile } from '../lib/profile.js';
 import {
   getCorrespondence, sendMessage, markCorrespondenceRead, subscribeToCorrespondence,
 } from '../lib/chat.js';
+import { blockUser, reportUser } from '../lib/safety.js';
 import { messageTime } from '../lib/format.js';
 import { colors, fonts, spacing } from '../theme.js';
 
@@ -28,6 +30,7 @@ export default function ChatScreen({ route, navigation }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [safetyOpen, setSafetyOpen] = useState(false);
   const listRef = useRef(null);
 
   const appendMessage = useCallback((msg) => {
@@ -93,6 +96,40 @@ export default function ChatScreen({ route, navigation }) {
 
   const other = displayProfile(convo.other);
 
+  const doBlock = () => {
+    Alert.alert(
+      `Block ${other?.name || 'this member'}?`,
+      "They won't be able to see you or message you, and this conversation will be hidden.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await blockUser(user.id, other.id);
+              setSafetyOpen(false);
+              navigation.goBack();
+            } catch (e) {
+              Alert.alert('Could not block', e.message || '');
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const doReport = async (reason) => {
+    try {
+      await reportUser(user.id, other.id, reason, { matchId });
+      setSafetyOpen(false);
+      Alert.alert('Report received', 'Thank you — our team will review this.');
+    } catch (e) {
+      setSafetyOpen(false);
+      Alert.alert('Could not submit report', e.message || '');
+    }
+  };
+
   const renderItem = ({ item }) => {
     const mine = item.sender_id === user.id;
     return (
@@ -116,6 +153,9 @@ export default function ChatScreen({ route, navigation }) {
           <Text style={styles.headerName}>{other?.name}</Text>
           <Text style={styles.headerMeta}>{other?.memberNumber}</Text>
         </View>
+        <Pressable onPress={() => setSafetyOpen(true)} hitSlop={12} style={{ paddingLeft: spacing(1.5) }}>
+          <Feather name="more-vertical" size={20} color={colors.muted} />
+        </Pressable>
       </View>
       <Rule />
 
@@ -167,6 +207,14 @@ export default function ChatScreen({ route, navigation }) {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+
+      <SafetySheet
+        visible={safetyOpen}
+        otherName={other?.name}
+        onBlock={doBlock}
+        onReport={doReport}
+        onClose={() => setSafetyOpen(false)}
+      />
     </SafeAreaView>
   );
 }

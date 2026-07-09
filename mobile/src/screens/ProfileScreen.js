@@ -5,6 +5,7 @@ import { Screen, ScreenHeader, Portrait, Label, Rule, Badge, Button, Loading, Er
 import { useAuth } from '../auth/AuthContext.js';
 import { displayProfile } from '../lib/profile.js';
 import { pickPhoto, addProfilePhoto, removeProfilePhoto, publicUrl, PHOTO_LIMIT } from '../lib/photos.js';
+import { deleteMyAccount } from '../lib/safety.js';
 import { colors, fonts, spacing } from '../theme.js';
 
 const TIER_LABELS = { observer: 'Observer', member: 'Member', founding: 'Founding' };
@@ -63,6 +64,28 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const onDeleteAccount = () => {
+    Alert.alert(
+      'Delete account',
+      'This permanently deletes your account, profile, photos, matches, and messages. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteMyAccount(profile?.photo_paths || []);
+              await signOut();
+            } catch (e) {
+              Alert.alert('Could not delete account', e.message || '');
+            }
+          },
+        },
+      ],
+    );
   };
 
   const p = displayProfile(profile);
@@ -140,6 +163,9 @@ export default function ProfileScreen() {
         </Text>
 
         <Button title="Sign out" variant="danger" onPress={signOut} style={{ marginTop: spacing(3) }} />
+        <Pressable onPress={onDeleteAccount} style={{ marginTop: spacing(2.5), alignItems: 'center' }} hitSlop={8}>
+          <Text style={styles.deleteLink}>Delete my account</Text>
+        </Pressable>
       </View>
     </Screen>
   );
@@ -235,5 +261,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     color: colors.faint,
     marginTop: spacing(2),
+  },
+  deleteLink: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    color: colors.dangerDim,
+    textDecorationLine: 'underline',
   },
 });

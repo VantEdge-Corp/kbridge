@@ -13,6 +13,7 @@ import { useAuth } from '../auth/AuthContext.js';
 import { displayProfile } from '../lib/profile.js';
 import { listCorrespondences, subscribeToInbox } from '../lib/chat.js';
 import { subscribeToMatchStamps } from '../lib/swipes.js';
+import { getBlockedIds } from '../lib/safety.js';
 import { timeAgo } from '../lib/format.js';
 import { colors, fonts, spacing } from '../theme.js';
 
@@ -25,8 +26,16 @@ export default function MatchesScreen() {
   const load = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const rows = await listCorrespondences(user.id);
-      setThreads(rows.map(t => ({ ...t, other: displayProfile(t.other) })));
+      const [rows, blocked] = await Promise.all([
+        listCorrespondences(user.id),
+        getBlockedIds(user.id),
+      ]);
+      const blockedSet = new Set(blocked);
+      setThreads(
+        rows
+          .filter(t => !blockedSet.has(t.other?.id))
+          .map(t => ({ ...t, other: displayProfile(t.other) })),
+      );
     } catch {
       setThreads(t => t ?? []);
     }
