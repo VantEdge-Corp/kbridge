@@ -15,8 +15,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const LEGAL_VERSIONS = Object.freeze({
-  terms: '2026-07-09',
-  privacy: '2026-07-09',
+  terms: '2026-07-09.2',
+  privacy: '2026-07-09.2',
 });
 
 const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL || 'https://kbridge.app').replace(/\/+$/, '');
