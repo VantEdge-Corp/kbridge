@@ -1,23 +1,24 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Apply.jsx — Public application form. Profession-oriented with mandatory
-// photo + US passport upload. No auth required.
+// Apply.jsx — Public application form. No auth required.
+//
+// Membership is decided by committee review of the written application (see the
+// admin panel). kbridge does not collect government IDs or run identity
+// verification, so nothing sensitive is uploaded here.
 //
 // Submit flow:
-//   1. Upload face photo to Supabase Storage (verifications/{uuid}-face.*)
-//   2. Upload passport photo (verifications/{uuid}-passport.*)
-//   3. Insert applications row with the two storage paths
-//   4. Redirect to /status/:token
+//   1. Validate fields + require the two consents (18+, Terms/Privacy).
+//   2. Insert the applications row with the accepted document versions.
+//   3. Redirect to /status/:token.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, Upload, X as XIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 import { submitApplication } from "../lib/applications.js";
-import { uploadVerification } from "../lib/storage.js";
-import { computeFaceMatch, loadFaceModels, classifyMatch } from "../lib/face-match.js";
+import { LEGAL_VERSIONS } from "../lib/legal.js";
 import {
-  Shell, Label, Btn, TextField, TextArea, ErrorBanner,
+  Shell, Label, Btn, TextField, TextArea, ErrorBanner, Checkbox,
 } from "../components/ui.jsx";
 
 const WHY_MAX = 600;
@@ -37,115 +38,20 @@ function validate(fields) {
     errs.years_experience = "Out of range.";
   }
 
-  if (!fields.facePhotoFile) errs.facePhotoFile = "Required.";
-  if (!fields.passportPhotoFile) errs.passportPhotoFile = "Required.";
-
   if (!fields.why?.trim()) errs.why = "Required.";
+
+  // Consent is mandatory and unbundled — each box is its own gate.
+  if (!fields.age18) errs.age18 = "Required.";
+  if (!fields.agreeTerms) errs.agreeTerms = "Required.";
 
   return errs;
 }
 
-function PhotoField({ label, hint, file, onPick, error }) {
-  const inputRef = useRef(null);
-  const previewUrl = file ? URL.createObjectURL(file) : null;
-
-  return (
-    <div className="space-y-3">
-      <Label>{label}<span className="text-[#c4956c] ml-1">*</span></Label>
-      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#5a5349] leading-relaxed">
-        {hint}
-      </p>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={e => onPick(e.target.files?.[0] ?? null)}
-      />
-
-      {!file ? (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className="w-full border border-dashed border-[#3a352d] hover:border-[#c4956c] transition-colors py-8 flex flex-col items-center gap-3 text-[#8a7f6a] hover:text-[#c4956c]"
-        >
-          <Upload size={16} />
-          <span className="font-mono text-[10px] uppercase tracking-[0.22em]">Choose a file</span>
-          <span className="font-mono text-[9px] text-[#5a5349]">JPEG, PNG, or WebP · max 8 MB</span>
-        </button>
-      ) : (
-        <div className="border border-[#3a352d] p-4 flex items-center gap-4">
-          <div className="w-20 h-20 bg-[#1a1410] overflow-hidden flex-shrink-0">
-            <img src={previewUrl} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-display text-sm text-[#e8e0d0] truncate">{file.name}</div>
-            <div className="font-mono text-[10px] text-[#5a5349] mt-1">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => { onPick(null); if (inputRef.current) inputRef.current.value = ""; }}
-            className="text-[#8a7f6a] hover:text-[#d4928f] p-2"
-            aria-label="Remove"
-          >
-            <XIcon size={14} />
-          </button>
-        </div>
-      )}
-
-      {error && <p className="font-mono text-[10px] text-[#d4928f]">{error}</p>}
-    </div>
-  );
-}
-
-// Compact status row beneath the two photo fields. Never blocks
-// submission — the committee still decides. Just helps the applicant
-// see why something might be flagged.
-function FaceMatchStatus({ state }) {
-  if (!state) return null;
-
-  if (state === "computing") {
-    return (
-      <div className="border border-[#3a352d] bg-[#1a1815]/40 p-4 flex items-center gap-3">
-        <Loader2 size={14} className="text-[#8a7f6a] animate-spin" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8a7f6a]">
-          Comparing your selfie to your passport photo…
-        </span>
-      </div>
-    );
-  }
-
-  if (state.error) {
-    return (
-      <div className="border border-[#3a352d] bg-[#1a1815]/40 p-4 space-y-1">
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#d4a47c]">
-          Identity check: {state.error}
-        </div>
-        <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#5a5349]">
-          You can still submit — the committee will review by hand.
-        </div>
-      </div>
-    );
-  }
-
-  const v = classifyMatch(state.distance);
-  return (
-    <div className="border border-[#3a352d] bg-[#1a1815]/40 p-4 flex items-baseline gap-3">
-      <span
-        className="font-mono text-[10px] uppercase tracking-[0.22em]"
-        style={{ color: v.color }}
-      >
-        Identity check: {v.label}
-      </span>
-      <span className="font-mono text-[9px] text-[#5a5349]">
-        distance {state.distance?.toFixed(3)}
-      </span>
-    </div>
-  );
-}
+const DocLink = ({ to, children }) => (
+  <a href={to} target="_blank" rel="noreferrer" className="text-[#c4956c] underline underline-offset-2 hover:text-[#d4a47c]">
+    {children}
+  </a>
+);
 
 export default function Apply() {
   const navigate = useNavigate();
@@ -154,39 +60,12 @@ export default function Apply() {
     profession: "", company: "", linkedin_url: "", years_experience: "",
     school: "", degree: "",
     bio: "", why: "",
-    facePhotoFile: null, passportPhotoFile: null,
+    age18: false, agreeTerms: false,
   });
   const [trap, setTrap] = useState("");
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [stage, setStage] = useState("");
   const [error, setError] = useState("");
-
-  // Face match state. Recomputes whenever either photo changes.
-  // null = not yet computed, "computing" = in-flight, otherwise the result object.
-  const [faceMatch, setFaceMatch] = useState(null);
-
-  // Kick off model load on mount so it's likely ready by the time
-  // both photos are picked. Errors are swallowed — the actual call
-  // in computeFaceMatch will surface them.
-  useEffect(() => {
-    loadFaceModels().catch(() => {});
-  }, []);
-
-  // Recompute the score whenever both photos exist.
-  useEffect(() => {
-    if (!fields.facePhotoFile || !fields.passportPhotoFile) {
-      setFaceMatch(null);
-      return;
-    }
-    let cancelled = false;
-    setFaceMatch("computing");
-    (async () => {
-      const result = await computeFaceMatch(fields.facePhotoFile, fields.passportPhotoFile);
-      if (!cancelled) setFaceMatch(result);
-    })();
-    return () => { cancelled = true; };
-  }, [fields.facePhotoFile, fields.passportPhotoFile]);
 
   const update = (k, v) => setFields(prev => ({ ...prev, [k]: v }));
 
@@ -202,37 +81,30 @@ export default function Apply() {
 
     setSubmitting(true);
     try {
-      setStage("Uploading face photo…");
-      const face_photo_path = await uploadVerification(fields.facePhotoFile, "face");
-
-      setStage("Uploading passport photo…");
-      const passport_photo_path = await uploadVerification(fields.passportPhotoFile, "passport");
-
-      setStage("Submitting application…");
-      const face_match = (faceMatch && typeof faceMatch === "object") ? faceMatch : null;
       const { status_token } = await submitApplication({
-        email:               fields.email,
-        first_name:          fields.first_name,
-        age:                 fields.age ? parseInt(fields.age, 10) : null,
-        city:                fields.city,
-        profession:          fields.profession,
-        company:             fields.company,
-        linkedin_url:        fields.linkedin_url,
-        years_experience:    fields.years_experience ? parseInt(fields.years_experience, 10) : null,
-        school:              fields.school,
-        degree:              fields.degree,
-        bio:                 fields.bio,
-        why:                 fields.why,
-        face_photo_path,
-        passport_photo_path,
-        face_match,
+        email:            fields.email,
+        first_name:       fields.first_name,
+        age:              fields.age ? parseInt(fields.age, 10) : null,
+        city:             fields.city,
+        profession:       fields.profession,
+        company:          fields.company,
+        linkedin_url:     fields.linkedin_url,
+        years_experience: fields.years_experience ? parseInt(fields.years_experience, 10) : null,
+        school:           fields.school,
+        degree:           fields.degree,
+        bio:              fields.bio,
+        why:              fields.why,
+        consent: {
+          ageConfirmed:   fields.age18,
+          termsVersion:   LEGAL_VERSIONS.terms,
+          privacyVersion: LEGAL_VERSIONS.privacy,
+        },
       });
 
       navigate(`/status/${status_token}`, { replace: true });
     } catch (err) {
       setError(err.message || "Something went wrong.");
       setSubmitting(false);
-      setStage("");
     }
   };
 
@@ -259,8 +131,8 @@ export default function Apply() {
             <em className="italic text-[#c4956c]">read by hand.</em>
           </h1>
           <p className="font-display italic text-lg text-[#a89d87] mt-4 max-w-xl leading-relaxed">
-            We verify identity by hand from your photo and a US passport before
-            approving accounts. Submit once, you'll hear back within a few days.
+            Tell us who you are. Every application is read by hand and reviewed by
+            the committee — you'll hear back within a few days.
           </p>
         </div>
 
@@ -386,41 +258,9 @@ export default function Apply() {
             </div>
           </section>
 
-          {/* III — Identity */}
-          <section className="space-y-8">
-            <div>
-              <Label>III — Identity</Label>
-              <p className="font-display italic text-[#a89d87] text-sm mt-2 leading-relaxed">
-                Two images. The committee reviews them by hand. Stored privately —
-                only admins can view, and only while your application is open.
-              </p>
-            </div>
-
-            <PhotoField
-              label="Clear photo of your face"
-              hint="A recent photo, neutral lighting, no sunglasses or hat. Phone selfie is fine."
-              file={fields.facePhotoFile}
-              onPick={(f) => update("facePhotoFile", f)}
-              error={touched && errors.facePhotoFile}
-            />
-
-            <PhotoField
-              label="US passport"
-              hint="The photo page of a current US passport. Make sure the name and photo are readable."
-              file={fields.passportPhotoFile}
-              onPick={(f) => update("passportPhotoFile", f)}
-              error={touched && errors.passportPhotoFile}
-            />
-
-            {/* Face-match status — appears once both photos are picked. */}
-            {fields.facePhotoFile && fields.passportPhotoFile && (
-              <FaceMatchStatus state={faceMatch} />
-            )}
-          </section>
-
-          {/* IV — About */}
+          {/* III — About */}
           <section className="space-y-6">
-            <Label>IV — About you</Label>
+            <Label>III — About you</Label>
 
             <TextArea
               label="Brief professional summary"
@@ -443,12 +283,28 @@ export default function Apply() {
             {touched && errors.why && <p className="font-mono text-[10px] text-[#d4928f]">{errors.why}</p>}
           </section>
 
+          {/* IV — Consent (clickwrap; each box is its own gate) */}
+          <section className="space-y-5">
+            <Label>IV — Consent</Label>
+
+            <Checkbox checked={fields.age18} onChange={v => update("age18", v)}>
+              I am 18 years of age or older.
+            </Checkbox>
+            {touched && errors.age18 && <p className="font-mono text-[10px] text-[#d4928f] ml-8">{errors.age18}</p>}
+
+            <Checkbox checked={fields.agreeTerms} onChange={v => update("agreeTerms", v)}>
+              I have read and agree to the <DocLink to="/terms">Terms of Service</DocLink> and{" "}
+              <DocLink to="/privacy">Privacy Policy</DocLink>.
+            </Checkbox>
+            {touched && errors.agreeTerms && <p className="font-mono text-[10px] text-[#d4928f] ml-8">{errors.agreeTerms}</p>}
+          </section>
+
           {error && <ErrorBanner>{error}</ErrorBanner>}
 
           <div className="pt-6 border-t border-[#3a352d] flex items-center justify-between gap-4">
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#5a5349] leading-relaxed">
-              {submitting && stage
-                ? stage
+              {submitting
+                ? "Submitting…"
                 : "Reviewed within a few days · No account until approved"}
             </div>
             <Btn variant="primary" type="submit" disabled={!canSubmit}>
@@ -457,7 +313,7 @@ export default function Apply() {
           </div>
 
           <p className="font-mono text-[9px] text-[#5a5349] uppercase tracking-[0.18em] flex items-center gap-2">
-            <Check size={10} /> Photos are private. We never sell, publish, or repost them.
+            <Check size={10} /> Your information is private. We never sell it.
           </p>
         </form>
       </div>

@@ -14,6 +14,7 @@ import ApplicationStatus from "./routes/ApplicationStatus.jsx";
 import Signup from "./routes/Signup.jsx";
 import Login from "./routes/Login.jsx";
 import AuthCallback from "./routes/AuthCallback.jsx";
+import Legal from "./routes/Legal.jsx";
 import { supabase } from "./lib/supabase.js";
 import { TIERS, canSendIntro, canSendInvite, canAccessEvents } from "./lib/tiers.js";
 import { displayProfile } from "./lib/profile.js";
@@ -2003,6 +2004,10 @@ export default function App() {
           <Route path="/signup/:token"  element={<Signup/>}/>
           <Route path="/login"          element={<Login/>}/>
           <Route path="/auth/callback"  element={<AuthCallback/>}/>
+
+          {/* Public — legal */}
+          <Route path="/privacy"        element={<Legal doc="privacy"/>}/>
+          <Route path="/terms"          element={<Legal doc="terms"/>}/>
 
           {/* Legacy public paths — keep working but redirect to the new flow */}
           <Route path="/auth"       element={<Navigate to="/login" replace/>}/>

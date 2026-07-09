@@ -7,10 +7,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useEffect, useState } from 'react';
-import { Text, StyleSheet } from 'react-native';
-import { Screen, Label, Rule, Field, Button, ErrorText, Loading, BackBar } from '../components/ui.js';
+import { Text, Linking, StyleSheet } from 'react-native';
+import { Screen, Label, Rule, Field, Button, Checkbox, ErrorText, Loading, BackBar } from '../components/ui.js';
 import { supabase } from '../lib/supabase.js';
-import { getApplicationForSignup } from '../lib/applications.js';
+import { getApplicationForSignup, recordProfileConsent } from '../lib/applications.js';
+import { LEGAL_VERSIONS, LEGAL_URLS } from '../legal.js';
 import { colors, fonts, spacing } from '../theme.js';
 
 const MIN_PASSWORD = 6;
@@ -25,6 +26,7 @@ export default function SignupScreen({ route, navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [touched, setTouched] = useState(false);
@@ -52,7 +54,7 @@ export default function SignupScreen({ route, navigation }) {
 
   const passwordOk = password.length >= MIN_PASSWORD;
   const passwordsMatch = password.length > 0 && password === confirm;
-  const canSubmit = !busy && email && passwordOk && passwordsMatch;
+  const canSubmit = !busy && email && passwordOk && passwordsMatch && agree;
 
   const submit = async () => {
     setTouched(true);
@@ -63,6 +65,12 @@ export default function SignupScreen({ route, navigation }) {
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
       if (signUpError) throw signUpError;
+
+      // Record account-holder consent on the new profile (needs the session
+      // for RLS; the same acceptance is also on the approved application).
+      if (data.session && data.user?.id) {
+        await recordProfileConsent(data.user.id, LEGAL_VERSIONS);
+      }
 
       // With email confirmation enabled, signUp returns a user but no
       // session — the auth listener won't fire, so route back to Login
@@ -128,6 +136,17 @@ export default function SignupScreen({ route, navigation }) {
             error={touched && confirm && !passwordsMatch ? "Passwords don't match." : undefined}
           />
 
+          <Checkbox
+            checked={agree}
+            onChange={setAgree}
+            error={touched && !agree ? 'Required.' : undefined}
+          >
+            I have read and agree to the{' '}
+            <Text style={styles.link} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms of Service</Text>
+            {' '}and{' '}
+            <Text style={styles.link} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>.
+          </Checkbox>
+
           <ErrorText>{error}</ErrorText>
           <Button
             title={busy ? 'Creating account…' : 'Create account'}
@@ -159,6 +178,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#a89d87',
     marginTop: spacing(1.5),
+  },
+  link: {
+    color: colors.accent,
+    textDecorationLine: 'underline',
   },
   footnote: {
     fontFamily: fonts.mono,

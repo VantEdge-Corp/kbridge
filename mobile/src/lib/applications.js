@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // applications.js — Public application flow (apply / status / signup).
-// Port of the web app's src/lib/applications.js, public surface only —
-// the admin queue stays on the web.
+// Mirrors the web contract (src/lib/applications.js). Membership is decided by
+// committee review of the written application; no ID/photo verification.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { supabase } from './supabase.js';
@@ -20,24 +20,30 @@ export async function submitApplication(fields) {
   if (!fields?.first_name) throw new Error('First name is required.');
 
   const row = {
-    email:               fields.email.trim().toLowerCase(),
-    first_name:          fields.first_name.trim(),
-    age:                 fields.age ?? null,
-    city:                fields.city ?? null,
-    occupation:          fields.occupation ?? null,
-    school:              fields.school ?? null,
-    degree:              fields.degree ?? null,
-    bio:                 fields.bio ?? null,
-    link:                fields.link ?? null,
-    why:                 fields.why ?? null,
-    communities:         Array.isArray(fields.communities) ? fields.communities : [],
-    profession:          fields.profession ?? null,
-    company:             fields.company ?? null,
-    linkedin_url:        fields.linkedin_url ?? null,
-    years_experience:    fields.years_experience ?? null,
-    face_photo_path:     fields.face_photo_path ?? null,
-    passport_photo_path: fields.passport_photo_path ?? null,
+    email:            fields.email.trim().toLowerCase(),
+    first_name:       fields.first_name.trim(),
+    age:              fields.age ?? null,
+    city:             fields.city ?? null,
+    occupation:       fields.occupation ?? null,
+    school:           fields.school ?? null,
+    degree:           fields.degree ?? null,
+    bio:              fields.bio ?? null,
+    link:             fields.link ?? null,
+    why:              fields.why ?? null,
+    communities:      Array.isArray(fields.communities) ? fields.communities : [],
+    profession:       fields.profession ?? null,
+    company:          fields.company ?? null,
+    linkedin_url:     fields.linkedin_url ?? null,
+    years_experience: fields.years_experience ?? null,
   };
+
+  // Proof of consent — which document versions the applicant accepted, and when.
+  if (fields.consent) {
+    row.age_confirmed   = !!fields.consent.ageConfirmed;
+    row.terms_version   = fields.consent.termsVersion ?? null;
+    row.privacy_version = fields.consent.privacyVersion ?? null;
+    row.consented_at    = new Date().toISOString();
+  }
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -69,4 +75,20 @@ export async function getApplicationForSignup(token) {
     .rpc('get_application_for_signup', { p_token: token.trim() });
   if (error) throw new Error(error.message || 'Could not load application.');
   return Array.isArray(data) && data.length ? data[0] : null;
+}
+
+// Best-effort consent record on the new profile at signup. The same
+// acceptance is already stored on the approved application, so a failure
+// here is non-fatal.
+export async function recordProfileConsent(userId, versions) {
+  if (!userId) return;
+  try {
+    await supabase.from('profiles').update({
+      terms_version: versions.terms,
+      privacy_version: versions.privacy,
+      consented_at: new Date().toISOString(),
+    }).eq('id', userId);
+  } catch {
+    // non-fatal
+  }
 }

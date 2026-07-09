@@ -39,7 +39,7 @@ export const ADMIN_STATUS = Object.freeze({
  *   link?: string, why?: string, communities?: string[],
  *   profession?: string, company?: string, linkedin_url?: string,
  *   years_experience?: number|null,
- *   face_photo_path?: string, passport_photo_path?: string
+ *   consent?: { ageConfirmed?: boolean, termsVersion?: string, privacyVersion?: string }
  * }} fields
  */
 export async function submitApplication(fields) {
@@ -62,15 +62,17 @@ export async function submitApplication(fields) {
     company:             fields.company ?? null,
     linkedin_url:        fields.linkedin_url ?? null,
     years_experience:    fields.years_experience ?? null,
-    face_photo_path:     fields.face_photo_path ?? null,
-    passport_photo_path: fields.passport_photo_path ?? null,
+    // Membership is decided by committee review of the application; kbridge
+    // does not collect government IDs or run identity-document verification.
   };
 
-  // Auxiliary results (face match score, etc.) ride along in payload
-  // so we don't add a new column for each verification provider.
-  const payload = {};
-  if (fields.face_match) payload.face_match = fields.face_match;
-  if (Object.keys(payload).length) row.payload = payload;
+  // Proof of consent — which document versions the applicant accepted, and when.
+  if (fields.consent) {
+    row.age_confirmed   = !!fields.consent.ageConfirmed;
+    row.terms_version   = fields.consent.termsVersion ?? null;
+    row.privacy_version = fields.consent.privacyVersion ?? null;
+    row.consented_at    = new Date().toISOString();
+  }
 
   const { data, error } = await supabase
     .from(TABLE)

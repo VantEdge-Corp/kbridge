@@ -16,7 +16,8 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 import { supabase } from "../lib/supabase.js";
 import { getApplicationForSignup } from "../lib/applications.js";
-import { Shell, Label, Btn, TextField, ErrorBanner } from "../components/ui.jsx";
+import { LEGAL_VERSIONS } from "../lib/legal.js";
+import { Shell, Label, Btn, TextField, ErrorBanner, Checkbox } from "../components/ui.jsx";
 
 const MIN_PASSWORD = 6;
 
@@ -31,6 +32,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
@@ -59,7 +61,7 @@ export default function Signup() {
 
   const passwordsMatch = password.length > 0 && password === confirm;
   const passwordOk = password.length >= MIN_PASSWORD;
-  const canSubmit = !busy && email && passwordOk && passwordsMatch;
+  const canSubmit = !busy && email && passwordOk && passwordsMatch && agree;
 
   const submit = async (e) => {
     e?.preventDefault();
@@ -75,6 +77,19 @@ export default function Signup() {
       });
 
       if (signUpError) throw signUpError;
+
+      // Record consent on the new profile (best-effort — the same acceptance
+      // is already stored on the approved application, so a failure here is
+      // not fatal to signup).
+      if (data.user?.id) {
+        try {
+          await supabase.from("profiles").update({
+            terms_version:   LEGAL_VERSIONS.terms,
+            privacy_version: LEGAL_VERSIONS.privacy,
+            consented_at:    new Date().toISOString(),
+          }).eq("id", data.user.id);
+        } catch { /* non-fatal */ }
+      }
 
       // If the project has email confirmation enabled, signUp returns a
       // user but no session. Send them to /login with a clear message.
@@ -179,6 +194,16 @@ export default function Signup() {
             <p className="font-mono text-[10px] text-[#d4928f] -mt-6">
               Passwords don't match.
             </p>
+          )}
+
+          <Checkbox checked={agree} onChange={setAgree}>
+            I have read and agree to the{" "}
+            <a href="/terms" target="_blank" rel="noreferrer" className="text-[#c4956c] underline underline-offset-2 hover:text-[#d4a47c]">Terms of Service</a>{" "}
+            and{" "}
+            <a href="/privacy" target="_blank" rel="noreferrer" className="text-[#c4956c] underline underline-offset-2 hover:text-[#d4a47c]">Privacy Policy</a>.
+          </Checkbox>
+          {touched && !agree && (
+            <p className="font-mono text-[10px] text-[#d4928f] ml-8">Required.</p>
           )}
 
           {error && <ErrorBanner>{error}</ErrorBanner>}

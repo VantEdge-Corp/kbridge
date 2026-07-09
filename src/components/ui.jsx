@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
+import { Check } from "lucide-react";
 
 export const FontLoader = () => (
   <style>{`
@@ -103,6 +104,25 @@ export const TextArea = ({
       className="w-full bg-transparent border-b border-[#3a352d] pb-3 text-[#e8e0d0] font-display text-base placeholder:text-[#5a5349] focus:border-[#c4956c] transition-colors resize-none"
     />
   </div>
+);
+
+// Clickwrap consent checkbox — unchecked by default, affirmative action
+// required. `children` carries the label (with hyperlinks to the documents).
+export const Checkbox = ({ checked, onChange, children }) => (
+  <label className="flex items-start gap-3 cursor-pointer select-none">
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`mt-0.5 w-5 h-5 flex-shrink-0 border flex items-center justify-center transition-colors ${
+        checked ? "bg-[#c4956c] border-[#c4956c]" : "border-[#3a352d] hover:border-[#c4956c]"
+      }`}
+    >
+      {checked && <Check size={13} className="text-[#0e0d0b]" strokeWidth={3} />}
+    </button>
+    <span className="font-display text-[15px] text-[#a89d87] leading-snug">{children}</span>
+  </label>
 );
 
 export const Shell = ({ children }) => (

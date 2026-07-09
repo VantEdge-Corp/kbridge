@@ -1,33 +1,24 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ApplyScreen.js — the public application, on the phone. Mirrors the web
-// form (src/routes/Apply.jsx) field-for-field and submits through the same
-// contract: upload face + passport to the private verifications bucket,
-// insert the applications row, then land on the status screen.
+// ApplyScreen.js — the public application, on the phone. Mirrors the web form
+// (src/routes/Apply.jsx): a written application reviewed by hand by the
+// committee. No ID/photo verification — kbridge does not collect government
+// IDs or run identity-document checks.
 //
-// The web's in-browser face match (face-api.js) is browser-only and never
-// blocked submission anyway — on mobile the committee reviews by hand.
+// Submit: validate + require the two consents (18+, Terms/Privacy), insert the
+// applications row with the accepted document versions, then land on Status.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState } from 'react';
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Linking, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
-import { Feather } from '@expo/vector-icons';
-import { Screen, Label, Rule, Field, Button, ErrorText, BackBar } from '../components/ui.js';
+import { Screen, Label, Rule, Field, Button, Checkbox, ErrorText, BackBar } from '../components/ui.js';
 import { submitApplication } from '../lib/applications.js';
-import { uploadVerification, assetBytes } from '../lib/storage.js';
+import { LEGAL_VERSIONS, LEGAL_URLS } from '../legal.js';
 import { colors, fonts, spacing } from '../theme.js';
 
 const WHY_MAX = 600;
 const SUMMARY_MAX = 320;
 export const STATUS_TOKEN_KEY = 'kbridge_status_token';
-
-const PICKER_OPTIONS = {
-  mediaTypes: ['images'],
-  quality: 0.8,
-  base64: true,
-  exif: false,
-};
 
 function validate(f) {
   const errs = {};
@@ -40,72 +31,10 @@ function validate(f) {
   if (f.years_experience && (Number(f.years_experience) < 0 || Number(f.years_experience) > 80)) {
     errs.years_experience = 'Out of range.';
   }
-  if (!f.facePhoto) errs.facePhoto = 'Required.';
-  if (!f.passportPhoto) errs.passportPhoto = 'Required.';
   if (!f.why?.trim()) errs.why = 'Required.';
+  if (!f.age18) errs.age18 = 'Required.';
+  if (!f.agreeTerms) errs.agreeTerms = 'Required.';
   return errs;
-}
-
-function PhotoField({ label, hint, asset, onPick, error }) {
-  const [pickError, setPickError] = useState('');
-
-  const pick = async (fromCamera) => {
-    setPickError('');
-    try {
-      const perm = fromCamera
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        setPickError(fromCamera ? 'Camera access was denied.' : 'Photo library access was denied.');
-        return;
-      }
-      const result = fromCamera
-        ? await ImagePicker.launchCameraAsync(PICKER_OPTIONS)
-        : await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
-      if (!result.canceled && result.assets?.[0]) onPick(result.assets[0]);
-    } catch (e) {
-      setPickError(e.message || 'Could not open the picker.');
-    }
-  };
-
-  return (
-    <View style={{ marginBottom: spacing(3) }}>
-      <Label style={{ marginBottom: spacing(0.75) }}>
-        {label} <Text style={{ color: colors.accent }}>*</Text>
-      </Label>
-      <Text style={photoStyles.hint}>{hint}</Text>
-
-      {!asset ? (
-        <View style={photoStyles.pickRow}>
-          <Pressable onPress={() => pick(false)} style={({ pressed }) => [photoStyles.pickButton, pressed && { opacity: 0.6 }]}>
-            <Feather name="image" size={14} color={colors.muted} />
-            <Text style={photoStyles.pickLabel}>Photo library</Text>
-          </Pressable>
-          <Pressable onPress={() => pick(true)} style={({ pressed }) => [photoStyles.pickButton, pressed && { opacity: 0.6 }]}>
-            <Feather name="camera" size={14} color={colors.muted} />
-            <Text style={photoStyles.pickLabel}>Take photo</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <View style={photoStyles.preview}>
-          <Image source={{ uri: asset.uri }} style={photoStyles.thumb} />
-          <View style={{ flex: 1, marginLeft: spacing(1.5) }}>
-            <Text style={photoStyles.previewName} numberOfLines={1}>
-              {asset.fileName || 'Photo selected'}
-            </Text>
-            <Text style={photoStyles.previewSize}>
-              {(assetBytes(asset) / 1024 / 1024).toFixed(2)} MB
-            </Text>
-          </View>
-          <Pressable onPress={() => onPick(null)} hitSlop={10} style={{ padding: spacing(1) }}>
-            <Feather name="x" size={16} color={colors.muted} />
-          </Pressable>
-        </View>
-      )}
-
-      {(error || pickError) ? <Text style={photoStyles.error}>{pickError || error}</Text> : null}
-    </View>
-  );
 }
 
 export default function ApplyScreen({ navigation }) {
@@ -114,11 +43,10 @@ export default function ApplyScreen({ navigation }) {
     profession: '', company: '', linkedin_url: '', years_experience: '',
     school: '', degree: '',
     bio: '', why: '',
-    facePhoto: null, passportPhoto: null,
+    age18: false, agreeTerms: false,
   });
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [stage, setStage] = useState('');
   const [error, setError] = useState('');
 
   const update = (k) => (v) => setFields(prev => ({ ...prev, [k]: v }));
@@ -134,13 +62,6 @@ export default function ApplyScreen({ navigation }) {
 
     setSubmitting(true);
     try {
-      setStage('Uploading face photo…');
-      const face_photo_path = await uploadVerification(fields.facePhoto, 'face');
-
-      setStage('Uploading passport photo…');
-      const passport_photo_path = await uploadVerification(fields.passportPhoto, 'passport');
-
-      setStage('Submitting application…');
       const { status_token } = await submitApplication({
         email:            fields.email,
         first_name:       fields.first_name,
@@ -154,8 +75,11 @@ export default function ApplyScreen({ navigation }) {
         degree:           fields.degree,
         bio:              fields.bio,
         why:              fields.why,
-        face_photo_path,
-        passport_photo_path,
+        consent: {
+          ageConfirmed:   fields.age18,
+          termsVersion:   LEGAL_VERSIONS.terms,
+          privacyVersion: LEGAL_VERSIONS.privacy,
+        },
       });
 
       await AsyncStorage.setItem(STATUS_TOKEN_KEY, status_token).catch(() => {});
@@ -163,7 +87,6 @@ export default function ApplyScreen({ navigation }) {
     } catch (err) {
       setError(err.message || 'Something went wrong.');
       setSubmitting(false);
-      setStage('');
     }
   };
 
@@ -176,8 +99,8 @@ export default function ApplyScreen({ navigation }) {
         Short, specific, <Text style={styles.titleAccent}>read by hand.</Text>
       </Text>
       <Text style={styles.lede}>
-        We verify identity by hand from your photo and a US passport before
-        approving accounts. Submit once, you'll hear back within a few days.
+        Tell us who you are. Every application is read by hand and reviewed by the
+        committee — you'll hear back within a few days.
       </Text>
 
       <SectionLabel>I — Contact</SectionLabel>
@@ -200,27 +123,7 @@ export default function ApplyScreen({ navigation }) {
         <Field label="School (optional)" value={fields.school} onChangeText={update('school')} placeholder="Yale" autoCapitalize="words" style={styles.col} />
       </View>
 
-      <SectionLabel>III — Identity</SectionLabel>
-      <Text style={styles.sectionNote}>
-        Two images. The committee reviews them by hand. Stored privately —
-        only admins can view, and only while your application is open.
-      </Text>
-      <PhotoField
-        label="Clear photo of your face"
-        hint="A recent photo, neutral lighting, no sunglasses or hat. A selfie is fine."
-        asset={fields.facePhoto}
-        onPick={update('facePhoto')}
-        error={showErr('facePhoto')}
-      />
-      <PhotoField
-        label="US passport"
-        hint="The photo page of a current US passport. Make sure the name and photo are readable."
-        asset={fields.passportPhoto}
-        onPick={update('passportPhoto')}
-        error={showErr('passportPhoto')}
-      />
-
-      <SectionLabel>IV — About you</SectionLabel>
+      <SectionLabel>III — About you</SectionLabel>
       <Field
         label="Brief professional summary"
         value={fields.bio}
@@ -241,19 +144,28 @@ export default function ApplyScreen({ navigation }) {
         error={showErr('why')}
       />
 
+      <SectionLabel>IV — Consent</SectionLabel>
+      <Checkbox checked={fields.age18} onChange={update('age18')} error={showErr('age18')}>
+        I am 18 years of age or older.
+      </Checkbox>
+      <Checkbox checked={fields.agreeTerms} onChange={update('agreeTerms')} error={showErr('agreeTerms')}>
+        I have read and agree to the{' '}
+        <Text style={styles.link} onPress={() => Linking.openURL(LEGAL_URLS.terms)}>Terms of Service</Text>
+        {' '}and{' '}
+        <Text style={styles.link} onPress={() => Linking.openURL(LEGAL_URLS.privacy)}>Privacy Policy</Text>.
+      </Checkbox>
+
       <ErrorText>{error}</ErrorText>
       <Rule style={{ marginVertical: spacing(2) }} />
       <Text style={styles.submitNote}>
-        {submitting && stage ? stage : 'Reviewed within a few days · No account until approved'}
+        {submitting ? 'Submitting…' : 'Reviewed within a few days · No account until approved'}
       </Text>
       <Button
         title={submitting ? 'Submitting…' : 'Submit application'}
         onPress={onSubmit}
         disabled={submitting}
       />
-      <Text style={styles.privacyNote}>
-        Photos are private. We never sell, publish, or repost them.
-      </Text>
+      <Text style={styles.privacyNote}>Your information is private. We never sell it.</Text>
     </Screen>
   );
 }
@@ -293,14 +205,9 @@ const styles = StyleSheet.create({
   col: {
     flex: 1,
   },
-  sectionNote: {
-    fontFamily: fonts.display,
-    fontStyle: 'italic',
-    fontSize: 13,
-    lineHeight: 19,
-    color: '#a89d87',
-    marginBottom: spacing(2),
-    marginTop: -spacing(1),
+  link: {
+    color: colors.accent,
+    textDecorationLine: 'underline',
   },
   submitNote: {
     fontFamily: fonts.mono,
@@ -317,68 +224,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.faint,
     marginTop: spacing(2),
-  },
-});
-
-const photoStyles = StyleSheet.create({
-  hint: {
-    fontFamily: fonts.mono,
-    fontSize: 9,
-    lineHeight: 15,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: colors.faint,
-    marginBottom: spacing(1.5),
-  },
-  pickRow: {
-    flexDirection: 'row',
-    gap: spacing(1.5),
-  },
-  pickButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing(1),
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.line,
-    paddingVertical: spacing(2.5),
-  },
-  pickLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    color: colors.muted,
-  },
-  preview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
-    padding: spacing(1.5),
-  },
-  thumb: {
-    width: 64,
-    height: 64,
-    backgroundColor: colors.raised,
-  },
-  previewName: {
-    fontFamily: fonts.display,
-    fontSize: 14,
-    color: colors.text,
-  },
-  previewSize: {
-    fontFamily: fonts.mono,
-    fontSize: 9,
-    color: colors.faint,
-    marginTop: 3,
-  },
-  error: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    color: colors.danger,
-    marginTop: spacing(1),
   },
 });

@@ -121,6 +121,26 @@ export function BackBar({ onBack, right }) {
   );
 }
 
+// Clickwrap consent row. Only the box toggles, so inline <Text onPress> links
+// inside `children` (e.g. Terms / Privacy) open without also toggling.
+export function Checkbox({ checked, onChange, children, error }) {
+  return (
+    <View style={{ marginBottom: spacing(1.5) }}>
+      <View style={styles.checkboxRow}>
+        <Pressable
+          onPress={() => onChange(!checked)}
+          hitSlop={8}
+          style={[styles.checkboxBox, checked && styles.checkboxBoxOn]}
+        >
+          {checked ? <Feather name="check" size={13} color={colors.bg} /> : null}
+        </Pressable>
+        <Text style={styles.checkboxLabel}>{children}</Text>
+      </View>
+      {error ? <Text style={styles.checkboxError}>{error}</Text> : null}
+    </View>
+  );
+}
+
 export function ErrorText({ children }) {
   if (!children) return null;
   return <Text style={styles.error}>{children}</Text>;
@@ -270,6 +290,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing(1.5),
+  },
+  checkboxBox: {
+    width: 22,
+    height: 22,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  checkboxBoxOn: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontFamily: fonts.display,
+    fontSize: 15,
+    lineHeight: 21,
+    color: '#a89d87',
+  },
+  checkboxLink: {
+    color: colors.accent,
+    textDecorationLine: 'underline',
+  },
+  checkboxError: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.danger,
+    marginTop: spacing(0.5),
+    marginLeft: spacing(1.5) + 22,
   },
   error: {
     fontFamily: fonts.mono,

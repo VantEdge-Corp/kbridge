@@ -76,7 +76,7 @@ export default function Login() {
           </Link>
         </header>
 
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex-1 flex flex-col items-center justify-center p-8">
           <div className="w-full max-w-md animate-fade-up">
             <div className="text-center mb-12">
               <div className="font-display text-4xl mb-2">Welcome.</div>
@@ -129,6 +129,11 @@ export default function Login() {
                 <Link to="/apply" className="text-[#c4956c] hover:text-[#d4a47c]">Apply for membership →</Link>
               </p>
             </form>
+          </div>
+
+          <div className="mt-12 flex gap-6">
+            <Link to="/privacy" className="font-mono text-[9px] uppercase tracking-[0.22em] text-[#5a5349] hover:text-[#c4956c]">Privacy</Link>
+            <Link to="/terms" className="font-mono text-[9px] uppercase tracking-[0.22em] text-[#5a5349] hover:text-[#c4956c]">Terms</Link>
           </div>
         </div>
       </div>
