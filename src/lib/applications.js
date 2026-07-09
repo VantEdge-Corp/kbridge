@@ -188,3 +188,19 @@ export async function saveInternalNote(id, note) {
     .eq("id", id);
   if (error) throw new Error(error.message || "Could not save note.");
 }
+
+/**
+ * Set an applicant's ranking score (1–10, decimals allowed). Goes through a
+ * SECURITY DEFINER RPC that checks is_admin and also propagates the score to
+ * the member's profile if they've already claimed an account. Pass "" / null
+ * to clear. Returns the numeric value (or null).
+ */
+export async function setApplicationScore(id, score) {
+  const val = score === "" || score == null ? null : Number(score);
+  if (val != null && (Number.isNaN(val) || val < 1 || val > 10)) {
+    throw new Error("Score must be between 1 and 10.");
+  }
+  const { error } = await supabase.rpc("set_application_score", { app_id: id, new_score: val });
+  if (error) throw new Error(error.message || "Could not save score.");
+  return val;
+}

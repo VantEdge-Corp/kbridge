@@ -17,7 +17,7 @@ import { Check, X, Clock, ChevronDown, ChevronUp, RefreshCw, Shield, Mail, Setti
 
 import { supabase } from "../lib/supabase.js";
 import {
-  listApplications, decideApplication, saveInternalNote, ADMIN_STATUS,
+  listApplications, decideApplication, saveInternalNote, setApplicationScore, ADMIN_STATUS,
 } from "../lib/applications.js";
 import { getSignedUrl } from "../lib/storage.js";
 import { classifyMatch } from "../lib/face-match.js";
@@ -53,6 +53,9 @@ const DossierCard = ({ app, onChanged, decidedBy }) => {
   const [note, setNote] = useState(app.internal_note ?? "");
   const [noteDirty, setNoteDirty] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
+  const [score, setScore] = useState(app.score ?? "");
+  const [scoreDirty, setScoreDirty] = useState(false);
+  const [savingScore, setSavingScore] = useState(false);
 
   // Signed URLs for verification photos — short-lived, re-issued each
   // time the card is expanded. We only fetch them once the admin opens
@@ -101,6 +104,19 @@ const DossierCard = ({ app, onChanged, decidedBy }) => {
       alert(err.message || "Could not save note.");
     } finally {
       setSavingNote(false);
+    }
+  };
+
+  const persistScore = async () => {
+    setSavingScore(true);
+    try {
+      const val = await setApplicationScore(app.id, score);
+      onChanged({ ...app, score: val });
+      setScoreDirty(false);
+    } catch (err) {
+      alert(err.message || "Could not save score.");
+    } finally {
+      setSavingScore(false);
     }
   };
 
@@ -199,6 +215,34 @@ const DossierCard = ({ app, onChanged, decidedBy }) => {
                     {savingNote ? "Saving…" : "Save note"}
                   </button>
                 )}
+              </div>
+
+              <div>
+                <Label>Ranking · 1–10</Label>
+                <div className="flex items-center gap-3 mt-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    step="0.1"
+                    value={score}
+                    onChange={e => { setScore(e.target.value); setScoreDirty(true); }}
+                    placeholder="—"
+                    className="w-24 bg-[#1a1815] border border-[#3a352d] p-2 text-[#e8e0d0] font-mono text-sm focus:outline-none focus:border-[#c4956c]"
+                  />
+                  {scoreDirty && (
+                    <button
+                      onClick={persistScore}
+                      disabled={savingScore}
+                      className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#c4956c] border border-[#c4956c]/40 px-3 py-1.5 hover:bg-[#c4956c]/10 disabled:opacity-40"
+                    >
+                      {savingScore ? "Saving…" : "Save score"}
+                    </button>
+                  )}
+                </div>
+                <p className="font-mono text-[9px] text-[#5a5349] mt-1 tracking-[0.14em]">
+                  Members only match within ±2.5 of this. Score at admission.
+                </p>
               </div>
             </div>
           </div>
