@@ -83,3 +83,42 @@ src/components/MatchModal.js "a mutual interest"
 src/screens/                 Login, Apply, Status, Signup,
                              Discover, Matches, Chat, Profile
 ```
+
+## Shipping to the App Store
+
+`expo start` / Expo Go is for development only — the App Store needs a real
+build. `eas.json` defines the build profiles; the rest is account setup that
+can't be scripted.
+
+1. **One-time:** an Apple Developer account ($99/yr) and an Expo account.
+   `npm i -g eas-cli`, then from `mobile/`: `eas login` and `eas init` (this
+   writes your `projectId` into `app.json`).
+2. **Build config env:** cloud builds don't read your local `.env`. Create EAS
+   environment variables for the `production` (and `preview`) environments:
+   `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, and
+   `EXPO_PUBLIC_WEB_URL` (your **deployed** Vercel domain, not localhost — so
+   the in-app Terms/Privacy links resolve). Set them in the Expo dashboard or
+   with `eas env:create`.
+3. **Build + submit:** `eas build --platform ios --profile production`, then
+   `eas submit --platform ios`.
+
+### App Store Connect (do these or review will bounce)
+
+- **Age rating: 17+** (required for dating).
+- **App Privacy labels:** declare photos, contact info (email), coarse location
+  (city), and user content — must match the Privacy Policy.
+- **Support URL + Privacy Policy URL** (`https://<your-domain>/privacy`).
+- **App Review notes → demo account.** Reviewers can't pass the committee gate,
+  so run `../supabase/seed_demo.sql` and give them:
+  `review@kbridge.app` / `review123`. That account already has people to swipe
+  on and one match + conversation.
+
+### Before you submit
+
+- Paid tiers are **hidden** until IAP is wired (`isPurchasesConfigured()` is
+  `false` in `src/lib/purchases.js`) — so there's no non-functional paywall for
+  Apple to reject. Wire RevenueCat + flip that flag to turn tiers back on.
+- Test the **production build on a real device** (crashes surface there, not in
+  `expo export`): apply → get approved in `/admin` → sign up → upload a photo →
+  swipe → match → chat → block/report → delete account.
+

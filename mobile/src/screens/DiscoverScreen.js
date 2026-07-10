@@ -18,6 +18,7 @@ import {
   subscribeToMatchStamps, getProfileById, getLikesToday,
 } from '../lib/swipes.js';
 import { dailyLikeLimit } from '../lib/tiers.js';
+import { isPurchasesConfigured } from '../lib/purchases.js';
 import { spacing } from '../theme.js';
 
 const DECK_SIZE = 30;
@@ -29,7 +30,8 @@ export default function DiscoverScreen() {
   const [match, setMatch] = useState(null);
   const [error, setError] = useState('');
   const [likesToday, setLikesToday] = useState(0);
-  const likeLimit = dailyLikeLimit(profile?.tier);
+  // No cap until in-app purchases are live — there's nothing to upgrade to yet.
+  const likeLimit = isPurchasesConfigured() ? dailyLikeLimit(profile?.tier) : Infinity;
   const seenMatchIds = useRef(new Set());
 
   const load = useCallback(async () => {

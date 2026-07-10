@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthContext.js';
 import { displayProfile } from '../lib/profile.js';
 import { pickPhoto, addProfilePhoto, removeProfilePhoto, publicUrl, PHOTO_LIMIT } from '../lib/photos.js';
 import { deleteMyAccount } from '../lib/safety.js';
+import { isPurchasesConfigured } from '../lib/purchases.js';
 import { colors, fonts, spacing } from '../theme.js';
 
 const TIER_LABELS = { observer: 'Observer', member: 'Member', founding: 'Founding' };
@@ -120,12 +121,14 @@ export default function ProfileScreen() {
           {p.identityVerified ? <Badge>Identity verified</Badge> : null}
         </View>
 
-        <Button
-          title="View membership tiers"
-          variant="ghost"
-          onPress={() => navigation.navigate('Upgrade')}
-          style={{ marginTop: spacing(2.5) }}
-        />
+        {isPurchasesConfigured() ? (
+          <Button
+            title="View membership tiers"
+            variant="ghost"
+            onPress={() => navigation.navigate('Upgrade')}
+            style={{ marginTop: spacing(2.5) }}
+          />
+        ) : null}
 
         <Rule style={{ marginVertical: spacing(3) }} />
 
