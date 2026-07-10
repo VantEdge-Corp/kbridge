@@ -19,6 +19,7 @@ import { supabase } from "./lib/supabase.js";
 import { TIERS, canSendIntro, canSendInvite, canAccessEvents } from "./lib/tiers.js";
 import { displayProfile } from "./lib/profile.js";
 import { uploadProfilePhoto, removeProfilePhoto, publicUrl, PHOTO_LIMIT } from "./lib/photos.js";
+import { blockUser, getBlockedIds, reportUser, deleteMyAccount, REPORT_REASONS } from "./lib/safety.js";
 import {
   listCorrespondences, getCorrespondence, sendMessage as sendChatMessage,
   markCorrespondenceRead, subscribeToCorrespondence, subscribeToInbox,
@@ -1016,6 +1017,7 @@ const DiscoverPage = () => {
   const [upgrade,setUpgrade]=useState(null);
   const [members,setMembers] = useState([]);
   const [pendingIds,setPendingIds] = useState(new Set());
+  const [blockedIds,setBlockedIds] = useState(new Set());
   const [loadingMembers,setLoadingMembers] = useState(true);
 
   // Load discoverable members + ids already in flight or matched
@@ -1025,7 +1027,7 @@ const DiscoverPage = () => {
     (async()=>{
       setLoadingMembers(true);
       try {
-        const [{data: members, error: mErr}, {data: outgoing}] = await Promise.all([
+        const [{data: members, error: mErr}, {data: outgoing}, blocked] = await Promise.all([
           supabase.from("profiles")
             .select("id, first_name, age, city, occupation, school, degree, bio, communities, member_number, identity_verified, education_verified, photos_uploaded, photo_paths")
             .eq("onboarding_complete", true)
@@ -1034,11 +1036,13 @@ const DiscoverPage = () => {
             .select("recipient_id, status")
             .eq("requester_id", user.id)
             .in("status", ["pending","accepted"]),
+          getBlockedIds(user.id),
         ]);
         if(!active) return;
         if(mErr) throw mErr;
         setMembers(members || []);
         setPendingIds(new Set((outgoing||[]).map(r=>r.recipient_id)));
+        setBlockedIds(new Set(blocked||[]));
       } catch (e) {
         console.error("load discover members", e);
       } finally {
@@ -1050,7 +1054,7 @@ const DiscoverPage = () => {
 
   const matchedIds = new Set(correspondences.map(c=>c.other?.id).filter(Boolean));
   const available = members
-    .filter(p => !matchedIds.has(p.id) && !pendingIds.has(p.id))
+    .filter(p => !matchedIds.has(p.id) && !pendingIds.has(p.id) && !blockedIds.has(p.id))
     .map(displayProfile)
     .filter(Boolean);
 
@@ -1254,12 +1258,25 @@ const ChatPage = () => {
   const {matchId} = useParams();
   const {user} = useAuth();
   const {refresh} = useAppState();
+  const navigate = useNavigate();
   const [data,setData] = useState(null);
   const [loading,setLoading] = useState(true);
   const [notFound,setNotFound] = useState(false);
   const [draft,setDraft] = useState("");
   const [sending,setSending] = useState(false);
+  const [safety,setSafety] = useState(null); // null | "menu" | "report"
   const messagesRef = useRef(null);
+
+  const doBlock = async () => {
+    if(!data?.other) return;
+    if(!window.confirm(`Block ${data.other.first_name||"this member"}? They won't see you or be able to message you.`)) return;
+    try { await blockUser(user.id, data.other.id); navigate("/correspondence"); }
+    catch(e){ alert(e.message||"Could not block."); }
+  };
+  const doReport = async (reason) => {
+    try { await reportUser(user.id, data.other.id, reason, {matchId}); setSafety(null); alert("Report received. Our team will review it."); }
+    catch(e){ setSafety(null); alert(e.message||"Could not report."); }
+  };
 
   // Initial load
   useEffect(()=>{
@@ -1345,7 +1362,10 @@ const ChatPage = () => {
 
   return (
     <AppShell navTitle={other.name} showBack backTo="/correspondence" hideTabBar={false}
-      navActions={<Link to="/settings" className="text-[#8a7f6a] hover:text-[#c4956c]"><Settings size={17}/></Link>}>
+      navActions={<div className="flex items-center gap-3">
+        <button onClick={()=>setSafety("menu")} className="text-[#8a7f6a] hover:text-[#d4928f]" title="Block or report"><Shield size={16}/></button>
+        <Link to="/settings" className="text-[#8a7f6a] hover:text-[#c4956c]"><Settings size={17}/></Link>
+      </div>}>
       <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={messagesRef}>
         <div className="text-center mb-6">
           <div className="w-16 h-16 mx-auto overflow-hidden mb-3"><Portrait profile={other} size="square"/></div>
@@ -1381,6 +1401,29 @@ const ChatPage = () => {
         <input value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSend()} placeholder="Write something thoughtful…" className="flex-1 bg-transparent text-[#e8e0d0] font-display text-lg placeholder:text-[#5a5349] px-2 py-3"/>
         <button onClick={handleSend} disabled={!draft.trim()||sending} className={`p-3 transition-all ${draft.trim()&&!sending?"text-[#c4956c] hover:text-[#d4a47c]":"text-[#5a5349]"}`}><Send size={18}/></button>
       </div>
+
+      {safety && (
+        <div className="fixed inset-0 z-50 bg-[#0e0d0b]/90 flex items-end sm:items-center justify-center p-4" onClick={()=>setSafety(null)}>
+          <div className="w-full max-w-sm border border-[#3a352d] bg-[#151310]" onClick={e=>e.stopPropagation()}>
+            {safety==="menu" ? (
+              <>
+                <div className="p-4 border-b border-[#3a352d]"><Label>{other.name}</Label></div>
+                <button onClick={()=>setSafety("report")} className="w-full text-left p-4 border-b border-[#3a352d] font-display text-[#d4928f] hover:bg-[#1a1815]">Report</button>
+                <button onClick={doBlock} className="w-full text-left p-4 border-b border-[#3a352d] font-display text-[#d4928f] hover:bg-[#1a1815]">Block</button>
+                <button onClick={()=>setSafety(null)} className="w-full text-left p-4 font-display text-[#e8e0d0] hover:bg-[#1a1815]">Cancel</button>
+              </>
+            ) : (
+              <>
+                <div className="p-4 border-b border-[#3a352d]"><Label>Report — what's wrong?</Label></div>
+                {REPORT_REASONS.map(r=>(
+                  <button key={r} onClick={()=>doReport(r)} className="w-full text-left p-4 border-b border-[#3a352d] font-display text-[#e8e0d0] hover:bg-[#1a1815]">{r}</button>
+                ))}
+                <button onClick={()=>setSafety("menu")} className="w-full text-left p-4 font-display text-[#8a7f6a] hover:bg-[#1a1815]">Back</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 };
@@ -1738,6 +1781,16 @@ const SettingsPage = () => {
     navigate("/", {replace:true});
   };
 
+  const handleDelete = async () => {
+    try {
+      await deleteMyAccount(profile?.photo_paths || []);
+      await supabase.auth.signOut();
+      navigate("/", {replace:true});
+    } catch(e) {
+      alert(e.message || "Could not delete account.");
+    }
+  };
+
   const handlePasswordChange = async () => {
     const {error} = await supabase.auth.updateUser({password:newPassword});
     if(!error){ setPwSuccess(true); setNewPw(""); setTimeout(()=>setPwSuccess(false),3000); }
@@ -1857,7 +1910,7 @@ const SettingsPage = () => {
                   <div className="border border-[#8b5a5a]/40 bg-[#8b5a5a]/10 p-5 space-y-4">
                     <p className="font-display text-[#d4928f]">This will permanently delete your profile, matches, and messages. This cannot be undone.</p>
                     <div className="flex gap-3">
-                      <Btn variant="danger" onClick={()=>{/* TODO: delete user */}} className="flex-1">Confirm Delete</Btn>
+                      <Btn variant="danger" onClick={handleDelete} className="flex-1">Confirm Delete</Btn>
                       <Btn variant="ghost" onClick={()=>setDC(false)} className="flex-1">Cancel</Btn>
                     </div>
                   </div>

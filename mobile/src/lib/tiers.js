@@ -32,3 +32,11 @@ export const TIER_ORDER = ['observer', 'member', 'founding'];
 export function tierMeets(userTier, requiredTier) {
   return TIER_ORDER.indexOf(userTier) >= TIER_ORDER.indexOf(requiredTier);
 }
+
+// Free-tier daily like cap (tunable). Enforced client-side in Discover, same
+// as the app's other tier limits; move to a DB trigger to make it tamper-proof.
+export const DAILY_LIKE_LIMIT = { observer: 30, member: Infinity, founding: Infinity };
+
+export function dailyLikeLimit(tierKey) {
+  return DAILY_LIKE_LIMIT[tierKey] ?? DAILY_LIKE_LIMIT.observer;
+}

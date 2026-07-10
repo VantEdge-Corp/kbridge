@@ -19,6 +19,7 @@ import { supabase } from "../lib/supabase.js";
 import {
   listApplications, decideApplication, saveInternalNote, setApplicationScore, ADMIN_STATUS,
 } from "../lib/applications.js";
+import { listReports, updateReportStatus } from "../lib/safety.js";
 import { getSignedUrl } from "../lib/storage.js";
 import { classifyMatch } from "../lib/face-match.js";
 import { useAuth } from "../lib/auth-context.js";
@@ -357,6 +358,77 @@ const DossierCard = ({ app, onChanged, decidedBy }) => {
   );
 };
 
+const REPORT_STATUS_COLOR = {
+  open:      "text-[#d4928f] border-[#8b5a5a]/40",
+  reviewed:  "text-[#a89d87] border-[#3a352d]",
+  actioned:  "text-[#7aab8a] border-[#7aab8a]/40",
+  dismissed: "text-[#5a5349] border-[#3a352d]",
+};
+
+const ReportsPanel = () => {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    try { setReports(await listReports()); }
+    catch (e) { alert(e.message || "Could not load reports."); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const setStatus = async (id, status) => {
+    try {
+      const u = await updateReportStatus(id, status);
+      setReports(rs => rs.map(r => r.id === id ? { ...r, status: u.status } : r));
+    } catch (e) { alert(e.message || "Could not update report."); }
+  };
+
+  if (loading) return <div className="text-center py-20"><Label>Loading reports…</Label></div>;
+  if (reports.length === 0) return (
+    <div className="text-center py-20 space-y-3">
+      <div className="font-display text-3xl italic text-[#c4956c]">Nothing reported.</div>
+      <Label>The community is quiet.</Label>
+    </div>
+  );
+
+  return (
+    <div className="space-y-3">
+      {reports.map(r => (
+        <div key={r.id} className="border border-[#3a352d] bg-[#0d0c0a] p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="font-display text-lg text-[#e8e0d0]">{r.reason}</div>
+              <div className="font-mono text-[10px] text-[#5a5349] uppercase tracking-[0.18em] mt-1">
+                {(r.reported?.first_name || "—")} {r.reported?.member_number || ""} · reported by {(r.reporter?.first_name || "—")}
+              </div>
+              <div className="font-mono text-[9px] text-[#5a5349] mt-1">
+                {r.created_at ? new Date(r.created_at).toLocaleString() : ""}
+              </div>
+            </div>
+            <span className={`font-mono text-[9px] uppercase tracking-[0.2em] px-2 py-1 border ${REPORT_STATUS_COLOR[r.status] || REPORT_STATUS_COLOR.open}`}>
+              {r.status}
+            </span>
+          </div>
+          {r.detail && <p className="font-display italic text-[#a89d87] text-sm mt-3 leading-relaxed">"{r.detail}"</p>}
+          <div className="flex items-center gap-2 mt-4">
+            {["reviewed", "actioned", "dismissed"].map(s => (
+              <button
+                key={s}
+                onClick={() => setStatus(r.id, s)}
+                disabled={r.status === s}
+                className="font-mono text-[9px] uppercase tracking-[0.2em] px-3 py-1.5 border border-[#3a352d] text-[#8a7f6a] hover:border-[#c4956c] hover:text-[#c4956c] disabled:opacity-30"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function AdminPanel() {
   const navigate = useNavigate();
   // AuthProvider already owns the session + profile, so just consume it
@@ -378,6 +450,7 @@ export default function AdminPanel() {
   };
 
   const load = async () => {
+    if (filter === "reports") return; // ReportsPanel loads its own data
     setLoading(true);
     try {
       const rows = await listApplications({ status: filter });
@@ -429,6 +502,7 @@ export default function AdminPanel() {
     [ADMIN_STATUS.APPROVED,   "Admitted"],
     [ADMIN_STATUS.CLAIMED,    "Active"],
     [ADMIN_STATUS.REJECTED,   "Declined"],
+    ["reports",               "Reports"],
   ];
 
   return (
@@ -491,7 +565,9 @@ export default function AdminPanel() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {loading ? (
+        {filter === "reports" ? (
+          <ReportsPanel/>
+        ) : loading ? (
           <div className="text-center py-20"><Label>Loading applications…</Label></div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 space-y-3">

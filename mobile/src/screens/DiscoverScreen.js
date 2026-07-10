@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Screen, ScreenHeader, Loading, Empty, Button, Label } from '../components/ui.js';
 import SwipeDeck from '../components/SwipeDeck.js';
@@ -15,8 +15,9 @@ import { useAuth } from '../auth/AuthContext.js';
 import { displayProfile } from '../lib/profile.js';
 import {
   getSwipeCandidates, recordSwipe, isDuplicateSwipe,
-  subscribeToMatchStamps, getProfileById,
+  subscribeToMatchStamps, getProfileById, getLikesToday,
 } from '../lib/swipes.js';
+import { dailyLikeLimit } from '../lib/tiers.js';
 import { spacing } from '../theme.js';
 
 const DECK_SIZE = 30;
@@ -27,18 +28,24 @@ export default function DiscoverScreen() {
   const [deck, setDeck] = useState(null);
   const [match, setMatch] = useState(null);
   const [error, setError] = useState('');
+  const [likesToday, setLikesToday] = useState(0);
+  const likeLimit = dailyLikeLimit(profile?.tier);
   const seenMatchIds = useRef(new Set());
 
   const load = useCallback(async () => {
     try {
       setError('');
-      const rows = await getSwipeCandidates(DECK_SIZE);
+      const [rows, likes] = await Promise.all([
+        getSwipeCandidates(DECK_SIZE),
+        getLikesToday(user.id),
+      ]);
       setDeck(rows.map(displayProfile));
+      setLikesToday(likes);
     } catch (e) {
       setError(e.message || 'Could not load profiles.');
       setDeck([]);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -57,9 +64,22 @@ export default function DiscoverScreen() {
   }, [user?.id]);
 
   const handleSwipe = useCallback(async (direction, prof) => {
+    if (direction === 'like' && likesToday >= likeLimit) {
+      load(); // bring the card back
+      Alert.alert(
+        'You’re out of likes today',
+        `The free tier includes ${likeLimit} likes a day. Upgrade for unlimited.`,
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'See tiers', onPress: () => navigation.navigate('Upgrade') },
+        ],
+      );
+      return;
+    }
     setDeck(d => (d || []).filter(p => p.id !== prof.id));
     try {
       const result = await recordSwipe(user.id, prof.id, direction);
+      if (direction === 'like') setLikesToday(n => n + 1);
       if (direction === 'like' && result?.match_id && !seenMatchIds.current.has(result.match_id)) {
         seenMatchIds.current.add(result.match_id);
         setMatch({ profile: prof, matchId: result.match_id });
@@ -67,7 +87,7 @@ export default function DiscoverScreen() {
     } catch (e) {
       if (!isDuplicateSwipe(e)) setError(e.message || 'That swipe did not save.');
     }
-  }, [user?.id]);
+  }, [user?.id, likesToday, likeLimit, load, navigation]);
 
   const openCorrespondence = () => {
     const m = match;

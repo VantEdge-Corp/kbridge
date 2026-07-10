@@ -55,3 +55,17 @@ export async function getProfileById(id) {
   if (error) throw error;
   return data;
 }
+
+// Count today's likes for the daily free-tier cap.
+export async function getLikesToday(userId) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const { count, error } = await supabase
+    .from('swipes')
+    .select('id', { count: 'exact', head: true })
+    .eq('swiper_id', userId)
+    .eq('direction', 'like')
+    .gte('created_at', start.toISOString());
+  if (error) return 0;
+  return count || 0;
+}
