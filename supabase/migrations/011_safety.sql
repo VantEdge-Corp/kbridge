@@ -19,10 +19,15 @@ create table if not exists public.blocks (
 
 alter table public.blocks enable row level security;
 
+drop policy if exists "Read own blocks" on public.blocks;
 create policy "Read own blocks" on public.blocks
   for select using (auth.uid() = blocker_id);
+
+drop policy if exists "Create own blocks" on public.blocks;
 create policy "Create own blocks" on public.blocks
   for insert with check (auth.uid() = blocker_id);
+
+drop policy if exists "Delete own blocks" on public.blocks;
 create policy "Delete own blocks" on public.blocks
   for delete using (auth.uid() = blocker_id);
 
@@ -41,10 +46,15 @@ create table if not exists public.reports (
 
 alter table public.reports enable row level security;
 
+drop policy if exists "Reporter creates report" on public.reports;
 create policy "Reporter creates report" on public.reports
   for insert with check (auth.uid() = reporter_id);
+
+drop policy if exists "Admins read reports" on public.reports;
 create policy "Admins read reports" on public.reports
   for select using (public.is_admin());
+
+drop policy if exists "Admins update reports" on public.reports;
 create policy "Admins update reports" on public.reports
   for update using (public.is_admin()) with check (public.is_admin());
 
