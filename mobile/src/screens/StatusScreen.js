@@ -118,7 +118,11 @@ export default function StatusScreen({ route, navigation }) {
           />
           <Button title="Check status" onPress={lookup} disabled={!input.trim()} />
         </>
-      ) : state.loading ? (
+      ) : state.loading || (!record && !state.error) ? (
+        // The `!record && !error` arm matters: lookup() sets the token, which
+        // re-renders before the fetch effect has run, so state is still the
+        // initial { loading: false, record: null }. Without this the success
+        // branch below renders with a null record and `view.icon` throws.
         <View style={{ paddingVertical: spacing(8) }}><Loading /></View>
       ) : state.error ? (
         <>
