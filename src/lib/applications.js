@@ -66,18 +66,19 @@ export async function submitApplication(fields) {
     // does not collect government IDs or run identity-document verification.
   };
 
-  // Proof of consent — which document versions the applicant accepted, and when.
+  // Proof of consent — which document versions the applicant accepted.
+  // consented_at is stamped server-side by the RPC, not from the browser clock.
   if (fields.consent) {
     row.age_confirmed   = !!fields.consent.ageConfirmed;
     row.terms_version   = fields.consent.termsVersion ?? null;
     row.privacy_version = fields.consent.privacyVersion ?? null;
-    row.consented_at    = new Date().toISOString();
   }
 
+  // Goes through the RPC rather than a direct insert: anon has no SELECT
+  // policy on applications, so `insert(...).select(...)` fails RLS on the
+  // RETURNING clause. See migration 012.
   const { data, error } = await supabase
-    .from(TABLE)
-    .insert(row)
-    .select("status_token, email")
+    .rpc("submit_application", { p_payload: row })
     .single();
 
   if (error) {
