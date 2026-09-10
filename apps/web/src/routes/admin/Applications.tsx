@@ -71,7 +71,7 @@ function Dossier({ app, onChanged }: { app: ApplicationRow; onChanged: () => voi
 
   return (
     <article className="border border-border rounded-lg bg-surface" data-testid="dossier">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-3 px-4 min-h-14 text-left">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-3 px-5 min-h-14 text-left motion hover:bg-surface-hover focus-ring">
         <span className="font-display text-name text-text">{app.firstName}</span>
         <span className="text-body-sm text-text-muted truncate">
           {[app.occupation, app.company, app.city].filter(Boolean).join(' · ')}
@@ -80,7 +80,7 @@ function Dossier({ app, onChanged }: { app: ApplicationRow; onChanged: () => voi
         <Icon name={open ? 'chevronDown' : 'chevronRight'} size={18} className="text-text-faint shrink-0" />
       </button>
       {open ? (
-        <div className="px-4 pb-4 border-t border-border pt-4 space-y-5">
+        <div className="px-5 pb-5 border-t border-border pt-5 space-y-5">
           <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-body-sm">
             {rows.map(([k, v]) => (
               <div key={k} className="grid grid-cols-[110px_1fr] gap-2">
@@ -147,9 +147,9 @@ export function AdminApplications() {
   const { data, loading, error, reload } = useAsync(() => api.applications.admin.list({ status, search }), [status, search]);
   return (
     <div data-testid="admin-applications">
-      <h1 className="font-display text-title text-text mb-4">Applications</h1>
-      <SegmentedTabs segments={TABS} value={status} onChange={setStatus} className="mb-4" />
-      <div className="relative mb-4 max-w-sm">
+      <h1 className="font-display text-title leading-[34px] text-text mb-6">Applications</h1>
+      <SegmentedTabs segments={TABS} value={status} onChange={setStatus} className="mb-5" />
+      <div className="relative mb-5 max-w-sm">
         <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
         <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, email, area, occupation" aria-label="Search applications" className={`${inputClass} h-11 pl-10`} />
       </div>
@@ -160,7 +160,7 @@ export function AdminApplications() {
       ) : !data || data.length === 0 ? (
         <EmptyState title="Nothing here." body="No applications with this status." />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {data.map((app) => (
             <Dossier key={app.id} app={app} onChanged={reload} />
           ))}

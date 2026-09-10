@@ -76,16 +76,17 @@ export function Dialog({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        className={`relative w-full ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'} max-h-[92dvh] flex flex-col bg-surface-elevated border border-border rounded-t-xl sm:rounded-xl shadow-2xl`}
+        className={`relative w-full ${wide ? 'sm:max-w-2xl' : 'sm:max-w-[480px]'} max-h-[92dvh] flex flex-col bg-surface-elevated border border-border rounded-t-xl sm:rounded-xl shadow-sheet`}
       >
-        <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b border-border">
+        <span aria-hidden="true" className="sm:hidden mx-auto mt-3 h-1 w-9 rounded-full bg-border-strong" />
+        <div className="flex items-center justify-between gap-3 px-6 pt-4 pb-3">
           <h2 className="font-display text-subheading text-text">{title}</h2>
-          <IconButton aria-label="Close" onClick={onClose} className="-mr-2">
+          <IconButton aria-label="Close" onClick={onClose} className="-mr-3">
             <Icon name="x" />
           </IconButton>
         </div>
-        <div className="px-5 py-4 overflow-y-auto">{children}</div>
-        {footer ? <div className="px-5 py-3 border-t border-border flex justify-end gap-3">{footer}</div> : null}
+        <div className="px-6 pb-2 overflow-y-auto">{children}</div>
+        {footer ? <div className="px-6 py-4 flex justify-end gap-3">{footer}</div> : null}
       </div>
     </div>,
     document.body,
@@ -98,7 +99,7 @@ export function Menu({ open, onClose, items }: { open: boolean; onClose: () => v
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div role="menu" className="absolute right-0 top-full mt-1 z-50 min-w-44 bg-surface-elevated border border-border rounded-md py-1 shadow-xl">
+      <div role="menu" className="absolute right-0 top-full mt-1 z-50 min-w-44 bg-surface-elevated border border-border rounded-md py-1 shadow-sheet">
         {items.map((item) => (
           <button
             key={item.label}

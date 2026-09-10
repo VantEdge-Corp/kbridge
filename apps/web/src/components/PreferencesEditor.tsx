@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
   AGE,
   AREAS,
@@ -21,10 +21,10 @@ import {
   type Preferences,
   type RangePreferenceKey,
 } from '@peaches/core';
-import { Select } from './Field';
+import { Eyebrow, Select } from './Field';
 import { FilterRow } from './FilterRow';
+import { Group } from './Group';
 import { MultiSelect, type MultiOption } from './MultiSelect';
-import { SectionHeader } from './SectionHeader';
 
 export interface LocationSettings {
   areaId: string | null;
@@ -40,17 +40,17 @@ interface MultiDimension {
 
 const noPreferNotToSay = <T extends { value: string; label: string }>(opts: ReadonlyArray<T>) => opts.filter((o) => o.value !== 'prefer_not_to_say');
 
-export const MULTI_DIMENSIONS: ReadonlyArray<MultiDimension> = [
+const BACKGROUND_DIMENSIONS: ReadonlyArray<MultiDimension> = [
   { key: 'nationalities', label: 'Nationality', options: COUNTRIES.map((c) => ({ value: c.code, label: c.name })), searchable: true },
   { key: 'raceEthnicities', label: 'Race / ethnicity', options: RACE_ETHNICITY_OPTIONS },
   { key: 'education', label: 'Education', options: DEGREE_LEVEL_OPTIONS },
   { key: 'occupation', label: 'Occupation', options: INDUSTRY_OPTIONS },
   { key: 'studentStatus', label: 'Student / professional', options: STUDENT_STATUS_OPTIONS },
   { key: 'languages', label: 'Languages', options: LANGUAGE_OPTIONS, searchable: true },
-  { key: 'relationshipIntent', label: 'Relationship intent', options: RELATIONSHIP_INTENT_OPTIONS },
 ];
 
-const LIFESTYLE_DIMENSIONS: ReadonlyArray<MultiDimension> = [
+const INTENT_DIMENSIONS: ReadonlyArray<MultiDimension> = [
+  { key: 'relationshipIntent', label: 'Relationship intent', options: RELATIONSHIP_INTENT_OPTIONS },
   { key: 'drinking', label: 'Drinking', options: noPreferNotToSay(DRINKING_OPTIONS) },
   { key: 'smoking', label: 'Smoking', options: noPreferNotToSay(SMOKING_OPTIONS) },
   { key: 'children', label: 'Children', options: noPreferNotToSay(CHILDREN_OPTIONS) },
@@ -100,10 +100,22 @@ function RangeSelects({
   );
 }
 
+/** A grouped container of filter rows with an eyebrow title inside. */
+function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <Group>
+      <div className="px-4 pt-4 pb-1">
+        <Eyebrow>{title}</Eyebrow>
+      </div>
+      {children}
+    </Group>
+  );
+}
+
 /**
- * The full preference set, one strength control per dimension. Location and
- * distance are not preferences: distance is a hard boundary and the area is
- * the member's private location.
+ * The full preference set, one strength control per dimension, in grouped
+ * sections. Location and distance are not preferences: distance is a hard
+ * boundary and the area is the member's private location.
  */
 export function PreferencesEditor({
   prefs,
@@ -131,26 +143,26 @@ export function PreferencesEditor({
   }, [location.maxDistanceMiles]);
 
   return (
-    <div className="space-y-5">
-      <FilterRow label="Location" hint="Only the area name is shown to others">
-        <Select aria-label="Your area" options={AREA_OPTIONS} placeholder="Choose your area" value={location.areaId ?? ''} onChange={(e) => onLocationChange({ ...location, areaId: e.target.value || null })} />
-      </FilterRow>
-      <FilterRow label="Distance" hint="Hard boundary">
-        <Select aria-label="Maximum distance" options={DISTANCE_OPTIONS} value={distanceValue} onChange={(e) => onLocationChange({ ...location, maxDistanceMiles: Number(e.target.value) })} />
-      </FilterRow>
-      <FilterRow label="Age" strength={prefs.ageRange.strength} onStrength={(s) => onChange(withRange(prefs, 'ageRange', { strength: s }))}>
-        <RangeSelects label="Age" min={prefs.ageRange.min} max={prefs.ageRange.max} options={AGE_OPTIONS} onChange={(min, max) => onChange(withRange(prefs, 'ageRange', { min, max }))} />
-      </FilterRow>
-      {MULTI_DIMENSIONS.slice(0, 2).map(multiRow)}
-      <FilterRow label="Height" strength={prefs.height.strength} onStrength={(s) => onChange(withRange(prefs, 'height', { strength: s }))}>
-        <RangeSelects label="Height" min={prefs.height.min} max={prefs.height.max} options={HEIGHT_OPTIONS} onChange={(min, max) => onChange(withRange(prefs, 'height', { min, max }))} />
-      </FilterRow>
-      {MULTI_DIMENSIONS.slice(2).map(multiRow)}
-      <div>
-        <SectionHeader title="Lifestyle" />
-        <div className="space-y-4">{LIFESTYLE_DIMENSIONS.map(multiRow)}</div>
-      </div>
-      {multiRow(INTEREST_DIMENSION)}
+    <div className="space-y-4">
+      <FilterGroup title="Location">
+        <FilterRow label="Your area" hint="Only the area name is shown to others">
+          <Select aria-label="Your area" options={AREA_OPTIONS} placeholder="Choose your area" value={location.areaId ?? ''} onChange={(e) => onLocationChange({ ...location, areaId: e.target.value || null })} />
+        </FilterRow>
+        <FilterRow label="Distance" hint="Hard boundary">
+          <Select aria-label="Maximum distance" options={DISTANCE_OPTIONS} value={distanceValue} onChange={(e) => onLocationChange({ ...location, maxDistanceMiles: Number(e.target.value) })} />
+        </FilterRow>
+      </FilterGroup>
+      <FilterGroup title="Basics">
+        <FilterRow label="Age" strength={prefs.ageRange.strength} onStrength={(s) => onChange(withRange(prefs, 'ageRange', { strength: s }))}>
+          <RangeSelects label="Age" min={prefs.ageRange.min} max={prefs.ageRange.max} options={AGE_OPTIONS} onChange={(min, max) => onChange(withRange(prefs, 'ageRange', { min, max }))} />
+        </FilterRow>
+        <FilterRow label="Height" strength={prefs.height.strength} onStrength={(s) => onChange(withRange(prefs, 'height', { strength: s }))}>
+          <RangeSelects label="Height" min={prefs.height.min} max={prefs.height.max} options={HEIGHT_OPTIONS} onChange={(min, max) => onChange(withRange(prefs, 'height', { min, max }))} />
+        </FilterRow>
+      </FilterGroup>
+      <FilterGroup title="Background">{BACKGROUND_DIMENSIONS.map(multiRow)}</FilterGroup>
+      <FilterGroup title="Intent & lifestyle">{INTENT_DIMENSIONS.map(multiRow)}</FilterGroup>
+      <FilterGroup title="Interests">{multiRow(INTEREST_DIMENSION)}</FilterGroup>
     </div>
   );
 }

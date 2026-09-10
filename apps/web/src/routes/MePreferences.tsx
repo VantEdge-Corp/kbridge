@@ -47,12 +47,12 @@ export function MePreferences() {
   };
 
   return (
-    <div className="max-w-[560px]">
-      <PageHeader title="Discovery preferences" back="/me" />
-      <p className="text-body-sm text-text-muted mb-6">
-        Required excludes anyone who doesn&apos;t match. Preferred ranks matches first. Any leaves the dimension out. Nationality and
-        ethnicity only ever affect who you see when you set them here.
-      </p>
+    <div className="max-w-[720px]">
+      <PageHeader
+        title="Discovery preferences"
+        back="/me"
+        lede="Required excludes anyone who doesn't match. Preferred ranks matches first. Any leaves the dimension out."
+      />
       {loading || !prefs || !location ? (
         <LoadingBlock />
       ) : error ? (
@@ -65,7 +65,7 @@ export function MePreferences() {
               <Notice tone="danger">{saveError}</Notice>
             </div>
           ) : null}
-          <div className="mt-8 flex justify-end gap-3 pb-6">
+          <div className="mt-6 flex justify-end gap-3 pb-6">
             <Button variant="ghost" onClick={() => navigate('/me')} disabled={busy}>
               Cancel
             </Button>

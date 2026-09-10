@@ -3,6 +3,7 @@ import { longDate, type PublicApplicationStatus } from '@peaches/core';
 import { api } from '../lib/api';
 import { LinkButton } from '../components/Button';
 import { Notice } from '../components/Field';
+import { Group, GroupSection } from '../components/Group';
 import { LoadingBlock } from '../components/Loading';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useAsync } from '../hooks/useAsync';
@@ -54,21 +55,25 @@ export function Status() {
             Application received. Keep this link: it is the only way to check your status or create your account later.
           </Notice>
         ) : null}
-        <dl className="grid grid-cols-[120px_1fr] gap-y-2 text-body-sm">
-          <dt className="text-text-muted">Status</dt>
-          <dd className="text-text">{view.eyebrow}</dd>
-          <dt className="text-text-muted">Applicant</dt>
-          <dd className="text-text">{data.firstName}</dd>
-          <dt className="text-text-muted">Submitted</dt>
-          <dd className="text-text">{longDate(data.createdAt)}</dd>
-        </dl>
+        <Group>
+          <GroupSection>
+            <dl className="grid grid-cols-[120px_1fr] gap-y-2.5 text-body-sm">
+              <dt className="text-text-muted">Status</dt>
+              <dd className="text-text">{view.eyebrow}</dd>
+              <dt className="text-text-muted">Applicant</dt>
+              <dd className="text-text">{data.firstName}</dd>
+              <dt className="text-text-muted">Submitted</dt>
+              <dd className="text-text">{longDate(data.createdAt)}</dd>
+            </dl>
+          </GroupSection>
+        </Group>
         {data.status === 'approved' ? <LinkButton to={`/signup/${token}`}>Create your account</LinkButton> : null}
         {data.status === 'claimed' ? (
           <LinkButton to="/login" variant="secondary">
             Sign in
           </LinkButton>
         ) : null}
-        <p className="text-caption text-text-muted">
+        <p className="text-body-sm text-text-muted">
           Bookmark this page to return.{' '}
           <Link to="/" className="underline underline-offset-2 hover:text-text">
             Back to start

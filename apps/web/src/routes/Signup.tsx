@@ -4,6 +4,7 @@ import { api, errorMessage } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { Button, LinkButton } from '../components/Button';
 import { Checkbox, Input, Notice } from '../components/Field';
+import { Group, GroupSection } from '../components/Group';
 import { LoadingBlock } from '../components/Loading';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useAsync } from '../hooks/useAsync';
@@ -69,8 +70,10 @@ export function Signup() {
 
   return (
     <PublicFrame title={`Welcome, ${data.firstName}.`} lede="Choose a password to create your account. Your email is the one you applied with.">
+      <Group>
+        <GroupSection>
       <form onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
-        <Input label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} hint="Must match your admitted application" />
+        <Input label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} help="Must match your admitted application." />
         <Input label="Password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <Input label="Confirm password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         <Checkbox
@@ -94,8 +97,10 @@ export function Signup() {
         <Button type="submit" disabled={busy || problems.length > 0} className="w-full">
           {busy ? 'Creating account' : 'Create account'}
         </Button>
-        {problems.length > 0 && (password || confirm) ? <p className="text-caption text-text-muted">{problems[0]}</p> : null}
+        {problems.length > 0 && (password || confirm) ? <p className="text-body-sm text-text-muted">{problems[0]}</p> : null}
       </form>
+        </GroupSection>
+      </Group>
     </PublicFrame>
   );
 }

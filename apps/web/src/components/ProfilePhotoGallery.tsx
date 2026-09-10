@@ -7,11 +7,12 @@ export function ProfilePhotoGallery({ name, photos }: { name: string; photos: Re
   const current = photos[index] ?? photos[0];
   return (
     <div>
-      <div className="aspect-[3/4] w-full rounded-[14px] overflow-hidden border border-border bg-surface">
+      <div className="relative aspect-[3/4] w-full rounded-lg overflow-hidden bg-surface">
         {current ? <img src={current} alt={`${name}'s photo ${index + 1}`} className="h-full w-full object-cover" /> : <MonogramPortrait name={name} className="h-full w-full" fontSize={96} />}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-inset ring-image-ring" />
       </div>
       {photos.length > 1 ? (
-        <div className="mt-2 flex gap-2 overflow-x-auto" role="tablist" aria-label="Photos">
+        <div className="mt-3 flex gap-2 overflow-x-auto" role="tablist" aria-label="Photos">
           {photos.map((p, i) => (
             <button
               key={p}
@@ -20,7 +21,7 @@ export function ProfilePhotoGallery({ name, photos }: { name: string; photos: Re
               aria-selected={i === index}
               aria-label={`Photo ${i + 1}`}
               onClick={() => setIndex(i)}
-              className={`shrink-0 w-14 h-[74px] rounded-md overflow-hidden border ${i === index ? 'border-ivory' : 'border-border opacity-70 hover:opacity-100'}`}
+              className={`shrink-0 w-14 h-[74px] rounded-sm overflow-hidden motion focus-ring ${i === index ? 'ring-1 ring-ivory' : 'opacity-60 hover:opacity-100'}`}
             >
               <img src={p} alt="" className="h-full w-full object-cover" />
             </button>

@@ -57,11 +57,8 @@ export function MePhotos() {
   };
 
   return (
-    <div className="max-w-[640px]">
-      <PageHeader title="Photos" back="/me" />
-      <p className="text-body-sm text-text-muted mb-5">
-        Up to {LIMITS.photos} photos. The first is your portrait on cards. Clear, recent, and mostly of you reads best.
-      </p>
+    <div className="max-w-[720px]">
+      <PageHeader title="Photos" back="/me" lede={`Up to ${LIMITS.photos} photos. The first is your portrait on cards. Clear, recent, and mostly of you reads best.`} />
       {error ? (
         <div className="mb-4">
           <Notice tone="danger">{error}</Notice>
@@ -69,9 +66,10 @@ export function MePhotos() {
       ) : null}
       <div className="grid grid-cols-3 gap-3">
         {profile.photoPaths.map((path, i) => (
-          <div key={path} className="group relative aspect-[3/4] rounded-[12px] overflow-hidden border border-border bg-surface">
+          <div key={path} className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-surface">
             <img src={profile.photos[i]} alt={`Your photo ${i + 1}`} className="h-full w-full object-cover" />
-            {i === 0 ? <span className="absolute left-2 top-2 text-micro uppercase tracking-[1.2px] bg-canvas/80 text-text px-2 py-1 rounded">Portrait</span> : null}
+            <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-inset ring-image-ring" />
+            {i === 0 ? <span className="absolute left-2 top-2 text-micro uppercase tracking-[1.2px] bg-canvas/80 text-text px-2 py-1 rounded-sm">Portrait</span> : null}
             <div className="absolute inset-x-2 bottom-2 flex gap-1.5">
               {i !== 0 ? (
                 <Button size="sm" variant="secondary" className="flex-1 bg-canvas/85" disabled={busy} onClick={() => void makePrimary(path)}>
@@ -85,7 +83,7 @@ export function MePhotos() {
           </div>
         ))}
         {profile.photoPaths.length < LIMITS.photos ? (
-          <label className={`aspect-[3/4] rounded-[12px] border border-dashed border-border-strong flex flex-col items-center justify-center gap-1 text-text-muted hover:text-text hover:border-ivory cursor-pointer ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+          <label className={`aspect-[3/4] rounded-lg border border-dashed border-border-strong flex flex-col items-center justify-center gap-1 text-text-muted motion hover:text-text hover:border-ivory cursor-pointer ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
             <Icon name="plus" size={20} />
             <span className="text-caption">{busy ? 'Uploading' : 'Add photo'}</span>
             <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={busy} onChange={(e) => void add(e.target.files?.[0] ?? null)} />

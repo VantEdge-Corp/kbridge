@@ -23,6 +23,7 @@ import { PageHeader } from '../components/AppShell';
 import { Button, IconButton, LinkButton } from '../components/Button';
 import { Menu } from '../components/Dialog';
 import { EmptyState } from '../components/EmptyState';
+import { Group, GroupSection, ROW_HAIRLINE, rowInset } from '../components/Group';
 import { Notice } from '../components/Field';
 import { Icon } from '../components/icons';
 import { IntroductionNoteDialog } from '../components/IntroductionNoteDialog';
@@ -136,8 +137,8 @@ export function Profile() {
             {profile.bio ? <p className="mt-4 text-body text-text leading-relaxed whitespace-pre-wrap">{profile.bio}</p> : null}
           </section>
 
-          <section>
-            <SectionHeader title="Background" />
+          <Group>
+          <GroupSection eyebrow="Background">
             <ProfileMetadata
               items={[
                 { label: 'Work', value: profile.employmentDisplay },
@@ -150,18 +151,16 @@ export function Profile() {
                 { label: 'Area', value: profile.displayArea },
               ]}
             />
-          </section>
+          </GroupSection>
 
           {profile.relationshipIntent ? (
-            <section>
-              <SectionHeader title="Intent" />
+            <GroupSection eyebrow="Intent">
               <p className="text-body-sm text-text">{labelFor(RELATIONSHIP_INTENT_OPTIONS, profile.relationshipIntent)}</p>
-            </section>
+            </GroupSection>
           ) : null}
 
           {l.drinking || l.smoking || l.exercise || l.children ? (
-            <section>
-              <SectionHeader title="Lifestyle" />
+            <GroupSection eyebrow="Lifestyle">
               <ProfileMetadata
                 items={[
                   { label: 'Drinking', value: l.drinking && l.drinking !== 'prefer_not_to_say' ? labelFor(DRINKING_OPTIONS, l.drinking) : '' },
@@ -170,8 +169,9 @@ export function Profile() {
                   { label: 'Children', value: l.children && l.children !== 'prefer_not_to_say' ? labelFor(CHILDREN_OPTIONS, l.children) : '' },
                 ]}
               />
-            </section>
+            </GroupSection>
           ) : null}
+          </Group>
 
           {profile.interests.length > 0 ? (
             <section>
@@ -189,14 +189,16 @@ export function Profile() {
             {profile.publicVerificationBadges.length === 0 ? (
               <p className="text-body-sm text-text-muted">No verified details yet.</p>
             ) : (
-              <ul className="space-y-1.5">
-                {profile.publicVerificationBadges.map((d) => (
-                  <li key={d} className="flex items-center gap-2 text-body-sm text-text">
-                    <VerificationBadge dimension={d} />
-                    {VERIFICATION_LABEL[d]} confirmed by the committee
-                  </li>
-                ))}
-              </ul>
+              <Group>
+                <ul>
+                  {profile.publicVerificationBadges.map((d) => (
+                    <li key={d} className={`${ROW_HAIRLINE} flex items-center gap-3 px-4 py-3 text-body-sm text-text`} style={rowInset(44)}>
+                      <VerificationBadge dimension={d} size={18} />
+                      {VERIFICATION_LABEL[d]} confirmed by the committee
+                    </li>
+                  ))}
+                </ul>
+              </Group>
             )}
           </section>
 
@@ -205,16 +207,18 @@ export function Profile() {
             {data && data.posts.length === 0 ? (
               <p className="text-body-sm text-text-muted">Nothing posted yet.</p>
             ) : (
-              <ul className="space-y-3">
-                {data?.posts.map((p) => (
-                  <li key={p.id}>
-                    <Link to={`/post/${p.id}`} className="block border border-border rounded-md px-3.5 py-3 hover:bg-surface-hover">
-                      <p className="text-body-sm text-text line-clamp-3">{p.body}</p>
-                      <p className="mt-1 text-caption text-text-muted">{timeAgo(p.createdAt)}</p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <Group>
+                <ul>
+                  {data?.posts.map((p) => (
+                    <li key={p.id} className={ROW_HAIRLINE} style={rowInset(16)}>
+                      <Link to={`/post/${p.id}`} className="block px-4 py-3.5 motion hover:bg-surface-hover focus-ring">
+                        <p className="text-body-sm text-text line-clamp-3">{p.body}</p>
+                        <p className="mt-1 text-caption text-text-muted">{timeAgo(p.createdAt)}</p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Group>
             )}
           </section>
         </div>

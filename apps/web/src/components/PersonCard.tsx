@@ -16,29 +16,30 @@ export const PersonCard = memo(function PersonCard({ profile }: { profile: Publi
   return (
     <Link
       to={`/profile/${profile.id}`}
-      className="group block rounded-[12px] focus:outline-none focus-visible:ring-1 focus-visible:ring-border-strong"
+      className="group block rounded-lg focus-ring"
       aria-label={`${nameAge(profile.firstName, profile.age)}${verified ? ', verified' : ''}. ${cardMetadata(profile)}`}
       data-testid="person-card"
     >
-      <div className="aspect-[3/4] rounded-[12px] overflow-hidden bg-surface border border-border">
+      <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-surface motion group-hover:brightness-105">
         {photo ? (
-          <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+          <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover" />
         ) : (
           <MonogramPortrait name={profile.firstName} className="h-full w-full" fontSize={48} />
         )}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-inset ring-image-ring" />
       </div>
-      <div className="mt-2 flex items-center gap-1.5 min-w-0">
-        <span className="font-display text-name text-text truncate">{nameAge(profile.firstName, profile.age)}</span>
+      <div className="mt-2.5 flex items-center gap-1.5 min-w-0">
+        <span className="font-display text-name text-text truncate underline-offset-4 decoration-1 group-hover:underline">{nameAge(profile.firstName, profile.age)}</span>
         {verified ? <VerificationBadge /> : null}
       </div>
-      <p className="text-caption text-text-muted truncate">{cardMetadata(profile)}</p>
+      <p className="mt-0.5 text-caption text-text-muted truncate">{cardMetadata(profile)}</p>
     </Link>
   );
 });
 
 export function PersonGrid({ profiles }: { profiles: ReadonlyArray<PublicProfile> }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-5" data-testid="person-grid">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 md:gap-x-4" data-testid="person-grid">
       {profiles.map((p) => (
         <PersonCard key={p.id} profile={p} />
       ))}

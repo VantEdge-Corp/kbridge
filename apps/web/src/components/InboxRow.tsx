@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { ROW_HAIRLINE, rowInset } from './Group';
 import { Avatar } from './MonogramPortrait';
 import { VerificationBadge } from './VerificationBadge';
 
-/** Compact inbox row: 40px avatar, name, one secondary line, time, optional unread pill. */
+/** Compact inbox row inside a Group: 40px avatar, name, one secondary line, time, optional unread pill. */
 export function InboxRow({
   profileId,
   name,
@@ -12,6 +13,7 @@ export function InboxRow({
   secondary,
   time,
   unread = 0,
+  active = false,
   onClick,
   to,
   children,
@@ -24,6 +26,7 @@ export function InboxRow({
   secondary: ReactNode;
   time?: string;
   unread?: number;
+  active?: boolean;
   onClick?: () => void;
   to?: string;
   children?: ReactNode;
@@ -48,15 +51,15 @@ export function InboxRow({
       </div>
     </>
   );
-  const rowClass = 'flex items-center gap-3 flex-1 min-w-0 text-left min-h-[60px] py-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-border-strong rounded-md';
+  const rowClass = 'flex items-center gap-3 flex-1 min-w-0 text-left min-h-16 py-2 pr-4 rounded-md focus-ring';
   return (
-    <div className="border-b border-border last:border-b-0" data-testid={testId}>
-      <div className="flex items-center gap-3">
-        <Link to={`/profile/${profileId}`} aria-label={`${name}'s profile`} className="shrink-0 rounded-full focus:outline-none focus-visible:ring-1 focus-visible:ring-border-strong">
+    <div className={`${ROW_HAIRLINE} motion ${active ? 'bg-surface-elevated' : 'hover:bg-surface-hover'}`} style={rowInset(68)} data-testid={testId}>
+      <div className="flex items-center gap-3 pl-4">
+        <Link to={`/profile/${profileId}`} aria-label={`${name}'s profile`} className="shrink-0 rounded-full focus-ring">
           <Avatar name={name} src={photo} size={40} />
         </Link>
         {to ? (
-          <Link to={to} className={rowClass}>
+          <Link to={to} className={rowClass} aria-current={active ? 'page' : undefined}>
             {body}
           </Link>
         ) : (
@@ -65,7 +68,7 @@ export function InboxRow({
           </button>
         )}
       </div>
-      {children ? <div className="pl-[52px] pb-4">{children}</div> : null}
+      {children ? <div className="pl-[68px] pr-4 pb-4">{children}</div> : null}
     </div>
   );
 }

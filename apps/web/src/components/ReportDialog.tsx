@@ -72,7 +72,7 @@ export function ReportDialog({
       ) : (
         <div className="space-y-4">
           <Select label="Reason" options={REPORT_REASONS.map((r) => ({ value: r, label: r }))} value={reason} onChange={(e) => setReason(e.target.value)} />
-          <TextArea label="Details" hint="Optional" value={detail} onChange={(e) => setDetail(e.target.value)} rows={4} maxLength={1000} />
+          <TextArea label="Details" optional value={detail} onChange={(e) => setDetail(e.target.value)} rows={4} maxLength={1000} />
           {error ? <Notice tone="danger">{error}</Notice> : null}
         </div>
       )}

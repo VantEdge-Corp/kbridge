@@ -15,7 +15,6 @@ import { Feed } from './routes/Feed';
 import { PostNew } from './routes/PostNew';
 import { PostDetail } from './routes/PostDetail';
 import { Inbox } from './routes/Inbox';
-import { Chat } from './routes/Chat';
 import { Profile } from './routes/Profile';
 import { Me } from './routes/Me';
 import { MeEdit } from './routes/MeEdit';
@@ -65,11 +64,11 @@ export function App() {
               <Route path="/feed" element={<Feed />} />
               <Route path="/post/new" element={<PostNew />} />
               <Route path="/post/:id" element={<PostDetail />} />
-              <Route path="/inbox" element={<Inbox />} />
               <Route path="/profile/:id" element={<Profile />} />
             </Route>
             <Route element={<MemberLayout fullHeight />}>
-              <Route path="/chat/:matchId" element={<Chat />} />
+              <Route path="/inbox" element={<Inbox />} />
+              <Route path="/chat/:matchId" element={<Inbox />} />
             </Route>
             <Route element={<MemberLayout allowAdmin />}>
               <Route path="/me" element={<Me />} />

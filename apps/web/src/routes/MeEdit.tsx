@@ -38,7 +38,7 @@ import { Button } from '../components/Button';
 import { Checkbox, Input, Label, Notice, Select, TextArea, Toggle } from '../components/Field';
 import { LoadingBlock } from '../components/Loading';
 import { MultiSelect } from '../components/MultiSelect';
-import { SectionHeader } from '../components/SectionHeader';
+import { Group, GroupSection } from '../components/Group';
 import { useAsync } from '../hooks/useAsync';
 import { usePageTitle } from '../hooks/usePageTitle';
 
@@ -142,11 +142,12 @@ export function MeEdit() {
   if (error) return <Notice tone="danger">{error}</Notice>;
 
   return (
-    <div className="max-w-[640px]">
+    <div className="max-w-[720px]">
       <PageHeader title="Edit profile" back="/me" />
-      <form onSubmit={(e) => void onSubmit(e)} className="space-y-10" noValidate>
-        <section className="space-y-4">
-          <SectionHeader title="Basics" />
+      <form onSubmit={(e) => void onSubmit(e)} className="space-y-5" noValidate>
+        <Group>
+          <GroupSection eyebrow="Basics">
+          <div className="space-y-4">
           <div className="grid grid-cols-[1fr_120px] gap-3">
             <Input label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
             <Input label="Age" inputMode="numeric" value={age} onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, ''))} />
@@ -159,13 +160,18 @@ export function MeEdit() {
               <Checkbox label="Show" checked={hasHeight} onChange={(e) => setHasHeight(e.target.checked)} className="min-h-0 py-0" />
             </div>
           </div>
-          <Select label="Your area" hint="Private. Others see only the area name" options={AREA_OPTIONS} placeholder="Choose your area" value={areaId} onChange={(e) => setAreaId(e.target.value)} />
-          <Select label="Maximum distance" hint="Hard boundary for discovery" options={DISTANCE_OPTIONS} value={maxDistance} onChange={(e) => setMaxDistance(e.target.value)} />
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Select label="Your area" help="Private. Others see only the area name." options={AREA_OPTIONS} placeholder="Choose your area" value={areaId} onChange={(e) => setAreaId(e.target.value)} />
+            <Select label="Maximum distance" help="A hard boundary for discovery." options={DISTANCE_OPTIONS} value={maxDistance} onChange={(e) => setMaxDistance(e.target.value)} />
+          </div>
           <TextArea label="Bio" hint={`${bio.length}/${LIMITS.bioMax}`} maxLength={LIMITS.bioMax} rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
-        </section>
+          </div>
+          </GroupSection>
+        </Group>
 
-        <section className="space-y-4">
-          <SectionHeader title="Work" />
+        <Group>
+          <GroupSection eyebrow="Work">
+          <div className="space-y-4">
           <Input label="Occupation" value={employment.occupation} onChange={(e) => setEmployment((v) => ({ ...v, occupation: e.target.value }))} />
           <Input label="Employer" value={employment.employer} onChange={(e) => setEmployment((v) => ({ ...v, employer: e.target.value }))} />
           <Toggle label="Show employer on my profile" description="Occupation is always shown" checked={employment.publicEmployerDisplayEnabled} onChange={(v) => setEmployment((s) => ({ ...s, publicEmployerDisplayEnabled: v }))} />
@@ -174,10 +180,13 @@ export function MeEdit() {
             <Select label="Field" options={INDUSTRY_OPTIONS} placeholder="Choose a field" value={industry} onChange={(e) => setIndustry(e.target.value)} />
           </div>
           <Select label="Standing" options={STUDENT_STATUS_OPTIONS} placeholder="Student or professional" value={studentStatus} onChange={(e) => setStudentStatus(e.target.value)} />
-        </section>
+          </div>
+          </GroupSection>
+        </Group>
 
-        <section className="space-y-4">
-          <SectionHeader title="Education" />
+        <Group>
+          <GroupSection eyebrow="Education">
+          <div className="space-y-4">
           <Input label="School" value={education.school} onChange={(e) => setEducation((v) => ({ ...v, school: e.target.value }))} />
           <div className="grid sm:grid-cols-2 gap-3">
             <Select label="Degree level" options={DEGREE_LEVEL_OPTIONS} value={education.degreeLevel} onChange={(e) => setEducation((v) => ({ ...v, degreeLevel: e.target.value as DegreeLevel }))} />
@@ -188,16 +197,19 @@ export function MeEdit() {
             <Checkbox label="Currently enrolled" checked={education.currentlyEnrolled} onChange={(e) => setEducation((v) => ({ ...v, currentlyEnrolled: e.target.checked }))} />
           </div>
           <Toggle label="Show education on my profile" checked={education.publicDisplayEnabled} onChange={(v) => setEducation((s) => ({ ...s, publicDisplayEnabled: v }))} />
-        </section>
+          </div>
+          </GroupSection>
+        </Group>
 
-        <section className="space-y-4">
-          <SectionHeader title="Background" />
+        <Group>
+          <GroupSection eyebrow="Background">
+          <div className="space-y-4">
           <div>
             <Label>Nationality</Label>
             <MultiSelect label="Nationality" options={COUNTRY_OPTIONS} values={nationalities} onChange={setNationalities} searchable placeholder="Add one or more" />
           </div>
           <div>
-            <Label hint="Optional">Race / ethnicity</Label>
+            <Label optional>Race / ethnicity</Label>
             <MultiSelect label="Race / ethnicity" options={RACE_ETHNICITY_OPTIONS} values={preferNotToSay ? [] : raceEthnicities} onChange={setRaceEthnicities} placeholder={preferNotToSay ? 'Prefer not to say' : 'Add one or more'} />
             <Toggle label="Prefer not to say" description="Hides this field and keeps it out of matching entirely" checked={preferNotToSay} onChange={setPreferNotToSay} />
           </div>
@@ -205,10 +217,13 @@ export function MeEdit() {
             <Label>Languages</Label>
             <MultiSelect label="Languages" options={LANGUAGE_OPTIONS} values={languages} onChange={setLanguages} searchable placeholder="Add one or more" />
           </div>
-        </section>
+          </div>
+          </GroupSection>
+        </Group>
 
-        <section className="space-y-4">
-          <SectionHeader title="Intent & lifestyle" />
+        <Group>
+          <GroupSection eyebrow="Intent & lifestyle">
+          <div className="space-y-4">
           <Select label="Relationship intent" options={RELATIONSHIP_INTENT_OPTIONS} placeholder="Choose" value={intent} onChange={(e) => setIntent(e.target.value)} />
           <div className="grid sm:grid-cols-2 gap-3">
             <Select label="Drinking" options={DRINKING_OPTIONS} placeholder="Not set" value={drinking} onChange={(e) => setDrinking(e.target.value)} />
@@ -216,12 +231,17 @@ export function MeEdit() {
             <Select label="Exercise" options={EXERCISE_OPTIONS} placeholder="Not set" value={exercise} onChange={(e) => setExercise(e.target.value)} />
             <Select label="Children" options={CHILDREN_OPTIONS} placeholder="Not set" value={children} onChange={(e) => setChildren(e.target.value)} />
           </div>
-        </section>
+          </div>
+          </GroupSection>
+        </Group>
 
-        <section className="space-y-4">
-          <SectionHeader title="Interests" />
+        <Group>
+          <GroupSection eyebrow="Interests">
+          <div className="space-y-4">
           <MultiSelect label="Interests" options={INTEREST_OPTIONS} values={interests} onChange={setInterests} searchable max={LIMITS.interestsMax} placeholder={`Up to ${LIMITS.interestsMax}`} />
-        </section>
+          </div>
+          </GroupSection>
+        </Group>
 
         {saveError ? <Notice tone="danger">{saveError}</Notice> : null}
         <div className="flex justify-end gap-3 pb-6">

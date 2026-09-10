@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Button } from './Button';
 import { Dialog } from './Dialog';
 import { Icon } from './icons';
-import { inputClass } from './Field';
+import { CheckBox, checkboxInputClass, inputClass } from './Field';
 import { TagChip } from './TagChip';
 
 export interface MultiOption {
@@ -108,8 +108,10 @@ export function MultiSelect({
             const disabled = !checked && !!max && values.length >= max;
             return (
               <li key={o.value}>
-                <label className={`flex items-center gap-3 px-2 min-h-11 rounded-md cursor-pointer hover:bg-surface-hover ${disabled ? 'opacity-50' : ''}`}>
-                  <input type="checkbox" className="h-4 w-4 accent-[#f1ece2]" checked={checked} disabled={disabled} onChange={() => toggle(o.value)} />
+                <label className={`flex items-center gap-3 px-2 min-h-11 rounded-md cursor-pointer motion hover:bg-surface-hover ${disabled ? 'opacity-50' : ''}`}>
+                  <CheckBox>
+                    <input type="checkbox" className={checkboxInputClass} checked={checked} disabled={disabled} onChange={() => toggle(o.value)} />
+                  </CheckBox>
                   <span className="text-body text-text">{o.label}</span>
                 </label>
               </li>

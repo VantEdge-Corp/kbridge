@@ -98,9 +98,9 @@ export function Explore() {
           <Notice tone="danger">{saveError}</Notice>
         </div>
       ) : null}
-      <div className="md:grid md:grid-cols-[340px_1fr] md:gap-8">
+      <div className="md:grid md:grid-cols-[340px_1fr] md:gap-8 lg:gap-10">
         {isDesktop ? (
-          <aside className="md:sticky md:top-6 md:self-start md:max-h-[calc(100dvh-48px)] md:overflow-y-auto md:pr-2 md:-mr-2" aria-label="Filters">
+          <aside className="md:sticky md:top-8 md:self-start md:max-h-[calc(100dvh-64px)] md:overflow-y-auto md:pr-1 md:-mr-1" aria-label="Filters">
             {loading || !editor ? <LoadingBlock /> : editor}
           </aside>
         ) : null}

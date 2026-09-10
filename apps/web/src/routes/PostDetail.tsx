@@ -7,6 +7,7 @@ import { PageHeader } from '../components/AppShell';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import { Notice, TextArea } from '../components/Field';
+import { Group, GroupSection, ROW_HAIRLINE, rowInset } from '../components/Group';
 import { IntroductionNoteDialog } from '../components/IntroductionNoteDialog';
 import { LoadingBlock } from '../components/Loading';
 import { Avatar } from '../components/MonogramPortrait';
@@ -66,7 +67,7 @@ export function PostDetail() {
   };
 
   return (
-    <div className="max-w-[640px]">
+    <div className="max-w-[720px]">
       <PageHeader title="Post" back="/feed" />
       {loading ? (
         <LoadingBlock />
@@ -78,33 +79,37 @@ export function PostDetail() {
         <div className="space-y-5">
           <PostCard post={data.post} onToggleSave={(p) => void toggleSave(p)} onRequestConversation={setRequest} onReport={setReport} onDelete={(p) => void remove(p)} />
           {actionError ? <Notice tone="danger">{actionError}</Notice> : null}
-          <section aria-label="Comments" className="space-y-4">
-            {data.comments.length === 0 ? <p className="text-body-sm text-text-muted">No comments yet.</p> : null}
-            {data.comments.map((c) => (
-              <div key={c.id} className="flex gap-3">
-                <Link to={`/profile/${c.author.id}`} className="shrink-0 rounded-full">
-                  <Avatar name={c.author.firstName} src={c.author.photos[0] ?? null} size={28} />
-                </Link>
-                <div className="min-w-0">
-                  <p className="text-caption text-text-muted">
-                    <Link to={`/profile/${c.author.id}`} className="text-text hover:underline underline-offset-2">
-                      {c.author.firstName}
-                    </Link>{' '}
-                    · {timeAgo(c.createdAt)}
-                  </p>
-                  <p className="text-body-sm text-text whitespace-pre-wrap break-words">{c.body}</p>
+          <Group>
+            <section aria-label="Comments">
+              {data.comments.length === 0 ? <p className="px-4 py-4 text-body-sm text-text-muted">No comments yet.</p> : null}
+              {data.comments.map((c) => (
+                <div key={c.id} className={`${ROW_HAIRLINE} flex gap-3 px-4 py-3.5`} style={rowInset(56)}>
+                  <Link to={`/profile/${c.author.id}`} className="shrink-0 rounded-full focus-ring">
+                    <Avatar name={c.author.firstName} src={c.author.photos[0] ?? null} size={28} />
+                  </Link>
+                  <div className="min-w-0">
+                    <p className="text-caption text-text-muted">
+                      <Link to={`/profile/${c.author.id}`} className="text-text hover:underline underline-offset-4 decoration-1">
+                        {c.author.firstName}
+                      </Link>{' '}
+                      · {timeAgo(c.createdAt)}
+                    </p>
+                    <p className="mt-0.5 text-body-sm text-text whitespace-pre-wrap break-words">{c.body}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </section>
-          <form onSubmit={(e) => void addComment(e)} className="space-y-3">
-            <TextArea label="Add a comment" hint={`${comment.length}/${LIMITS.commentBodyMax}`} maxLength={LIMITS.commentBodyMax} rows={2} value={comment} onChange={(e) => setComment(e.target.value)} />
-            <div className="flex justify-end">
-              <Button type="submit" size="sm" disabled={busy || !comment.trim()}>
-                {busy ? 'Posting' : 'Comment'}
-              </Button>
-            </div>
-          </form>
+              ))}
+            </section>
+            <GroupSection>
+              <form onSubmit={(e) => void addComment(e)} className="space-y-3">
+                <TextArea label="Add a comment" hint={`${comment.length}/${LIMITS.commentBodyMax}`} maxLength={LIMITS.commentBodyMax} rows={2} value={comment} onChange={(e) => setComment(e.target.value)} />
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm" disabled={busy || !comment.trim()}>
+                    {busy ? 'Posting' : 'Comment'}
+                  </Button>
+                </div>
+              </form>
+            </GroupSection>
+          </Group>
         </div>
       )}
       {request ? <IntroductionNoteDialog open onClose={() => setRequest(null)} recipient={request.author} postId={request.id} /> : null}

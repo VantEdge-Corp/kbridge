@@ -39,7 +39,7 @@ function MemberCard({ member, onChanged }: { member: AdminMember; onChanged: () 
   };
   const pending = VERIFICATION_DIMENSIONS.filter((d) => member.verification[d] === 'pending');
   return (
-    <article className={`border rounded-lg bg-surface p-4 ${member.suspended ? 'border-danger/60' : 'border-border'}`} data-testid="member-card">
+    <article className={`border rounded-lg bg-surface p-5 ${member.suspended ? 'border-danger/60' : 'border-border'}`} data-testid="member-card">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="font-display text-name text-text">{member.firstName}</span>
         <span className="text-caption text-text-muted">{member.memberNumber}</span>
@@ -105,7 +105,7 @@ export function AdminMembers() {
   const { data, loading, error, reload } = useAsync(() => api.verification.admin.listMembers({ search, pendingOnly }), [search, pendingOnly]);
   return (
     <div data-testid="admin-members">
-      <h1 className="font-display text-title text-text mb-4">Members</h1>
+      <h1 className="font-display text-title leading-[34px] text-text mb-6">Members</h1>
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="relative max-w-sm flex-1">
           <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />

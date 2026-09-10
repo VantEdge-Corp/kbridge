@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useMember } from '../auth/AuthProvider';
 import { PageHeader } from '../components/AppShell';
+import { Group } from '../components/Group';
 import { SettingsRow } from '../components/SettingsRow';
 import { usePageTitle } from '../hooks/usePageTitle';
 
@@ -23,12 +24,14 @@ export function Settings() {
   const { signOut, setAdminAsMember } = useAuth();
   const navigate = useNavigate();
   return (
-    <div className="max-w-[640px]" data-testid="settings">
+    <div className="max-w-[720px]" data-testid="settings">
       <PageHeader title="Settings" back="/me" />
-      <section>
+      <Group>
         {SETTINGS_SECTIONS.map((s) => (
           <SettingsRow key={s.slug} to={s.slug === 'discovery-preferences' ? '/me/preferences' : `/settings/${s.slug}`} icon={s.icon} label={s.label} />
         ))}
+      </Group>
+      <Group className="mt-4">
         {profile.isAdmin ? (
           <SettingsRow
             icon="clipboard"
@@ -48,7 +51,7 @@ export function Settings() {
           }}
           trailing={<span />}
         />
-      </section>
+      </Group>
     </div>
   );
 }

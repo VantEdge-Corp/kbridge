@@ -12,4 +12,8 @@ export function useMediaQuery(query: string): boolean {
   return matches;
 }
 
+/** The left rail and the Explore sidebar appear from 768px. */
 export const useIsDesktop = () => useMediaQuery('(min-width: 768px)');
+
+/** The two-pane inbox appears from 1024px. */
+export const useIsWide = () => useMediaQuery('(min-width: 1024px)');

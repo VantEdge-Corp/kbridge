@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { messageTime, type Message } from '@peaches/core';
 import { api, errorMessage } from '../lib/api';
 import { useMember } from '../auth/AuthProvider';
@@ -14,8 +14,12 @@ import { VerificationBadge } from '../components/VerificationBadge';
 import { useAsync } from '../hooks/useAsync';
 import { usePageTitle } from '../hooks/usePageTitle';
 
-export function Chat() {
-  const { matchId = '' } = useParams();
+/**
+ * One conversation. Fills its container's height: header, scrolling
+ * messages, composer. `showBack` adds the back arrow used on narrow screens,
+ * where the pane is the whole page.
+ */
+export function ChatPane({ matchId, showBack = false }: { matchId: string; showBack?: boolean }) {
   const { user } = useMember();
   const navigate = useNavigate();
   const { data, loading, error, setData } = useAsync(() => api.connections.get(matchId, user.id), [matchId, user.id]);
@@ -81,17 +85,20 @@ export function Chat() {
   }
 
   return (
-    <div className="flex flex-col h-full" data-testid="chat">
+    <div className="flex flex-col h-full min-h-0" data-testid="chat">
       <header className="flex items-center gap-3 h-16 border-b border-border shrink-0">
-        <Link to="/inbox" aria-label="Back to inbox" className="-ml-2 w-10 h-10 inline-flex items-center justify-center rounded-md text-text-secondary hover:text-text hover:bg-surface-hover">
-          <Icon name="arrowLeft" />
-        </Link>
-        <Link to={`/profile/${counterpart.id}`} className="flex items-center gap-3 min-w-0 rounded-md">
+        {showBack ? (
+          <Link to="/inbox" aria-label="Back to inbox" className="-ml-2 w-10 h-10 inline-flex items-center justify-center rounded-md text-text-secondary motion hover:text-text hover:bg-surface-hover focus-ring">
+            <Icon name="arrowLeft" />
+          </Link>
+        ) : null}
+        <Link to={`/profile/${counterpart.id}`} className="flex items-center gap-3 min-w-0 rounded-md focus-ring">
           <Avatar name={counterpart.firstName} src={counterpart.photos[0] ?? null} size={36} />
           <span className="flex items-center gap-1.5 min-w-0">
             <span className="text-body text-text font-medium truncate">{counterpart.firstName}</span>
             {counterpart.publicVerificationBadges.length > 0 ? <VerificationBadge /> : null}
           </span>
+          <span className="hidden sm:inline text-caption text-text-muted">{counterpart.displayArea}</span>
         </Link>
         <div className="relative ml-auto">
           <IconButton aria-label="More" onClick={() => setMenu((m) => !m)}>
@@ -109,10 +116,10 @@ export function Chat() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto py-4 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto py-5 space-y-2">
         {data.connection.introductionNote ? (
-          <div className="mb-4 border border-border rounded-lg bg-surface px-4 py-3">
-            <p className="text-micro uppercase tracking-[1.2px] text-text-muted mb-1">{data.connection.introducedBy === 'viewer' ? 'Your introduction' : `${counterpart.firstName}'s introduction`}</p>
+          <div className="mb-5 bg-surface border border-border rounded-lg px-4 py-3.5">
+            <p className="text-micro uppercase tracking-[1.2px] text-text-muted mb-1.5">{data.connection.introducedBy === 'viewer' ? 'Your introduction' : `${counterpart.firstName}'s introduction`}</p>
             <p className="text-body-sm text-text-secondary whitespace-pre-wrap">{data.connection.introductionNote}</p>
           </div>
         ) : null}
@@ -121,9 +128,9 @@ export function Chat() {
           const mine = m.senderId === user.id;
           return (
             <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[78%] rounded-lg px-3.5 py-2.5 ${mine ? 'bg-surface-elevated' : 'bg-surface border border-border'}`}>
+              <div className={`max-w-[78%] px-4 py-2.5 ${mine ? 'bg-surface-elevated rounded-lg rounded-br-sm' : 'bg-surface border border-border rounded-lg rounded-bl-sm'}`}>
                 <p className="text-body text-text whitespace-pre-wrap break-words">{m.body}</p>
-                <p className={`mt-1 text-micro ${mine ? 'text-text-muted text-right' : 'text-text-muted'}`}>{messageTime(m.createdAt)}</p>
+                <p className={`mt-1 text-micro text-text-muted ${mine ? 'text-right' : ''}`}>{messageTime(m.createdAt)}</p>
               </div>
             </div>
           );

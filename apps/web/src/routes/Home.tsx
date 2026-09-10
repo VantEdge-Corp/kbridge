@@ -46,10 +46,10 @@ export function Home() {
 
   return (
     <div>
-      <header className="flex items-center justify-between h-11 mb-3">
+      <header className="flex items-center justify-between h-10 mb-4">
         <Wordmark />
       </header>
-      <SegmentedTabs segments={HOME_SECTIONS} value={section} onChange={setSection} className="mb-5" />
+      <SegmentedTabs segments={HOME_SECTIONS} value={section} onChange={setSection} className="mb-6" />
       {data && !data.areaId ? (
         <div className="mb-5">
           <Notice>

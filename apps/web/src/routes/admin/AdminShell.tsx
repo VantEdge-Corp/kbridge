@@ -16,7 +16,7 @@ export function AdminShell() {
   const navigate = useNavigate();
   return (
     <div className="min-h-dvh flex flex-col">
-      <header className="h-16 px-4 md:px-6 flex items-center justify-between gap-3 border-b border-border">
+      <header className="sticky top-0 z-30 h-16 px-4 md:px-8 flex items-center justify-between gap-3 border-b border-border/60 bg-canvas/80 backdrop-blur-md">
         <div className="flex items-center gap-3 min-w-0">
           <Wordmark size={16} />
           <span className="hidden sm:inline text-micro uppercase tracking-[1.2px] text-text-muted">Committee</span>
@@ -44,14 +44,14 @@ export function AdminShell() {
               key={a.to}
               to={a.to}
               end={a.end}
-              className={({ isActive }) => `flex items-center gap-3 h-11 px-3 rounded-md text-body-sm ${isActive ? 'bg-surface text-ivory' : 'text-text-muted hover:text-text-secondary'}`}
+              className={({ isActive }) => `flex items-center gap-3 h-10 px-3 rounded-md text-body-sm motion focus-ring ${isActive ? 'bg-surface-elevated text-ivory' : 'text-text-muted hover:text-text-secondary hover:bg-surface-hover'}`}
             >
               <Icon name={a.icon} size={18} />
               {a.label}
             </NavLink>
           ))}
         </nav>
-        <main className="flex-1 min-w-0 px-4 md:px-6 py-5 max-w-[1080px]">
+        <main className="flex-1 min-w-0 px-4 md:px-8 py-6 md:py-8 max-w-[1080px]">
           <Outlet />
         </main>
       </div>

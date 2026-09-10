@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { homeFor } from '../auth/guards';
 import { LinkButton } from '../components/Button';
 import { Eyebrow } from '../components/Field';
+import { Group } from '../components/Group';
 import { Wordmark } from '../components/Wordmark';
 import { usePageTitle } from '../hooks/usePageTitle';
 
@@ -25,17 +26,18 @@ export function Landing() {
   const { user, profile, adminAsMember } = useAuth();
   const signedIn = !!user && !!profile;
   return (
-    <div className="min-h-dvh flex flex-col">
-      <header className="h-16 px-5 md:px-10 flex items-center justify-between">
+    <div className="relative min-h-dvh flex flex-col">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[720px] hero-glow" />
+      <header className="sticky top-0 z-30 h-16 px-5 md:px-10 flex items-center justify-between bg-canvas/80 backdrop-blur-md border-b border-border/60">
         <Wordmark />
         <nav className="flex items-center gap-5 text-body-sm">
           {signedIn ? (
-            <Link to={homeFor(profile, adminAsMember)} className="text-text-secondary hover:text-text">
+            <Link to={homeFor(profile, adminAsMember)} className="text-text-secondary hover:text-text motion">
               Open {BRAND.name}
             </Link>
           ) : (
             <>
-              <Link to="/login" className="text-text-secondary hover:text-text">
+              <Link to="/login" className="text-text-secondary hover:text-text motion">
                 Sign in
               </Link>
               <LinkButton to="/apply" size="sm">
@@ -46,55 +48,61 @@ export function Landing() {
         </nav>
       </header>
 
-      <main className="flex-1 w-full max-w-[960px] mx-auto px-5 md:px-10">
-        <section className="pt-16 md:pt-28 pb-16 md:pb-24">
-          <Eyebrow className="mb-4">{BRAND.market}</Eyebrow>
-          <h1 className="font-display text-[40px] md:text-[60px] leading-[1.04] text-text max-w-[12ch]">{BRAND.tagline}</h1>
-          <p className="mt-6 text-body md:text-subheading text-text-secondary max-w-[54ch] leading-relaxed">
-            {BRAND.name} is a verified, application-based way to meet people in {BRAND.market}. It is intentional, discreet, and for
-            adults who would rather be introduced than browsed. Membership is by application, reviewed by a committee, and
-            every profile can be verified one dimension at a time.
-          </p>
-          <div className="mt-8 flex items-center gap-5">
-            <LinkButton to="/apply">Apply</LinkButton>
-            {!signedIn ? (
-              <Link to="/login" className="text-body text-text-secondary hover:text-text underline-offset-4 hover:underline">
-                Sign in
-              </Link>
-            ) : null}
+      <main className="flex-1 w-full max-w-[1120px] mx-auto px-5 md:px-8">
+        <section className="relative pt-20 md:pt-32 pb-16 md:pb-24">
+          <div className="max-w-[720px]">
+            <Eyebrow className="mb-5">{BRAND.market}</Eyebrow>
+            <h1 className="font-display text-[44px] md:text-[64px] leading-[1.02] tracking-[-0.01em] text-text">{BRAND.tagline}</h1>
+            <p className="mt-6 text-body md:text-subheading text-text-secondary max-w-[54ch] leading-relaxed">
+              {BRAND.name} is a verified, application-based way to meet people in {BRAND.market}. It is intentional, discreet, and for
+              adults who would rather be introduced than browsed. Membership is by application, reviewed by a committee, and
+              every profile can be verified one dimension at a time.
+            </p>
+            <div className="mt-8 flex items-center gap-3">
+              <LinkButton to="/apply">Apply</LinkButton>
+              {!signedIn ? (
+                <LinkButton to="/login" variant="secondary">
+                  Sign in
+                </LinkButton>
+              ) : null}
+            </div>
           </div>
         </section>
 
-        <section className="py-12 md:py-16 border-t border-border">
-          <Eyebrow className="mb-6">How admission works</Eyebrow>
-          <ol className="grid md:grid-cols-3 gap-8">
-            {STEPS.map((s) => (
-              <li key={s.n}>
-                <p className="font-display text-heading text-text-muted">{s.n}</p>
-                <p className="mt-2 font-display text-subheading text-text">{s.title}</p>
-                <p className="mt-2 text-body-sm text-text-secondary leading-relaxed">{s.body}</p>
-              </li>
-            ))}
-          </ol>
+        <section className="pb-16 md:pb-24">
+          <Eyebrow className="mb-4">How admission works</Eyebrow>
+          <Group>
+            <ol className="grid md:grid-cols-3 gap-px bg-border">
+              {STEPS.map((s) => (
+                <li key={s.n} className="bg-surface p-6">
+                  <p className="font-display text-heading text-text-muted">{s.n}</p>
+                  <p className="mt-3 font-display text-subheading text-text">{s.title}</p>
+                  <p className="mt-2 text-body-sm text-text-secondary leading-relaxed">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+          </Group>
         </section>
 
-        <section className="py-12 md:py-16 border-t border-border">
-          <Eyebrow className="mb-6">What verification means</Eyebrow>
+        <section className="pb-16 md:pb-24">
+          <Eyebrow className="mb-4">What verification means</Eyebrow>
           <p className="text-body text-text-secondary max-w-[60ch] leading-relaxed">
             Verification is not a single checkmark. Each of four dimensions is reviewed on its own by the committee, and a
             profile shows only the ones that have been confirmed. We do not collect government IDs or biometric data.
           </p>
-          <dl className="mt-8 grid sm:grid-cols-2 gap-x-8 gap-y-5">
-            {VERIFICATION_DIMENSIONS.map((d) => (
-              <div key={d} className="border-l border-border pl-4">
-                <dt className="text-body text-text">{VERIFICATION_LABEL[d]}</dt>
-                <dd className="text-body-sm text-text-muted">{VERIFICATION_COPY[d]}</dd>
-              </div>
-            ))}
-          </dl>
+          <Group className="mt-6">
+            <dl className="grid sm:grid-cols-2 gap-px bg-border">
+              {VERIFICATION_DIMENSIONS.map((d) => (
+                <div key={d} className="bg-surface p-5">
+                  <dt className="text-body text-text">{VERIFICATION_LABEL[d]}</dt>
+                  <dd className="mt-1 text-body-sm text-text-muted">{VERIFICATION_COPY[d]}</dd>
+                </div>
+              ))}
+            </dl>
+          </Group>
         </section>
 
-        <section className="py-12 md:py-16 border-t border-border">
+        <section className="pb-20 md:pb-28">
           <div className="max-w-[60ch]">
             <p className="font-display text-heading text-text leading-snug">
               Discreet by design. At a glance, {BRAND.name} looks like a members&apos; app. In use, it is about meeting people well.
@@ -110,15 +118,15 @@ export function Landing() {
         </section>
       </main>
 
-      <footer className="h-16 px-5 md:px-10 flex items-center justify-between border-t border-border text-caption text-text-muted">
+      <footer className="py-8 px-5 md:px-10 flex items-center justify-between border-t border-border text-caption text-text-muted">
         <span>
           &copy; {new Date().getFullYear()} {BRAND.name} · {BRAND.market}
         </span>
         <nav className="flex gap-5">
-          <Link to="/privacy" className="hover:text-text">
+          <Link to="/privacy" className="hover:text-text motion">
             Privacy
           </Link>
-          <Link to="/terms" className="hover:text-text">
+          <Link to="/terms" className="hover:text-text motion">
             Terms
           </Link>
         </nav>

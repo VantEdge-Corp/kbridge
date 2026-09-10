@@ -33,7 +33,7 @@ function ReportCard({ report, onChanged }: { report: Report; onChanged: () => vo
     }
   };
   return (
-    <article className="border border-border rounded-lg bg-surface p-4">
+    <article className="border border-border rounded-lg bg-surface p-5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="font-display text-name text-text">{report.reported.firstName}</span>
         <span className="text-body-sm text-text-muted">reported by {report.reporter?.firstName ?? 'a former member'}</span>
@@ -67,7 +67,7 @@ export function AdminReports() {
   const visible = data?.filter((r) => tab === 'all' || r.status === tab) ?? [];
   return (
     <div data-testid="admin-reports">
-      <h1 className="font-display text-title text-text mb-4">Reports</h1>
+      <h1 className="font-display text-title leading-[34px] text-text mb-6">Reports</h1>
       <SegmentedTabs segments={TABS} value={tab} onChange={setTab} className="mb-4" />
       {loading ? (
         <LoadingBlock />

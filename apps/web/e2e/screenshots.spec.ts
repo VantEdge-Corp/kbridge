@@ -18,6 +18,12 @@ for (const width of WIDTHS) {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await shoot(page, 'landing', width);
+    await page.goto('/apply');
+    await page.waitForLoadState('networkidle');
+    await shoot(page, 'apply', width);
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+    await shoot(page, 'login', width);
     await login(page, REVIEWER);
     await page.waitForLoadState('networkidle');
     await shoot(page, 'home', width);
@@ -45,6 +51,9 @@ for (const width of WIDTHS) {
     await page.goto('/me');
     await page.waitForLoadState('networkidle');
     await shoot(page, 'me', width);
+    await page.goto('/me/edit');
+    await page.waitForLoadState('networkidle');
+    await shoot(page, 'me-edit', width);
     await page.goto('/settings');
     await page.waitForLoadState('networkidle');
     await shoot(page, 'settings', width);

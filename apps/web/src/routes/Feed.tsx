@@ -62,7 +62,7 @@ export function Feed() {
   );
 
   return (
-    <div className="max-w-[640px]">
+    <div className="max-w-[720px]">
       <PageHeader
         title="Feed"
         actions={

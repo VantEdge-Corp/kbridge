@@ -18,33 +18,31 @@ export function AppShell({ children, fullHeight = false }: { children: ReactNode
   return (
     <div className="min-h-dvh md:pl-[76px] pb-16 md:pb-0">
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[76px] flex-col items-center border-r border-border bg-canvas py-4 z-30">
-        <Link to="/home" aria-label="Peaches home" className="font-display text-ivory text-[22px] h-11 flex items-center">
+        <Link to="/home" aria-label="Peaches home" className="font-display text-ivory text-[22px] h-10 w-10 flex items-center justify-center rounded-md focus-ring">
           P
         </Link>
-        <nav aria-label="Primary" className="mt-3 w-full px-2 flex flex-col gap-1">
+        <nav aria-label="Primary" className="mt-4 w-full px-2 flex flex-col gap-1.5">
           {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 h-14 rounded-md text-micro tracking-wide focus:outline-none focus-visible:ring-1 focus-visible:ring-border-strong ${
-                  isActive ? 'text-ivory bg-surface' : 'text-text-muted hover:text-text-secondary'
-                }`
-              }
-            >
-              <Icon name={item.icon} size={20} />
-              <span>{item.label}</span>
+            <NavLink key={item.to} to={item.to} className="group flex flex-col items-center gap-1 py-1 rounded-md focus-ring">
+              {({ isActive }) => (
+                <>
+                  <span className={`w-10 h-10 rounded-md flex items-center justify-center motion ${isActive ? 'bg-surface-elevated text-ivory' : 'text-text-muted group-hover:bg-surface-hover group-hover:text-text-secondary'}`}>
+                    <Icon name={item.icon} size={20} />
+                  </span>
+                  <span className={`text-micro ${isActive ? 'text-ivory' : 'text-text-muted'}`}>{item.label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
         {profile ? (
-          <NavLink to="/me" aria-label="Your profile" className="mt-auto rounded-full focus:outline-none focus-visible:ring-1 focus-visible:ring-border-strong">
+          <NavLink to="/me" aria-label="Your profile" className="mt-auto rounded-full focus-ring">
             <Avatar name={profile.firstName} src={profile.photos[0] ?? null} size={32} />
           </NavLink>
         ) : null}
       </aside>
 
-      <main className={`mx-auto w-full max-w-[1120px] px-4 md:px-6 ${fullHeight ? 'h-[calc(100dvh-64px)] md:h-dvh py-0' : 'py-4 md:py-6'}`}>{children}</main>
+      <main className={`mx-auto w-full max-w-[1120px] px-4 md:px-8 ${fullHeight ? 'h-[calc(100dvh-64px)] md:h-dvh py-0' : 'py-6 md:py-8'}`}>{children}</main>
 
       <nav
         aria-label="Primary"
@@ -56,7 +54,7 @@ export function AppShell({ children, fullHeight = false }: { children: ReactNode
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center gap-1 h-16 text-micro ${isActive ? 'text-ivory' : 'text-text-muted'}`
+              `flex-1 flex flex-col items-center justify-center gap-1 h-16 text-micro motion ${isActive ? 'text-ivory' : 'text-text-muted'}`
             }
           >
             <Icon name={item.icon} size={20} />
@@ -68,22 +66,23 @@ export function AppShell({ children, fullHeight = false }: { children: ReactNode
   );
 }
 
-/** Page title in Georgia with optional right-side actions. */
-export function PageHeader({ title, eyebrow, actions, back }: { title: ReactNode; eyebrow?: ReactNode; actions?: ReactNode; back?: string }) {
+/** Page title in Georgia with an optional subtitle and right-side actions. */
+export function PageHeader({ title, eyebrow, lede, actions, back }: { title: ReactNode; eyebrow?: ReactNode; lede?: ReactNode; actions?: ReactNode; back?: string }) {
   return (
-    <header className="flex items-start justify-between gap-4 mb-5">
+    <header className="flex items-start justify-between gap-4 mb-6">
       <div className="min-w-0 flex items-start gap-2">
         {back ? (
-          <Link to={back} aria-label="Back" className="mt-1 -ml-2 w-10 h-10 inline-flex items-center justify-center rounded-md text-text-secondary hover:text-text hover:bg-surface-hover">
+          <Link to={back} aria-label="Back" className="mt-1 -ml-2 w-10 h-10 inline-flex items-center justify-center rounded-md text-text-secondary motion hover:text-text hover:bg-surface-hover focus-ring">
             <Icon name="arrowLeft" />
           </Link>
         ) : null}
         <div className="min-w-0">
-          {eyebrow ? <p className="text-micro uppercase tracking-[1.2px] text-text-muted mb-1">{eyebrow}</p> : null}
-          <h1 className="font-display text-title leading-tight text-text truncate">{title}</h1>
+          {eyebrow ? <p className="text-micro uppercase tracking-[1.2px] text-text-muted mb-1.5">{eyebrow}</p> : null}
+          <h1 className="font-display text-title leading-[34px] text-text truncate">{title}</h1>
+          {lede ? <p className="mt-2 text-body text-text-secondary">{lede}</p> : null}
         </div>
       </div>
-      {actions ? <div className="flex items-center gap-2 shrink-0">{actions}</div> : null}
+      {actions ? <div className="flex items-center gap-2 shrink-0 pt-0.5">{actions}</div> : null}
     </header>
   );
 }

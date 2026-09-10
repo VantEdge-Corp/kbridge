@@ -4,7 +4,7 @@ import { AREAS, BRAND, LEGAL_VERSIONS, LIMITS, isValidEmail, isValidLinkedin } f
 import { api, errorMessage } from '../lib/api';
 import { Button } from '../components/Button';
 import { Checkbox, Input, Notice, Select, TextArea } from '../components/Field';
-import { SectionHeader } from '../components/SectionHeader';
+import { Group, GroupSection } from '../components/Group';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { PublicFrame } from './PublicFrame';
 
@@ -110,7 +110,7 @@ export function Apply() {
       title="Apply for membership"
       lede={`A few minutes. Every application is read by a person, and nothing here is shown publicly. You will get a link to check your status.`}
     >
-      <form onSubmit={(e) => void onSubmit(e)} noValidate className="space-y-8" data-testid="apply-form">
+      <form onSubmit={(e) => void onSubmit(e)} noValidate className="space-y-6" data-testid="apply-form">
         <div className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden" aria-hidden="true">
           <label>
             Do not fill this field
@@ -118,48 +118,44 @@ export function Apply() {
           </label>
         </div>
 
-        <section>
-          <SectionHeader title="Contact" />
-          <div className="space-y-4">
-            <Input label="Email" type="email" autoComplete="email" value={form.email} onChange={(e) => set('email', e.target.value)} error={show('email')} />
-            <div className="grid grid-cols-[1fr_120px] gap-3">
-              <Input label="First name" autoComplete="given-name" value={form.firstName} onChange={(e) => set('firstName', e.target.value)} error={show('firstName')} />
-              <Input label="Age" inputMode="numeric" value={form.age} onChange={(e) => set('age', digits(e.target.value))} error={show('age')} />
+        <Group>
+          <GroupSection eyebrow="Contact">
+            <div className="space-y-4">
+              <Input label="Email" type="email" autoComplete="email" value={form.email} onChange={(e) => set('email', e.target.value)} error={show('email')} />
+              <div className="grid grid-cols-[1fr_120px] gap-3">
+                <Input label="First name" autoComplete="given-name" value={form.firstName} onChange={(e) => set('firstName', e.target.value)} error={show('firstName')} />
+                <Input label="Age" inputMode="numeric" value={form.age} onChange={(e) => set('age', digits(e.target.value))} error={show('age')} />
+              </div>
+              <Select label="Area" help="Only the area name is ever shown to other members." options={AREA_OPTIONS} placeholder="Choose your area" value={form.areaId} onChange={(e) => set('areaId', e.target.value)} error={show('areaId')} />
             </div>
-            <Select label="Area" hint="Only the area name is ever shown" options={AREA_OPTIONS} placeholder="Choose your area" value={form.areaId} onChange={(e) => set('areaId', e.target.value)} error={show('areaId')} />
-          </div>
-        </section>
+          </GroupSection>
 
-        <section>
-          <SectionHeader title="Work" />
-          <div className="space-y-4">
-            <Input label="Occupation" placeholder="e.g. Product designer" value={form.occupation} onChange={(e) => set('occupation', e.target.value)} error={show('occupation')} />
-            <div className="grid grid-cols-[1fr_140px] gap-3">
-              <Input label="Employer" hint="Optional" value={form.employer} onChange={(e) => set('employer', e.target.value)} />
-              <Input label="Years" inputMode="numeric" value={form.yearsExperience} onChange={(e) => set('yearsExperience', digits(e.target.value))} error={show('yearsExperience')} />
+          <GroupSection eyebrow="Work">
+            <div className="space-y-4">
+              <Input label="Occupation" placeholder="e.g. Product designer" value={form.occupation} onChange={(e) => set('occupation', e.target.value)} error={show('occupation')} />
+              <div className="grid grid-cols-[1fr_140px] gap-3">
+                <Input label="Employer" optional value={form.employer} onChange={(e) => set('employer', e.target.value)} />
+                <Input label="Years" inputMode="numeric" value={form.yearsExperience} onChange={(e) => set('yearsExperience', digits(e.target.value))} error={show('yearsExperience')} />
+              </div>
+              <Input label="LinkedIn" optional type="url" placeholder="linkedin.com/in/you" value={form.linkedinUrl} onChange={(e) => set('linkedinUrl', e.target.value)} error={show('linkedinUrl')} />
             </div>
-            <Input label="LinkedIn" hint="Optional" type="url" placeholder="linkedin.com/in/you" value={form.linkedinUrl} onChange={(e) => set('linkedinUrl', e.target.value)} error={show('linkedinUrl')} />
-          </div>
-        </section>
+          </GroupSection>
 
-        <section>
-          <SectionHeader title="Education" />
-          <div className="grid grid-cols-[1fr_1fr] gap-3">
-            <Input label="School" hint="Optional" value={form.school} onChange={(e) => set('school', e.target.value)} />
-            <Input label="Degree" hint="Optional" placeholder="e.g. M.S. Computer Science" value={form.degree} onChange={(e) => set('degree', e.target.value)} />
-          </div>
-        </section>
+          <GroupSection eyebrow="Education">
+            <div className="grid grid-cols-[1fr_1fr] gap-3">
+              <Input label="School" optional value={form.school} onChange={(e) => set('school', e.target.value)} />
+              <Input label="Degree" optional placeholder="e.g. B.S. Biology" value={form.degree} onChange={(e) => set('degree', e.target.value)} />
+            </div>
+          </GroupSection>
 
-        <section>
-          <SectionHeader title="About you" />
-          <div className="space-y-4">
-            <TextArea label="Short bio" hint={`${form.bio.length}/${LIMITS.bioMax}`} maxLength={LIMITS.bioMax} rows={3} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
-            <TextArea label={`Why ${BRAND.name}`} hint={`${form.why.length}/${WHY_MAX}`} maxLength={WHY_MAX} rows={4} value={form.why} onChange={(e) => set('why', e.target.value)} error={show('why')} />
-          </div>
-        </section>
+          <GroupSection eyebrow="About you">
+            <div className="space-y-4">
+              <TextArea label="Short bio" hint={`${form.bio.length}/${LIMITS.bioMax}`} maxLength={LIMITS.bioMax} rows={3} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
+              <TextArea label={`Why ${BRAND.name}`} hint={`${form.why.length}/${WHY_MAX}`} maxLength={WHY_MAX} rows={4} value={form.why} onChange={(e) => set('why', e.target.value)} error={show('why')} />
+            </div>
+          </GroupSection>
 
-        <section>
-          <SectionHeader title="Consent" />
+          <GroupSection eyebrow="Consent">
           <Checkbox label="I am 18 years of age or older." checked={form.age18} onChange={(e) => set('age18', e.target.checked)} error={show('age18')} />
           <Checkbox
             label={
@@ -179,7 +175,8 @@ export function Apply() {
             onChange={(e) => set('agreeTerms', e.target.checked)}
             error={show('agreeTerms')}
           />
-        </section>
+          </GroupSection>
+        </Group>
 
         {error ? <Notice tone="danger">{error}</Notice> : null}
         {touched && Object.keys(errors).length > 0 ? <Notice tone="danger">Please fix the highlighted fields.</Notice> : null}
