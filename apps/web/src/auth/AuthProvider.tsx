@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import type { OwnProfile } from '@peaches/core';
+import { errorMessage, type OwnProfile } from '@peaches/core';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';
 
@@ -12,6 +12,8 @@ interface AuthValue {
   session: Session | null;
   user: User | null;
   profile: OwnProfile | null;
+  /** Why the profile could not be loaded, when the query itself failed. */
+  profileError: string | null;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
   /** An admin browsing the member sections instead of the admin panel. */
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionReady, setSessionReady] = useState(false);
   const [profile, setProfile] = useState<OwnProfile | null>(null);
   const [profileFor, setProfileFor] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [adminAsMember, setAdminAsMemberState] = useState(readAdminAsMember);
 
   useEffect(() => {
@@ -63,10 +66,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!userId) {
       setProfile(null);
       setProfileFor(null);
+      setProfileError(null);
       return;
     }
-    const next = await api.profiles.getOwn(userId);
-    setProfile(next);
+    try {
+      const next = await api.profiles.getOwn(userId);
+      setProfile(next);
+      setProfileError(null);
+    } catch (error) {
+      setProfile(null);
+      setProfileError(errorMessage(error));
+    }
     setProfileFor(userId);
   }, [userId]);
 
@@ -75,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!userId) {
       setProfile(null);
       setProfileFor(null);
+      setProfileError(null);
       return;
     }
     api.profiles
@@ -82,12 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((next) => {
         if (!active) return;
         setProfile(next);
+        setProfileError(null);
         setProfileFor(userId);
         if (next) void api.discovery.touchActivity();
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!active) return;
         setProfile(null);
+        setProfileError(errorMessage(error));
         setProfileFor(userId);
       });
     return () => {
@@ -99,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     setProfileFor(null);
+    setProfileError(null);
   }, []);
 
   const setAdminAsMember = useCallback((value: boolean) => {
@@ -118,12 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       profile,
+      profileError,
       refreshProfile,
       signOut,
       adminAsMember,
       setAdminAsMember,
     }),
-    [loading, session, profile, refreshProfile, signOut, adminAsMember, setAdminAsMember],
+    [loading, session, profile, profileError, refreshProfile, signOut, adminAsMember, setAdminAsMember],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

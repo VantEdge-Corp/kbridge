@@ -1,5 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
-import type { OwnProfile } from '@peaches/core';
+import { errorMessage, type OwnProfile } from '@peaches/core';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from './api';
 import { supabase } from './supabase';
@@ -10,6 +10,10 @@ interface AuthValue {
   email: string;
   booting: boolean;
   profile: OwnProfile | null;
+  /** True once the profile fetch for the current session has settled. */
+  profileReady: boolean;
+  /** Why the profile could not be loaded, when the query itself failed. */
+  profileError: string | null;
   refreshProfile: () => Promise<OwnProfile | null>;
   signOut: () => Promise<void>;
 }
@@ -33,6 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [booting, setBooting] = useState(true);
   const [profile, setProfile] = useState<OwnProfile | null>(null);
+  const [profileFor, setProfileFor] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -66,25 +72,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (!userId) {
       setProfile(null);
+      setProfileFor(null);
+      setProfileError(null);
       return null;
     }
-    const next = await api.profiles.getOwn(userId);
-    setProfile(next);
-    return next;
+    try {
+      const next = await api.profiles.getOwn(userId);
+      setProfile(next);
+      setProfileError(null);
+      return next;
+    } catch (error) {
+      setProfile(null);
+      setProfileError(errorMessage(error));
+      return null;
+    } finally {
+      setProfileFor(userId);
+    }
   }, [userId]);
 
   useEffect(() => {
     let cancelled = false;
     if (!userId) {
       setProfile(null);
+      setProfileFor(null);
+      setProfileError(null);
       return;
     }
     api.profiles
       .getOwn(userId)
       .then((p) => {
-        if (!cancelled) setProfile(p);
+        if (cancelled) return;
+        setProfile(p);
+        setProfileError(null);
+        setProfileFor(userId);
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setProfile(null);
+        setProfileError(errorMessage(error));
+        setProfileFor(userId);
+      });
     return () => {
       cancelled = true;
     };
@@ -93,6 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setProfileFor(null);
+    setProfileError(null);
   }, []);
 
   const value = useMemo<AuthValue>(
@@ -102,10 +131,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: session?.user.email ?? '',
       booting,
       profile,
+      profileReady: !!userId && profileFor === userId,
+      profileError,
       refreshProfile,
       signOut,
     }),
-    [session, userId, booting, profile, refreshProfile, signOut],
+    [session, userId, booting, profile, profileFor, profileError, refreshProfile, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -45,6 +45,22 @@ export function isUniqueViolation(error: unknown): boolean {
   return error instanceof ApiError && error.code === '23505';
 }
 
+/**
+ * True when a query failed because the database is missing a table, column or
+ * function the app expects, which almost always means a migration has not been
+ * run on this Supabase project yet.
+ */
+export function isSchemaOutOfDate(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  if (error.code === '42703' || error.code === '42P01' || error.code === '42883' || error.code === 'PGRST205' || error.code === 'PGRST202') return true;
+  return /does not exist|schema cache/i.test(error.message);
+}
+
+export function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return typeof error === 'string' ? error : 'Something went wrong.';
+}
+
 let channelCounter = 0;
 export function uniqueChannelName(prefix: string): string {
   channelCounter += 1;
