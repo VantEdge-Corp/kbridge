@@ -1,0 +1,16 @@
+{
+  "name": "@peaches/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Peaches shared core: TypeScript models, taxonomies, design tokens, deterministic matching, and the Supabase data layer used by the web and mobile apps.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.5"
+  }
+}

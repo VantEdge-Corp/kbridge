@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Peaches",
+    "slug": "peaches",
+    "version": "1.0.0",
+    "scheme": "peaches",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0b0b0c",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0b0b0c",
+      "resizeMode": "contain",
+      "image": "./assets/splash-icon.png"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.peaches.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.peaches.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0b0b0c",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Peaches uses your photo library so you can add profile photos and post photos.",
+          "cameraPermission": false
+        }
+      ],
+      "expo-image",
+      "expo-splash-screen"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -2,11 +2,16 @@ node_modules
 dist
 .vite
 
-# Env files — never commit secrets
+# Env files: never commit secrets
 .env
 .env.local
 .env.*.local
 .env.production
+apps/*/.env
+
+# Expo
+apps/mobile/.expo
+apps/mobile/expo-env.d.ts
 
 # OS / editor noise
 .DS_Store
@@ -14,7 +19,7 @@ dist
 .idea/
 .vscode/
 
-# Supabase CLI artifacts (if you start using `supabase` CLI)
+# Supabase CLI artifacts
 .supabase/
 
 # Vercel local CLI artifacts

@@ -1,166 +1,226 @@
-# kbridge — Application-Gated Members' Society
+# Peaches
 
-A members-verified dating app with a hard application gate: anyone can apply, but no `auth.users` row exists until the committee approves them. Approved applicants are then prompted to choose a password and create their account. Declines are silent.
+*People worth meeting.*
+
+Peaches is a serious, verified social discovery and dating platform launching in
+Metro Atlanta. Membership is by application: anyone can apply, a committee
+reviews each application by hand, and only admitted applicants create an
+account. Members discover people through a calm two-column grid (no swiping),
+send a written introduction request, and message once it is accepted. Identity,
+education, student status, and employment are each verified separately and
+only verified badges are ever shown.
+
+This repository holds the whole product on one Supabase project:
+
+| Path | What it is |
+|---|---|
+| `apps/web` | Web app: public landing and admission flow, member experience, legal pages, committee admin panel. Vite 7, React 19, TypeScript, Tailwind v4. Deploys to Vercel. |
+| `apps/mobile` | iOS/Android app for members. Expo SDK 57, Expo Router, TypeScript. Runs in Expo Go. |
+| `packages/core` | `@peaches/core`: TypeScript models, taxonomies, Metro Atlanta areas, design tokens, the deterministic matching engine, the Supabase data layer, legal documents, and the fictional demo dataset. Both apps import it. |
+| `supabase/` | SQL migrations `001`-`013` and the two seed scripts. |
+| `docs/DESIGN.md` | The design system both apps follow. |
 
 ## Requirements
 
-- Node.js 18+
-- npm
+- Node.js 22 or newer, npm 10 or newer
 - A Supabase project (free tier is fine)
+- For the mobile app: the Expo Go app on a phone, or Xcode / Android Studio for a simulator
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Install
 
 ```bash
 npm install
 ```
 
-### 2. Configure Supabase
+One install at the repository root covers all three workspaces.
 
-Create a Supabase project at https://supabase.com/dashboard. Copy `.env.example` to `.env` and fill in:
+### 2. Create the database
 
-```
-VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_here
-```
+In the Supabase SQL Editor run the migrations in `supabase/migrations/` in
+order, `001` through `013`. Each one is a separate file; paste and run one at a
+time. Notes that matter:
 
-### 3. Run migrations in order
+- `013_peaches.sql` is the Peaches model: areas, structured public profiles,
+  owner-only private data and preferences, multi-dimensional verification, the
+  feed, the discovery function, realtime publication for messages, introduction
+  requests, and posts, and explicit table grants for the API roles. It is
+  idempotent and safe to re-run.
+- `001`, `006`, `007`, and `010` are not idempotent. Run them once. The others
+  can be re-run safely.
+- After `013`, no manual Replication or Storage steps are needed. Confirm in
+  Storage that `profile-photos` and `post-photos` are public buckets and
+  `verifications` is private.
 
-In the Supabase SQL editor, run these in order:
+Then run the seeds:
 
-1. `supabase/migrations/001_initial_schema.sql` — profiles, matches, messages, events, invitations
-2. `supabase/migrations/002_applications_gate.sql` — applications table, `is_admin` flag, gated signup trigger, public status RPCs
-3. `supabase/migrations/003_signup_flow.sql` — `get_application_for_signup` RPC used by `/signup/:token`
-4. `supabase/migrations/004_rls_no_recursion.sql` — replaces the admin RLS policies with a SECURITY DEFINER `is_admin()` helper. Without this, sign-in succeeds but `/discover` hangs because the profile query trips infinite RLS recursion.
-5. `supabase/migrations/005_verifications.sql` — profession/company/LinkedIn/years columns on applications, plus a private `verifications` storage bucket with policies (anon insert, admin select). After running, confirm in Supabase Dashboard → Storage that a bucket named `verifications` exists and is **not** marked public.
-6. `supabase/migrations/006_introductions.sql` — `introduction_requests` table + trigger that opens a match on accept, message read-receipts policy
-7. `supabase/migrations/007_swipes.sql` — `swipes` table + trigger that opens a match on a mutual like, `get_swipe_candidates` RPC, realtime on swipes. Required by the mobile app's Discover deck.
+1. `supabase/seed_admin.sql` creates the first committee admin:
+   `admin@admin.local` / `admin`. Change the password from Settings after the
+   first sign-in.
+2. `supabase/seed_demo.sql` (optional, for demos, App Review, and development)
+   creates twenty fictional members, posts, introduction requests, two
+   connections, and one conversation. Review account: `review@peaches.app` /
+   `review123`. A second account, `elena@peaches.app` with the same password,
+   can sign in for two-sided testing. No other demo member can sign in.
 
-> The loose `supabase/migration_ai_scoring.sql` outside the `migrations/` folder is from the older prototype model and is no longer required. You can ignore it or delete it.
+`seed_demo.sql` is generated. Edit `packages/core/src/mock/people.ts` and run
+`npm run seed:generate`; never edit the SQL by hand.
 
-### 4. Configure Supabase Auth
+### 3. Configure Auth
 
-In your Supabase dashboard:
+Authentication > URL Configuration: set the Site URL to your web domain
+(`http://localhost:5173` locally). Authentication > Providers > Email: turning
+off "Confirm email" lets a new member land in the app right after sign-up;
+leaving it on sends them to sign in after confirming.
 
-- **Authentication → URL Configuration**
-  - Site URL: `http://localhost:5173`
-  - Redirect URLs: `http://localhost:5173/auth/callback` (kept for future flexibility; the active flow uses password sign-in)
-- **Authentication → Providers → Email**
-  - For easiest local development, **turn OFF "Confirm email"**. The signup will then create a session immediately and drop the new member into `/discover`.
-  - If you leave it ON, new members are redirected to `/login?confirm=1` and must confirm via the email Supabase sends before they can sign in.
-
-### 5. Seed the bootstrap admin
-
-Run `supabase/seed_admin.sql` in the Supabase SQL Editor. It creates:
-
-- An approved application for `admin@admin.local`
-- An auth user with bcrypt-hashed password `admin` (bypasses the 6-char signup minimum by writing directly into `auth.users`)
-- A profile flagged `is_admin = true`
-
-Verify by signing in at `/login` with `admin@admin.local` / `admin`, then visiting `/admin`.
-
-If the direct `auth.users` insert fails on your Supabase version, the file's footer has a Dashboard-based fallback.
-
-### 6. Run the app
+### 4. Environment files
 
 ```bash
-npm run dev      # http://localhost:5173
-npm run build    # production build
-npm run preview  # preview build
+cp apps/web/.env.example apps/web/.env
+cp apps/mobile/.env.example apps/mobile/.env
 ```
 
-Or use the included shell script (does `.env` and `node_modules` checks, then starts dev):
+Fill in the project URL and anon key from Supabase > Settings > API. The mobile
+file also needs `EXPO_PUBLIC_WEB_URL`, the deployed web domain, because the
+app links to the hosted Privacy Policy and Terms.
+
+### 5. Run
 
 ```bash
-./start.sh
+npm run dev            # web at http://localhost:5173
+npm run dev:mobile     # Expo dev server; scan the QR code with Expo Go
 ```
 
-## The flow
+Expo Go supports only the current Expo SDK. This app tracks SDK 57; when Expo
+Go updates, upgrade with `npx expo install expo@latest --fix` inside
+`apps/mobile`.
+
+## How the product works
+
+### Admission
 
 ```
-PUBLIC                       ADMIN (admin@admin.local)         APPLICANT
-──────                       ─────────────────────────         ─────────
-/  Landing
-  ↓
-/apply       ── insert ──→   /admin   Approve / Decline (silent) / Defer
-                                      ↓ (approved)
-                              applications.status = 'approved'
-                                                                  ↓
-                                                          /status/:token
-                                                          → "Admitted"
-                                                          → "Create your account"
-                                                                  ↓
-                                                          /signup/:token
-                                                          → email pre-filled
-                                                          → choose password
-                                                          → supabase.auth.signUp
-                                                          → handle_new_user trigger:
-                                                            • verifies approved application
-                                                            • creates profile from app
-                                                            • marks application 'claimed'
-                                                                  ↓
-                                                          /discover (members area)
-                                                                  ↓
-                                                          Future logins → /login (email + password)
+/apply  ->  committee reviews in /admin  ->  Admit / Defer / Decline (silent)
+                                                    |
+                                     /status/:token shows "Admitted"
+                                                    |
+                                     /signup/:token  ->  password  ->  member
 ```
 
-## Routes
+Nothing exists in `auth.users` until an approved applicant creates a password.
+The `handle_new_user` trigger checks for an approved application, builds the
+profile, private data, preferences, and signals rows, and marks the application
+claimed. Declined applicants see "under review" indefinitely; the status
+functions never reveal a decline.
 
-| Path | Who | Purpose |
+### Data model
+
+Members are split into separate tables so that a naming convention is never
+the only boundary:
+
+| Concept | Where | Who can read it |
 |---|---|---|
-| `/` | Public | Landing |
-| `/apply` | Public | Application form |
-| `/status/:token` | Public | Application status (silent-decline aware) |
-| `/signup/:token` | Public | Set password, create account (gated by approval) |
-| `/login` | Public | Email + password sign-in |
-| `/discover` etc. | Members | Existing dating UI (untouched) |
-| `/admin` | Admin | Application review queue |
+| `PublicProfile` | `public_profiles` view over `profiles` | any signed-in member |
+| `PrivateUserData` (area, search radius, structured education and employment) | `member_private` | the owner and admins |
+| `Preferences` (one strength per dimension) | `member_preferences` | the owner only |
+| `RecommendationSignals` (exposure counters) | `recommendation_signals` | no client role |
+| `VerificationData` (four states) | `profiles.verification_*` | the owner; others see verified badges only |
+| Moderation (suspension, reports) | `profiles.suspended_at`, `reports` | admins |
 
-## Silent decline
+Other members never read `profiles` directly. The view projects public columns
+only, so the admin score, consent versions, pending or rejected verification
+states, and `is_admin` never leave the table. A trigger derives the public
+display strings (`employment_display`, `education_display`, `display_area`)
+from the private rows, honoring the member's display toggles.
 
-Declined applications are stored as `status = 'rejected'`, but the public RPCs (`get_application_status`, `get_application_email_status`, `get_application_for_signup`) never reveal the `'rejected'` status to the applicant — `/status/:token` shows "still under review" forever, and `/signup/:token` simply refuses to load.
+Location is an area chosen from a fixed list of Metro Atlanta areas. Other
+members see a coarse label such as "Duluth area". Distances are computed
+between area centroids on the server and returned as whole miles.
 
-To change this policy (e.g. send a polite decline email instead), edit the RPCs in `002_applications_gate.sql` / `003_signup_flow.sql` and add a Supabase Edge Function for outbound mail.
+### Matching
 
-## Edge cases handled
+Discovery is deterministic and lives in `packages/core/src/matching/`:
 
-- **Duplicate apply**: a unique partial index on `(lower(email))` for open statuses blocks a second pending/approved app for the same email; the form surfaces "An application from this email is already on file."
-- **Signup with the wrong email**: `handle_new_user` raises if no approved application exists for the email — the signup page surfaces the trigger's message.
-- **Reapply after decline**: rejected and claimed rows are excluded from the unique constraint, so the email can reapply.
-- **Bot signups**: the apply form includes an off-screen honeypot field.
-- **Admin self-review**: nothing prevents you from reviewing your own application.
+| Function | Role |
+|---|---|
+| `eligible(A, B)` | Hard filters: distance boundary and every `required` preference. |
+| `compatibility(A, B)` | Directional: how well B satisfies A's `preferred` dimensions. |
+| `compatibilityBA(A, B)` | `compatibility(B, A)`, computed server-side from B's private preferences and returned as a rounded number so B's preferences never reach A's device. |
+| `reciprocalCompatibility(A, B)` | Harmonic mean of the two directions. |
+| `distanceSignal(A, B)` | Modest advantage for closer members inside the radius. |
+| `demandSignal(B)` | Internal engagement measure with diminishing returns. Never shown. |
+| `activitySignal(B)` | Recency of activity, stepped by day. |
+| `newUserExploration(B)` | Temporary boost for members in their first two weeks. |
+| `exposureAdjustment(B)` | Small lift for under-shown members, small penalty for over-shown ones. |
+| `recommendationScore(A, B)` | Weighted sum; compatibility and reciprocity carry 60%. |
 
-## What's been removed from the previous prototype
+`get_discovery_candidates()` returns candidate ids with coarse signals (whole
+miles, bucketed counters, day-truncated timestamps, reverse compatibility);
+the client joins them to public profiles and ranks the four Home sections
+(For You, Nearby, New, Active). Explore applies the member's saved preferences
+manually. The SQL mirror of the compatibility rules is checked against the
+TypeScript implementation by `npm run check:parity`.
 
-- The old `AuthPage` and `OnboardingPage` components in `App.jsx` are no longer routed. They're still in the file as dead code — feel free to delete them.
-- Magic-link sign-in (`signInWithOtp`) was removed; everything is email + password now. `/auth/callback` is kept routed (harmless) but not used by the active flow.
+Rules enforced in code and tests: nationality and race/ethnicity affect
+matching only when a member selects them in their own preferences; they are
+never inputs to demand or exposure. "Prefer not to say" is a disclosure state,
+not a category, and never participates in matching.
 
-## What's still mocked (from the original prototype)
+### Verification
 
-- Identity verification (Veriff / Onfido / Persona would slot in)
-- Education verification (MeasureOne)
-- Photo upload (gradients only)
-- Matching algorithm (random for demo)
-- Chat replies (simulated)
-- Payments (Stripe would slot in)
+Members request review of one dimension at a time from Me or Settings. The
+committee sets each dimension to unverified, pending, verified, or rejected
+from the admin panel. Peaches collects no government IDs and no biometrics.
 
-These are post-login features and are not on the critical path for the application gate.
+### Feed, inbox, safety
 
-## Mobile app
+Members post short text with an optional photo, comment, save posts, and can
+request a conversation from a post. The inbox has Requests, Connections, and
+Messages. Members can block and report members, posts, and conversations, and
+delete their own account from Settings. A trigger caps introduction requests at
+eight per rolling day and refuses requests across a block.
 
-`mobile/` holds the members' iOS/Android app (Expo + React Navigation): a
-swipeable Discover deck, mutual-like matching, and direct messaging with
-matches. It talks to the same Supabase project — no separate backend. See
-[`mobile/README.md`](mobile/README.md) for setup; migration 007 must be run
-first.
+## Scripts
 
-## Tech stack
+| Command | What it does |
+|---|---|
+| `npm run dev` / `npm run build` | Web dev server / production build |
+| `npm run dev:mobile` | Expo dev server for the mobile app |
+| `npm run typecheck` | TypeScript across core, web, and mobile |
+| `npm test` | Matching engine and formatting tests |
+| `npm run seed:generate` | Regenerate `supabase/seed_demo.sql` from the dataset |
+| `npm run check:parity` | Compare SQL and TypeScript compatibility on a database (see the script header for env vars) |
+| `cd apps/web && npx playwright test` | Web end-to-end smoke test against a running Supabase |
+| `cd apps/mobile && npm run export:check` | Bundle the mobile app the way Expo Go loads it |
 
-- React 18 + Vite + Tailwind
-- React Router v6
-- Supabase (Auth + Postgres + RLS)
-- lucide-react
-- Mobile: Expo SDK 54 (React Native), React Navigation v7, same Supabase project
+## Local end-to-end testing
 
-Deploy target: Vercel (`vercel.json` is included). The mobile app ships via Expo/EAS and does not touch Vercel.
+With Docker and the Supabase CLI installed you can run the whole schema
+locally: create a scratch directory, copy `supabase/migrations/*.sql` into
+`supabase/migrations/` there, run `supabase init` then `supabase start`, and
+point the apps' `.env` files at the printed API URL and anon key. Apply the
+seeds with `psql "$DB_URL" -f supabase/seed_admin.sql` and
+`-f supabase/seed_demo.sql`. If another local Supabase project already uses the
+default ports, change the `port` values in the scratch `config.toml`.
+
+## Deployment
+
+- **Web**: `vercel.json` at the root builds `apps/web` from the monorepo. Set
+  `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the Vercel project.
+- **Mobile**: see `apps/mobile/README.md` for EAS build and App Store notes.
+
+## Legal
+
+`packages/core/src/legal/documents.ts` holds the Privacy Policy and Terms of
+Service rendered at `/privacy` and `/terms`. They are starter drafts with
+bracketed placeholders (entity, contact, address, governing law) and have not
+been reviewed by counsel. Bump `LEGAL_VERSIONS` in
+`packages/core/src/constants/limits.ts` on any material change so consent is
+re-recorded.
+
+## Not built yet
+
+Payments and subscriptions, push notifications, government ID verification,
+machine-learned ranking, video or voice calls, stories, livestreaming, and
+device location tracking are intentionally out of scope for this build.

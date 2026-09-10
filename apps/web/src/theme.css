@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Peaches tokens. Source of truth: packages/core/src/theme/tokens.ts */
+@theme {
+  --color-canvas: #0b0b0c;
+  --color-surface: #131315;
+  --color-surface-elevated: #1b1b1e;
+  --color-surface-warm: #171512;
+  --color-surface-hover: #1f1f23;
+  --color-border: #26262a;
+  --color-border-strong: #36363b;
+  --color-ivory: #f1ece2;
+  --color-text: #f1ece2;
+  --color-text-secondary: #b7b1a6;
+  --color-text-muted: #7f7a71;
+  --color-text-faint: #55524c;
+  --color-on-ivory: #0f0f10;
+  --color-verified: #9db8a5;
+  --color-danger: #c9908a;
+  --color-portrait-a: #2a2622;
+  --color-portrait-b: #3a3129;
+
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --text-micro: 11px;
+  --text-caption: 12px;
+  --text-body-sm: 13px;
+  --text-body: 15px;
+  --text-name: 17px;
+  --text-subheading: 18px;
+  --text-heading: 22px;
+  --text-title: 28px;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-ivory);
+  color: var(--color-on-ivory);
+}
