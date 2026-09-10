@@ -33,6 +33,12 @@ export const colors = {
   /** Pressed/hover states. */
   surfaceHover: '#1f1f23',
   overlay: 'rgba(11, 11, 12, 0.72)',
+  /** 2px focus ring around inputs and controls. */
+  focusRing: 'rgba(241, 236, 226, 0.08)',
+  /** Hairline inner ring on photos and portraits. */
+  imageRing: 'rgba(241, 236, 226, 0.06)',
+  /** Hover state of a primary (ivory) button. */
+  ivoryHover: '#e6e0d4',
   /** Placeholder portrait ground tones (warm, desaturated). */
   portraitA: '#2a2622',
   portraitB: '#3a3129',
@@ -50,10 +56,10 @@ export const spacing = {
 } as const;
 
 export const radius = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 20,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
   pill: 999,
 } as const;
 
@@ -116,7 +122,7 @@ export const card = {
   columns: 2,
   gap: 12,
   pagePadding: 16,
-  imageRadius: 12,
+  imageRadius: 16,
 } as const;
 
 export const avatar = {

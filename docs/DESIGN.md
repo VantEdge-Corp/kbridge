@@ -119,3 +119,95 @@ demand, popularity, ranking, or "top" language.
   disclosed them; "Prefer not to say" shows nothing.
 - Only `verified` badges are shown on other members' profiles. A member sees
   their own pending/rejected states on Me and in Settings > Verification.
+
+## Polish pass (clean, modern)
+
+These rules refine everything above. When they conflict with an earlier
+line, these win.
+
+### Rhythm
+
+- 8pt grid everywhere. Page padding 16 on phones, 32 on desktop.
+- Content widths on the web: 1120 for card grids, 720 for lists, reading
+  and settings, 560 for auth and application forms. Center them.
+- Sections are separated by 32 to 40px; items inside a section by 12 to 16px.
+- A screen title (Georgia 28/34) has 8px of subtitle below it and 24px before
+  content. Subtitles are 15px `textSecondary`.
+
+### Surfaces and radii
+
+- Radii: sm 8, md 12, lg 16, xl 24, pill 999. Inputs and buttons use md,
+  cards and grouped lists use lg, sheets and dialogs use xl.
+- Grouped list pattern: rows live inside one container with `surface`
+  background, a 1px `border`, and radius lg. Rows are separated by 1px
+  `border` lines inset from the leading avatar or icon; individual rows have
+  no outer borders of their own. Use it for Settings, Inbox, Me rows, filter
+  groups, admin dossiers.
+- Inputs: 44px tall (48 on phones), `surface` background, 1px `border`,
+  radius md, 12 to 14px horizontal padding, placeholder `textMuted`. Focus:
+  border `borderStrong` plus a 2px outer ring of ivory at 8% opacity.
+- Buttons: 44px tall, radius md, 15px medium. Primary: ivory background,
+  `onIvory` text; hover `#e6e0d4`. Secondary: transparent with 1px `border`,
+  ivory text; hover `surfaceHover`. Ghost: text only. Pressed: 0.8 opacity on
+  phones, 0.9 on the web. One primary per screen.
+- Thin 1px dividers only. No drop shadows on the canvas; sheets and dialogs
+  may use a soft 24px shadow at 40% black.
+
+### Type
+
+- Field labels are sentence case, 13px, `textSecondary`, 6px above the
+  input. Never uppercase per-field labels.
+- Uppercase eyebrows (11px, 1.2px tracking, `textMuted`) are only for section
+  headers and tiny status words.
+- Body 15/22 `text`; secondary 15/22 `textSecondary`; metadata 12 or 13
+  `textMuted`, one line, ellipsized.
+
+### Cards
+
+- PersonCard: 3:4 image with radius lg and a hairline inner ring at 6% ivory;
+  10px below it the name row (Georgia 17 plus the badge), then one metadata
+  line. Web hover: image brightens 5% over 150ms and the name gains a 1px
+  ivory underline. Phone press: 0.85 opacity.
+- PostCard: 16px padding inside a grouped container (see above), 36px
+  avatar, actions row of thin icons at 20px with 24px gaps; the
+  "Request conversation" action is a ghost button with an icon.
+
+### Tabs and rails
+
+- SegmentedTabs: 14px medium text, 20px gap, `textMuted`; the active tab is
+  ivory with a 2px ivory underline that hugs the label. Count badges are
+  11px pills on `surfaceElevated`.
+- Web rail: 76px wide; the active item is a 40px radius-md `surfaceElevated`
+  square with the icon in ivory; hover `surfaceHover`; labels 11px.
+- Phone tab bar: 20px icons, 11px labels, active ivory, a 1px `border` top.
+
+### Sheets, dialogs, empty states, motion
+
+- Sheets: `surfaceElevated`, top radius xl, a 36x4 `borderStrong` grabber,
+  24px padding. Dialogs on the web: radius xl, 24px padding, max width 480.
+- Empty states: centered, one sentence in `textSecondary`, optional single
+  secondary button, 48px vertical padding.
+- Transitions 150ms ease on hover and focus. No bounces, no springs on
+  navigation.
+
+### Web-specific
+
+- Landing: a sticky header with the wordmark, blurred `canvas` at 80%; a
+  hero limited to 720px with a very subtle warm radial glow (6% opacity)
+  behind it; the three admission steps in one grouped container as three
+  columns; the verification list as a two-column grouped container; a quiet
+  footer.
+- Inbox on desktop (>= 1024px): two panes. A 360px list on the left with the
+  three sections and a conversation on the right. `/inbox` shows a calm
+  "Choose a conversation" placeholder on the right; `/chat/:matchId` shows
+  the thread there. On narrower screens the existing full-screen chat stays.
+- Forms: sections are grouped containers with an eyebrow title inside;
+  sentence-case labels; helper text 13px `textMuted` below the input.
+
+### Phone-specific
+
+- Screen headers: back arrow, Georgia 28 title, one small trailing action.
+- Settings, Me, Inbox, Blocked users, Saved posts: grouped containers with
+  16px side margins.
+- Pickers and multi-selects: full-screen modal with a search field on top and
+  a Done button; selected rows show a check at the trailing edge.
