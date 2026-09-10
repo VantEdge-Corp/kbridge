@@ -29,7 +29,7 @@ interface Props {
   clearable?: boolean;
 }
 
-/** Full-screen list with search. Single select closes on tap; multi select uses Done. */
+/** Full-screen list with a search field on top and a Done button. Selected rows show a trailing check. */
 export function PickerModal({ visible, onClose, title, options, selected, onChange, multi, max, searchable = true, header, clearable }: Props) {
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
@@ -82,7 +82,7 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
         ) : null}
         {multi && max ? (
           <Text style={[text.caption, styles.count]}>
-            {selected.length}/{max} selected
+            {selected.length} of {max} selected
           </Text>
         ) : null}
         {header}
@@ -90,6 +90,7 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
           data={filtered}
           keyExtractor={(o) => o.value}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const on = selected.includes(item.value);
             return (
@@ -99,7 +100,7 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
                 onPress={() => toggle(item.value)}
                 style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.surfaceHover }]}
               >
-                <Text style={[text.body, on && { color: colors.ivory }]}>{item.label}</Text>
+                <Text style={[text.body, on && { color: colors.ivory, fontWeight: '500' }]}>{item.label}</Text>
                 {on ? <Icon name="check" size={18} color={colors.ivory} /> : null}
               </Pressable>
             );
@@ -114,9 +115,10 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
-  search: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
-  count: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xs },
-  row: { minHeight: 48, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  search: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
+  count: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
+  list: { paddingBottom: spacing.xxl },
+  row: { minHeight: 52, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sep: { height: 1, backgroundColor: colors.border, marginLeft: spacing.lg },
   empty: { padding: spacing.xl, textAlign: 'center' },
 });

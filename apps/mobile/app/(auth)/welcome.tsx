@@ -32,8 +32,8 @@ export default function Welcome() {
 const styles = StyleSheet.create({
   body: { flex: 1, paddingHorizontal: spacing.xl, justifyContent: 'space-between', paddingBottom: spacing.xl },
   brand: { flex: 1, justifyContent: 'center', gap: spacing.md },
-  tagline: { fontFamily: fonts.display, fontSize: 30, lineHeight: 36, color: colors.text, marginTop: spacing.sm },
-  lede: { maxWidth: 300 },
+  tagline: { fontFamily: fonts.display, fontSize: 32, lineHeight: 38, color: colors.text, marginTop: spacing.md },
+  lede: { maxWidth: 300, marginTop: spacing.xs },
   actions: { gap: spacing.md },
   foot: { textAlign: 'center', marginTop: spacing.lg },
 });

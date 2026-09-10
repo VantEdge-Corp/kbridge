@@ -8,6 +8,7 @@ import { ErrorText } from '@/components/ErrorText';
 import { Field } from '@/components/Field';
 import { Header } from '@/components/Header';
 import { PickerModal } from '@/components/PickerModal';
+import { Group } from '@/components/Group';
 import { Screen } from '@/components/Screen';
 import { SettingsRow } from '@/components/SettingsRow';
 import { colors, spacing, text } from '@/constants/theme';
@@ -123,21 +124,21 @@ export default function Apply() {
             exists until you are admitted.
           </Text>
 
-          <Text style={text.eyebrow}>Contact</Text>
+          <Text style={[text.eyebrow, styles.firstSection]}>Contact</Text>
           <Field label="Email" value={form.email} onChangeText={(v) => set('email', v)} error={show('email')} autoCapitalize="none" keyboardType="email-address" autoCorrect={false} />
           <View style={styles.pair}>
             <Field label="First name" containerStyle={{ flex: 2 }} value={form.firstName} onChangeText={(v) => set('firstName', v)} error={show('firstName')} autoCapitalize="words" />
             <Field label="Age" containerStyle={{ flex: 1 }} value={form.age} onChangeText={(v) => set('age', v.replace(/[^0-9]/g, ''))} error={show('age')} keyboardType="number-pad" />
           </View>
 
-          <Text style={text.eyebrow}>Where you live</Text>
-          <View style={styles.rowBox}>
+          <Text style={[text.eyebrow, styles.section]}>Where you live</Text>
+          <Group flush>
             <SettingsRow label="Area" value={areaById(form.areaId)?.name ?? 'Choose'} onPress={() => setAreaOpen(true)} />
-          </View>
+          </Group>
           {show('areaId') ? <Text style={styles.err}>{errors.areaId}</Text> : null}
           <Text style={text.caption}>Other members only ever see a coarse label like &quot;Duluth area&quot;.</Text>
 
-          <Text style={text.eyebrow}>Work</Text>
+          <Text style={[text.eyebrow, styles.section]}>Work</Text>
           <Field label="What you do" placeholder="e.g. Product designer" value={form.occupation} onChangeText={(v) => set('occupation', v)} error={show('occupation')} />
           <Field label="Employer (optional)" value={form.employer} onChangeText={(v) => set('employer', v)} />
           <View style={styles.pair}>
@@ -145,15 +146,15 @@ export default function Apply() {
           </View>
           <Field label="LinkedIn (optional)" value={form.linkedinUrl} onChangeText={(v) => set('linkedinUrl', v)} error={show('linkedinUrl')} autoCapitalize="none" keyboardType="url" autoCorrect={false} />
 
-          <Text style={text.eyebrow}>Education</Text>
+          <Text style={[text.eyebrow, styles.section]}>Education</Text>
           <Field label="School (optional)" value={form.school} onChangeText={(v) => set('school', v)} />
           <Field label="Degree (optional)" placeholder="e.g. B.S. Computer Science" value={form.degree} onChangeText={(v) => set('degree', v)} />
 
-          <Text style={text.eyebrow}>About you</Text>
+          <Text style={[text.eyebrow, styles.section]}>About you</Text>
           <Field label="A short summary (optional)" multiline value={form.bio} onChangeText={(v) => set('bio', v)} maxLength={LIMITS.bioMax} helper={`${form.bio.length}/${LIMITS.bioMax}`} />
           <Field label={`Why ${BRAND.name}?`} multiline value={form.why} onChangeText={(v) => set('why', v)} error={show('why')} maxLength={WHY_MAX} helper={`${form.why.length}/${WHY_MAX}`} />
 
-          <Text style={text.eyebrow}>Consent</Text>
+          <Text style={[text.eyebrow, styles.section]}>Consent</Text>
           <Checkbox checked={form.age18} onChange={(v) => set('age18', v)} accessibilityLabel="I am 18 years of age or older">
             <Text style={text.bodySmall}>I am 18 years of age or older.</Text>
             {show('age18') ? <Text style={styles.err}>{errors.age18}</Text> : null}
@@ -186,7 +187,8 @@ export default function Apply() {
 const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxxl, gap: spacing.lg },
   pair: { flexDirection: 'row', gap: spacing.md },
-  rowBox: { marginHorizontal: -spacing.lg, borderTopWidth: 1, borderTopColor: colors.border },
+  firstSection: { marginTop: spacing.sm },
+  section: { marginTop: spacing.lg },
   err: { ...text.caption, color: colors.danger },
   link: { color: colors.ivory, textDecorationLine: 'underline' },
 });

@@ -15,13 +15,13 @@ interface StepperProps {
 function Stepper({ value, onChange, min, max, step = 1, format, label }: StepperProps) {
   return (
     <View style={styles.stepper}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Decrease ${label}`} onPress={() => onChange(Math.max(min, value - step))} style={styles.btn} hitSlop={6}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Decrease ${label}`} onPress={() => onChange(Math.max(min, value - step))} style={({ pressed }) => [styles.btn, pressed && styles.pressed]} hitSlop={6}>
         <Icon name="minus" size={14} color={colors.textSecondary} />
       </Pressable>
-      <Text style={[text.bodySmall, styles.value]} accessibilityLabel={`${label} ${format(value)}`}>
+      <Text style={styles.value} accessibilityLabel={`${label} ${format(value)}`}>
         {format(value)}
       </Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Increase ${label}`} onPress={() => onChange(Math.min(max, value + step))} style={styles.btn} hitSlop={6}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Increase ${label}`} onPress={() => onChange(Math.min(max, value + step))} style={({ pressed }) => [styles.btn, pressed && styles.pressed]} hitSlop={6}>
         <Icon name="plus" size={14} color={colors.textSecondary} />
       </Pressable>
     </View>
@@ -50,7 +50,8 @@ export function RangeStepper({ min, max, onChange, bounds, step, format }: Props
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stepper: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, height: 32 },
-  btn: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center' },
-  value: { minWidth: 44, textAlign: 'center', color: colors.text },
+  stepper: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, height: 34 },
+  btn: { width: 36, height: 32, alignItems: 'center', justifyContent: 'center' },
+  pressed: { opacity: 0.6 },
+  value: { minWidth: 48, textAlign: 'center', color: colors.text, fontSize: 14, fontWeight: '500' },
 });

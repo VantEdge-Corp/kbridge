@@ -135,6 +135,7 @@ export default function PostDetail() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <Header back title="Post" />
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+          <View style={styles.cardWrap}>
           <PostCard
             post={post}
             detail
@@ -144,6 +145,7 @@ export default function PostDetail() {
             onRequestConversation={() => setRequest(true)}
             onMore={() => setMore(true)}
           />
+          </View>
           <View style={styles.comments}>
             <Text style={text.eyebrow}>{comments.length === 0 ? 'No comments yet' : `${comments.length} ${comments.length === 1 ? 'comment' : 'comments'}`}</Text>
             {comments.map((c) => (
@@ -198,11 +200,12 @@ export default function PostDetail() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
   body: { paddingBottom: spacing.xl },
-  comments: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.md },
+  cardWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
+  comments: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl, gap: spacing.md },
   comment: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
   commentBody: { flex: 1, gap: 2 },
   commentHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.canvas },
-  input: { flex: 1, minHeight: 40, maxHeight: 100, paddingHorizontal: spacing.md, paddingVertical: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, color: colors.text, fontSize: 15 },
-  send: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
+  input: { flex: 1, minHeight: 44, maxHeight: 100, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, color: colors.text, fontSize: 15, lineHeight: 20 },
+  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
 });

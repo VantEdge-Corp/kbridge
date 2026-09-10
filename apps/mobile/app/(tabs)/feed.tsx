@@ -141,6 +141,7 @@ export default function Feed() {
           )}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load('refresh')} tintColor={colors.textSecondary} />}
           contentContainerStyle={(posts?.length ?? 0) === 0 ? styles.emptyContent : styles.content}
+          ItemSeparatorComponent={() => <View style={styles.gap} />}
           ListEmptyComponent={<EmptyState title="Nothing here yet." body="Share a plan, a question, or something you noticed around the city." actionTitle="Write a post" onAction={() => router.push('/post/new')} />}
         />
       )}
@@ -174,6 +175,7 @@ export default function Feed() {
 
 const styles = StyleSheet.create({
   errorWrap: { alignItems: 'center', gap: spacing.md, paddingTop: spacing.xl },
-  content: { paddingBottom: 40 },
+  content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs, paddingBottom: 40 },
+  gap: { height: spacing.md },
   emptyContent: { flexGrow: 1, justifyContent: 'center' },
 });

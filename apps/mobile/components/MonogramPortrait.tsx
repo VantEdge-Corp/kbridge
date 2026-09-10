@@ -11,8 +11,8 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Placeholder portrait for members without photos: a warm dark gradient with the initial in Georgia. */
-export function MonogramPortrait({ firstName, width, height, radius = 12, style }: Props) {
+/** Placeholder portrait for members without photos: a warm dark gradient with the initial in Georgia and a hairline ring. */
+export function MonogramPortrait({ firstName, width, height, radius = 16, style }: Props) {
   const fontSize = Math.round(Math.min(width, height) * 0.36);
   return (
     <LinearGradient
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderColor: colors.imageRing,
   },
   initial: { fontFamily: fonts.display, color: colors.ivory, opacity: 0.9 },
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { colors, radius, spacing, touch } from '@/constants/theme';
+import { colors, spacing, touch } from '@/constants/theme';
 import { Icon } from './Icon';
 
 interface Props {
@@ -32,7 +32,7 @@ export function Checkbox({ checked, onChange, children, accessibilityLabel }: Pr
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   target: { width: touch.minTarget - 12, height: touch.minTarget - 12, alignItems: 'center', justifyContent: 'center', marginTop: -6 },
-  box: { width: 20, height: 20, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   checked: { backgroundColor: colors.ivory, borderColor: colors.ivory },
   label: { flex: 1 },
 });

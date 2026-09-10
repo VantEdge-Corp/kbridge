@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { spacing, text } from '@/constants/theme';
 import { Button } from './Button';
 
+/** Centered, one sentence in `textSecondary`, an optional single secondary action, 48px vertical padding. */
 export function EmptyState({ title, body, actionTitle, onAction }: { title: string; body?: string; actionTitle?: string; onAction?: () => void }) {
   return (
     <View style={styles.wrap}>
@@ -14,5 +15,5 @@ export function EmptyState({ title, body, actionTitle, onAction }: { title: stri
 
 const styles = StyleSheet.create({
   wrap: { paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xl, alignItems: 'center' },
-  center: { textAlign: 'center' },
+  center: { textAlign: 'center', maxWidth: 320 },
 });

@@ -14,6 +14,7 @@ interface Props {
   description?: string;
 }
 
+/** A row for grouped lists. No borders of its own; the Group draws the separators. */
 export function SettingsRow({ label, value, onPress, icon, destructive, chevron = true, right, description }: Props) {
   return (
     <Pressable
@@ -39,7 +40,7 @@ export function SettingsRow({ label, value, onPress, icon, destructive, chevron 
 }
 
 const styles = StyleSheet.create({
-  row: { minHeight: 52, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  row: { minHeight: 56, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   textWrap: { flex: 1 },
   value: { maxWidth: '45%', textAlign: 'right' },
 });

@@ -34,14 +34,14 @@ export function ProfilePhotoGallery({ photos, onAdd, onRemove, busy }: Props) {
           </View>
         ))}
         {canAdd ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Add photo" onPress={busy ? undefined : onAdd} style={styles.add}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Add photo" onPress={busy ? undefined : onAdd} style={({ pressed }) => [styles.add, pressed && { opacity: 0.7 }]}>
             {busy ? <ActivityIndicator color={colors.textSecondary} /> : <Icon name="plus" size={18} color={colors.textSecondary} />}
             {!busy ? <Text style={text.micro}>Add</Text> : null}
           </Pressable>
         ) : null}
       </ScrollView>
       <Text style={[text.caption, styles.count]}>
-        {photos.length}/{LIMITS.photos} photos{photos.length === 0 ? ' · profiles with photos are opened far more often' : ''}
+        {photos.length} of {LIMITS.photos} photos{photos.length === 0 ? ' · profiles with photos are opened far more often' : ''}
       </Text>
     </View>
   );
@@ -49,11 +49,11 @@ export function ProfilePhotoGallery({ photos, onAdd, onRemove, busy }: Props) {
 
 const styles = StyleSheet.create({
   row: { paddingHorizontal: spacing.lg, gap: spacing.sm },
-  tile: { width: TILE_W, height: TILE_H, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.surfaceElevated },
+  tile: { width: TILE_W, height: TILE_H, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.surfaceElevated, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing },
   image: { width: TILE_W, height: TILE_H },
-  primary: { position: 'absolute', left: 6, bottom: 6, backgroundColor: colors.overlay, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.sm },
+  primary: { position: 'absolute', left: 6, bottom: 6, backgroundColor: colors.overlay, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   primaryText: { fontSize: 10, color: colors.ivory, fontWeight: '500' },
   remove: { position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
-  add: { width: TILE_W, height: TILE_H, borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  add: { width: TILE_W, height: TILE_H, borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.surface },
   count: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
 });

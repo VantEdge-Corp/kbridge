@@ -5,13 +5,14 @@ import { timeAgo, truncate, type Connection, type IntroductionRequest } from '@p
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorText } from '@/components/ErrorText';
+import { GROUP_INSET, Group } from '@/components/Group';
 import { Header } from '@/components/Header';
 import { InboxRow } from '@/components/InboxRow';
 import { Loading } from '@/components/Loading';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { colors, spacing, text } from '@/constants/theme';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
@@ -126,47 +127,51 @@ export default function Inbox() {
               {incoming.length === 0 ? (
                 <EmptyState title="No requests waiting." body="When someone writes to you, their note appears here first." />
               ) : (
-                incoming.map((req) => (
-                  <InboxRow
-                    key={req.id}
-                    profile={req.counterpart}
-                    subtitle={expanded === req.id ? 'Tap to collapse' : truncate(req.note, 70)}
-                    time={timeAgo(req.createdAt)}
-                    emphasize
-                    onPress={() => setExpanded(expanded === req.id ? null : req.id)}
-                    onAvatarPress={() => openProfile(req.counterpart.id)}
-                  >
-                    {expanded === req.id ? (
-                      <View style={styles.expanded}>
-                        <Text style={text.body}>{req.note}</Text>
-                        <View style={styles.actions}>
-                          <Button title="Accept" size="small" onPress={() => accept(req)} loading={busy === req.id} />
-                          <Button title="Decline" size="small" variant="ghost" onPress={() => decline(req)} disabled={busy === req.id} />
-                          <View style={{ flex: 1 }} />
-                          <Button title="View profile" size="small" variant="ghost" onPress={() => openProfile(req.counterpart.id)} />
+                <Group inset={GROUP_INSET.avatar} style={styles.group}>
+                  {incoming.map((req) => (
+                    <InboxRow
+                      key={req.id}
+                      profile={req.counterpart}
+                      subtitle={expanded === req.id ? 'Tap to collapse' : truncate(req.note, 70)}
+                      time={timeAgo(req.createdAt)}
+                      emphasize
+                      onPress={() => setExpanded(expanded === req.id ? null : req.id)}
+                      onAvatarPress={() => openProfile(req.counterpart.id)}
+                    >
+                      {expanded === req.id ? (
+                        <View style={styles.expanded}>
+                          <Text style={text.body}>{req.note}</Text>
+                          <View style={styles.actions}>
+                            <Button title="Accept" size="small" onPress={() => accept(req)} loading={busy === req.id} />
+                            <Button title="Decline" size="small" variant="ghost" onPress={() => decline(req)} disabled={busy === req.id} />
+                            <View style={{ flex: 1 }} />
+                            <Button title="View profile" size="small" variant="ghost" onPress={() => openProfile(req.counterpart.id)} />
+                          </View>
                         </View>
-                      </View>
-                    ) : null}
-                  </InboxRow>
-                ))
+                      ) : null}
+                    </InboxRow>
+                  ))}
+                </Group>
               )}
               {outgoing.length > 0 ? (
                 <>
                   <SectionHeader title="Sent by you" />
-                  {outgoing.map((req) => (
-                    <InboxRow
-                      key={req.id}
-                      profile={req.counterpart}
-                      subtitle={`Waiting · ${truncate(req.note, 60)}`}
-                      time={timeAgo(req.createdAt)}
-                      onPress={() => openProfile(req.counterpart.id)}
-                      onAvatarPress={() => openProfile(req.counterpart.id)}
-                    >
-                      <View style={styles.actionsRight}>
-                        <Button title="Withdraw" size="small" variant="ghost" onPress={() => withdraw(req)} loading={busy === req.id} />
-                      </View>
-                    </InboxRow>
-                  ))}
+                  <Group inset={GROUP_INSET.avatar}>
+                    {outgoing.map((req) => (
+                      <InboxRow
+                        key={req.id}
+                        profile={req.counterpart}
+                        subtitle={`Waiting · ${truncate(req.note, 60)}`}
+                        time={timeAgo(req.createdAt)}
+                        onPress={() => openProfile(req.counterpart.id)}
+                        onAvatarPress={() => openProfile(req.counterpart.id)}
+                      >
+                        <View style={styles.actionsRight}>
+                          <Button title="Withdraw" size="small" variant="ghost" onPress={() => withdraw(req)} loading={busy === req.id} />
+                        </View>
+                      </InboxRow>
+                    ))}
+                  </Group>
                 </>
               ) : null}
             </>
@@ -174,33 +179,37 @@ export default function Inbox() {
             fresh.length === 0 ? (
               <EmptyState title="No new connections." body="Accepted introductions land here until the first message." />
             ) : (
-              fresh.map((c) => (
-                <InboxRow
-                  key={c.matchId}
-                  profile={c.counterpart}
-                  subtitle={c.introducedBy === 'viewer' ? 'They accepted your introduction · Say hello' : 'You accepted their introduction · Say hello'}
-                  time={timeAgo(c.createdAt)}
-                  emphasize
-                  onPress={() => openChat(c.matchId)}
-                  onAvatarPress={() => openProfile(c.counterpart.id)}
-                />
-              ))
+              <Group inset={GROUP_INSET.avatar} style={styles.group}>
+                {fresh.map((c) => (
+                  <InboxRow
+                    key={c.matchId}
+                    profile={c.counterpart}
+                    subtitle={c.introducedBy === 'viewer' ? 'They accepted your introduction · Say hello' : 'You accepted their introduction · Say hello'}
+                    time={timeAgo(c.createdAt)}
+                    emphasize
+                    onPress={() => openChat(c.matchId)}
+                    onAvatarPress={() => openProfile(c.counterpart.id)}
+                  />
+                ))}
+              </Group>
             )
           ) : threads.length === 0 ? (
             <EmptyState title="No conversations yet." />
           ) : (
-            threads.map((c) => (
-              <InboxRow
-                key={c.matchId}
-                profile={c.counterpart}
-                subtitle={`${c.lastMessage?.senderId === userId ? 'You: ' : ''}${c.lastMessage?.body ?? ''}`}
-                time={c.lastMessage ? timeAgo(c.lastMessage.createdAt) : undefined}
-                unread={c.unreadCount}
-                emphasize={c.unreadCount > 0}
-                onPress={() => openChat(c.matchId)}
-                onAvatarPress={() => openProfile(c.counterpart.id)}
-              />
-            ))
+            <Group inset={GROUP_INSET.avatar} style={styles.group}>
+              {threads.map((c) => (
+                <InboxRow
+                  key={c.matchId}
+                  profile={c.counterpart}
+                  subtitle={`${c.lastMessage?.senderId === userId ? 'You: ' : ''}${c.lastMessage?.body ?? ''}`}
+                  time={c.lastMessage ? timeAgo(c.lastMessage.createdAt) : undefined}
+                  unread={c.unreadCount}
+                  emphasize={c.unreadCount > 0}
+                  onPress={() => openChat(c.matchId)}
+                  onAvatarPress={() => openProfile(c.counterpart.id)}
+                />
+              ))}
+            </Group>
           )}
         </ScrollView>
       )}
@@ -210,7 +219,8 @@ export default function Inbox() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 40, flexGrow: 1 },
-  expanded: { marginTop: spacing.md, padding: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, gap: spacing.md },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  group: { marginTop: spacing.md },
+  expanded: { marginTop: spacing.md, paddingLeft: 40 + spacing.md, gap: spacing.md },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginLeft: -(40 + spacing.md) },
   actionsRight: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.xs },
 });

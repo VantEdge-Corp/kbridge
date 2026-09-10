@@ -91,7 +91,7 @@ export default function Photos() {
         <View style={styles.grid}>
           {photos.map((p, i) => (
             <Pressable key={p.path} onPress={() => actions(p.path, i)} accessibilityRole="button" accessibilityLabel={`Photo ${i + 1} options`} style={{ width: tile }}>
-              <Image source={{ uri: p.url }} style={{ width: tile, height: Math.round(tile / 0.75), borderRadius: radius.md, backgroundColor: colors.surfaceElevated }} contentFit="cover" />
+              <Image source={{ uri: p.url }} style={{ width: tile, height: Math.round(tile / 0.75), borderRadius: radius.md, backgroundColor: colors.surfaceElevated, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing }} contentFit="cover" />
               {i === 0 ? (
                 <View style={styles.main}>
                   <Text style={styles.mainText}>Main</Text>
@@ -115,5 +115,5 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   main: { position: 'absolute', left: 6, bottom: 6, backgroundColor: colors.overlay, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.sm },
   mainText: { fontSize: 10, color: colors.ivory, fontWeight: '500' },
-  add: { borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  add: { borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
 });

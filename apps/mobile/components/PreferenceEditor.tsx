@@ -25,6 +25,7 @@ import {
 } from '@peaches/core';
 import { spacing, text } from '@/constants/theme';
 import { FilterRow } from './FilterRow';
+import { Group } from './Group';
 import { PickerModal, type PickerOption } from './PickerModal';
 import { RangeStepper } from './RangeStepper';
 import { SectionHeader } from './SectionHeader';
@@ -97,12 +98,15 @@ export function PreferenceEditor({ prefs, onChange, areaId, maxDistanceMiles, on
 
   return (
     <View>
-      <SectionHeader title="Location" style={styles.firstSection} />
-      <FilterRow label="Location" summary={area ? area.name : 'Choose your area'} onPress={() => setOpen('area')} />
-      <FilterRow label="Distance" summary={`Within ${maxDistanceMiles} miles`} onPress={() => setOpen('distance')} />
+      <SectionHeader title="Location" first />
+      <Group>
+        <FilterRow label="Location" summary={area ? area.name : 'Choose your area'} onPress={() => setOpen('area')} />
+        <FilterRow label="Distance" summary={`Within ${maxDistanceMiles} miles`} onPress={() => setOpen('distance')} />
+      </Group>
       <Text style={[text.caption, styles.note]}>Distance is a hard boundary. Others only ever see your area label, never an address.</Text>
 
       <SectionHeader title="Basics" />
+      <Group>
       <FilterRow
         label={PREFERENCE_LABEL.ageRange}
         summary=""
@@ -134,20 +138,23 @@ export function PreferenceEditor({ prefs, onChange, areaId, maxDistanceMiles, on
           />
         }
       />
+      </Group>
 
       {SECTIONS.map((section) => (
         <View key={section.title}>
           <SectionHeader title={section.title} />
-          {section.keys.map((key) => (
-            <FilterRow
-              key={key}
-              label={PREFERENCE_LABEL[key]}
-              summary={summaries[key]}
-              onPress={() => setOpen(key)}
-              strength={prefs[key].strength}
-              onStrengthChange={(s) => setStrength(key, s)}
-            />
-          ))}
+          <Group>
+            {section.keys.map((key) => (
+              <FilterRow
+                key={key}
+                label={PREFERENCE_LABEL[key]}
+                summary={summaries[key]}
+                onPress={() => setOpen(key)}
+                strength={prefs[key].strength}
+                onStrengthChange={(s) => setStrength(key, s)}
+              />
+            ))}
+          </Group>
         </View>
       ))}
       <Text style={[text.caption, styles.note]}>
@@ -188,6 +195,5 @@ export function PreferenceEditor({ prefs, onChange, areaId, maxDistanceMiles, on
 }
 
 const styles = StyleSheet.create({
-  firstSection: { paddingTop: spacing.sm },
-  note: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+  note: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
 });

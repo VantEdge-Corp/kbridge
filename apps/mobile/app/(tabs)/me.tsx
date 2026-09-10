@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { formatHeight, nameAge, profileCompleteness, type VerificationDimension } from '@peaches/core';
 import { CompletenessBar } from '@/components/CompletenessBar';
-import { Header } from '@/components/Header';
-import { Icon } from '@/components/Icon';
+import { GROUP_INSET, Group } from '@/components/Group';
+import { Header, HeaderIconButton } from '@/components/Header';
 import { Loading } from '@/components/Loading';
 import { ProfilePhotoGallery } from '@/components/ProfilePhotoGallery';
 import { Screen } from '@/components/Screen';
@@ -12,7 +12,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { SettingsRow } from '@/components/SettingsRow';
 import { VerificationBadge } from '@/components/VerificationBadge';
 import { VerificationList } from '@/components/VerificationList';
-import { colors, spacing, text, touch } from '@/constants/theme';
+import { colors, spacing, text } from '@/constants/theme';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
@@ -108,14 +108,7 @@ export default function Me() {
 
   return (
     <Screen>
-      <Header
-        title="Me"
-        right={
-          <Pressable accessibilityRole="button" accessibilityLabel="Settings" onPress={() => router.push('/settings')} style={styles.gear} hitSlop={6}>
-            <Icon name="settings" size={20} color={colors.textSecondary} />
-          </Pressable>
-        }
-      />
+      <Header title="Me" right={<HeaderIconButton name="settings" label="Settings" onPress={() => router.push('/settings')} />} />
       <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.textSecondary} />}>
         <ProfilePhotoGallery photos={photos} onAdd={addPhoto} onRemove={removePhoto} busy={photoBusy} />
         <View style={styles.identity}>
@@ -132,14 +125,21 @@ export default function Me() {
             <Text style={[text.caption, { marginTop: spacing.xs }]}>Add a few lines about yourself in Edit profile.</Text>
           )}
         </View>
-        <CompletenessBar percent={completeness} />
+        <Group style={styles.card}>
+          <View style={styles.cardInner}>
+            <CompletenessBar percent={completeness} />
+            <Text style={text.caption}>Complete profiles are shown more often and read better.</Text>
+          </View>
+        </Group>
 
         <SectionHeader title="Profile" />
-        <SettingsRow label="Edit profile" icon="edit-2" onPress={() => router.push('/me/edit')} />
-        <SettingsRow label="Discovery preferences" icon="sliders" onPress={() => router.push('/me/preferences')} />
-        <SettingsRow label="Photos" icon="image" value={`${profile.photos.length}/6`} onPress={() => router.push('/me/photos')} />
-        <SettingsRow label="Saved posts" icon="bookmark" onPress={() => router.push('/me/saved')} />
-        <SettingsRow label="View as others see you" icon="eye" onPress={() => router.push({ pathname: '/profile/[id]', params: { id: userId } })} />
+        <Group inset={GROUP_INSET.icon}>
+          <SettingsRow label="Edit profile" icon="edit-2" onPress={() => router.push('/me/edit')} />
+          <SettingsRow label="Discovery preferences" icon="sliders" onPress={() => router.push('/me/preferences')} />
+          <SettingsRow label="Photos" icon="image" value={`${profile.photos.length} of 6`} onPress={() => router.push('/me/photos')} />
+          <SettingsRow label="Saved posts" icon="bookmark" onPress={() => router.push('/me/saved')} />
+          <SettingsRow label="View as others see you" icon="eye" onPress={() => router.push({ pathname: '/profile/[id]', params: { id: userId } })} />
+        </Group>
 
         <SectionHeader title="Verification" />
         <VerificationList verification={profile.verification} onRequest={requestVerification} busy={verifyBusy} />
@@ -150,9 +150,10 @@ export default function Me() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingTop: spacing.sm, paddingBottom: 40, gap: spacing.lg },
-  gear: { width: touch.minTarget, height: touch.minTarget, alignItems: 'flex-end', justifyContent: 'center' },
-  identity: { paddingHorizontal: spacing.lg, gap: 4 },
+  content: { paddingTop: spacing.sm, paddingBottom: 40 },
+  identity: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: 4 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  note: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+  card: { marginTop: spacing.lg },
+  cardInner: { padding: spacing.lg, gap: spacing.md },
+  note: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
 });

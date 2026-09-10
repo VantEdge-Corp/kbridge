@@ -5,6 +5,7 @@ import { timeAgo, type Post } from '@peaches/core';
 import { PAGE_PADDING } from '@/constants/layout';
 import { avatar, colors, radius, spacing, text } from '@/constants/theme';
 import { Avatar } from './Avatar';
+import { Button } from './Button';
 import { Icon } from './Icon';
 import { VerificationBadge } from './VerificationBadge';
 
@@ -19,10 +20,12 @@ interface Props {
   detail?: boolean;
 }
 
-/** No follower counts, no public popularity, no viral metrics. */
+const CARD_PADDING = spacing.lg;
+
+/** A grouped card: 36px avatar, text, optional photo, thin 20px action icons. No follower counts, no public popularity, no viral metrics. */
 export const PostCard = memo(function PostCard({ post, onOpen, onAuthor, onToggleSave, onRequestConversation, onMore, detail }: Props) {
   const { width } = useWindowDimensions();
-  const imageWidth = width - PAGE_PADDING * 2;
+  const imageWidth = width - PAGE_PADDING * 2 - CARD_PADDING * 2 - 2;
   return (
     <View style={styles.card}>
       <View style={styles.head}>
@@ -52,7 +55,7 @@ export const PostCard = memo(function PostCard({ post, onOpen, onAuthor, onToggl
       </Pressable>
       <View style={styles.actions}>
         <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${post.commentCount} comments`} style={styles.action} hitSlop={6}>
-          <Icon name="message-circle" size={18} color={colors.textSecondary} />
+          <Icon name="message-circle" size={20} color={colors.textSecondary} />
           {post.commentCount > 0 ? <Text style={text.caption}>{post.commentCount}</Text> : null}
         </Pressable>
         <Pressable
@@ -63,13 +66,11 @@ export const PostCard = memo(function PostCard({ post, onOpen, onAuthor, onToggl
           style={styles.action}
           hitSlop={6}
         >
-          <Icon name="bookmark" size={18} color={post.savedByViewer ? colors.ivory : colors.textSecondary} />
+          <Icon name="bookmark" size={20} color={post.savedByViewer ? colors.ivory : colors.textSecondary} />
         </Pressable>
         <View style={{ flex: 1 }} />
         {onRequestConversation && !post.own ? (
-          <Pressable onPress={onRequestConversation} accessibilityRole="button" style={({ pressed }) => [styles.request, pressed && { opacity: 0.7 }]}>
-            <Text style={styles.requestText}>Request conversation</Text>
-          </Pressable>
+          <Button title="Request conversation" icon="mail" variant="ghost" size="small" onPress={onRequestConversation} style={styles.request} />
         ) : null}
       </View>
     </View>
@@ -77,16 +78,22 @@ export const PostCard = memo(function PostCard({ post, onOpen, onAuthor, onToggl
 });
 
 const styles = StyleSheet.create({
-  card: { paddingHorizontal: PAGE_PADDING, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.md },
+  card: {
+    padding: CARD_PADDING,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    gap: spacing.md,
+  },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  author: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  author: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 2, flex: 1 },
   authorText: { flexShrink: 1, gap: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   more: { width: 36, height: 36, alignItems: 'flex-end', justifyContent: 'center' },
   body: { color: colors.text },
-  photo: { marginTop: spacing.md, borderRadius: radius.lg, backgroundColor: colors.surfaceElevated },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 32 },
-  request: { minHeight: 32, justifyContent: 'center' },
-  requestText: { fontSize: 13, color: colors.ivory, fontWeight: '500' },
+  photo: { marginTop: spacing.md, borderRadius: radius.md, backgroundColor: colors.surfaceElevated },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl, marginTop: 2 },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 32 },
+  request: { marginRight: -spacing.md },
 });

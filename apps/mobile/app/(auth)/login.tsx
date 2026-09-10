@@ -62,6 +62,6 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
-  banner: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md },
-  links: { alignItems: 'center', gap: 2 },
+  banner: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg },
+  links: { alignItems: 'center', gap: 4, marginTop: spacing.sm },
 });

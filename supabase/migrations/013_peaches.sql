@@ -205,7 +205,18 @@ create policy "Admins read private data"
   to authenticated
   using (public.is_admin());
 
+create or replace function public.set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
 -- Mirrors educationDisplay() / employmentDisplay() in @peaches/core.
+-- AFTER trigger on purpose: BEFORE INSERT row triggers also fire for rows that
+-- ON CONFLICT DO NOTHING then skips, which would overwrite the derived columns
+-- with defaults every time a client "ensures" the row exists.
 create or replace function public.sync_public_profile_from_private()
 returns trigger
 language plpgsql
@@ -250,15 +261,19 @@ begin
          updated_at = now()
    where id = new.user_id;
 
-  new.updated_at := now();
-  return new;
+  return null;
 end;
 $$;
 
 drop trigger if exists member_private_sync on public.member_private;
 create trigger member_private_sync
-  before insert or update on public.member_private
+  after insert or update on public.member_private
   for each row execute function public.sync_public_profile_from_private();
+
+drop trigger if exists member_private_touch on public.member_private;
+create trigger member_private_touch
+  before update on public.member_private
+  for each row execute function public.set_updated_at();
 
 -- ----------------------------------------------------------------------------
 -- 4. Preferences (owner only). Shape: the Preferences type in @peaches/core.
@@ -277,14 +292,6 @@ create policy "Owner manages preferences"
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
-
-create or replace function public.set_updated_at()
-returns trigger language plpgsql as $$
-begin
-  new.updated_at := now();
-  return new;
-end;
-$$;
 
 drop trigger if exists member_preferences_touch on public.member_preferences;
 create trigger member_preferences_touch

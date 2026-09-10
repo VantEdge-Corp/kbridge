@@ -122,7 +122,7 @@ export default function Status() {
 
 const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
-  tokenBox: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.lg, gap: spacing.sm },
+  tokenBox: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
   token: { color: colors.ivory, fontSize: 15, fontFamily: 'Menlo', letterSpacing: 0.5 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

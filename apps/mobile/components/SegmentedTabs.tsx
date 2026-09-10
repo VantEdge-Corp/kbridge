@@ -7,7 +7,7 @@ interface Props<K extends string> {
   onChange: (key: K) => void;
 }
 
-/** Text tabs: selected is ivory with a 1px ivory underline, others muted. */
+/** Text tabs, 14px medium, 20px apart. The active tab is ivory with a 2px underline that hugs the label. */
 export function SegmentedTabs<K extends string>({ items, value, onChange }: Props<K>) {
   return (
     <View style={styles.wrap}>
@@ -38,11 +38,11 @@ export function SegmentedTabs<K extends string>({ items, value, onChange }: Prop
 
 const styles = StyleSheet.create({
   wrap: { borderBottomWidth: 1, borderBottomColor: colors.border },
-  row: { paddingHorizontal: spacing.lg, gap: spacing.xl },
-  tab: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'transparent', marginBottom: -1, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },
+  row: { paddingHorizontal: spacing.lg, gap: 20 },
+  tab: { paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },
   tabSelected: { borderBottomColor: colors.ivory },
-  label: { fontSize: 13, color: colors.textMuted, fontWeight: '500' },
+  label: { fontSize: 14, color: colors.textMuted, fontWeight: '500' },
   labelSelected: { color: colors.ivory },
-  badge: { minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
-  badgeText: { fontSize: 10, color: colors.onIvory, fontWeight: '600' },
+  badge: { minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  badgeText: { fontSize: 11, color: colors.text, fontWeight: '600' },
 });

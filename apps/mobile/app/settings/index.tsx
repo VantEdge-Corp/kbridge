@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { BRAND } from '@peaches/core';
+import { GROUP_INSET, Group } from '@/components/Group';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
 import { SettingsRow } from '@/components/SettingsRow';
@@ -30,15 +31,19 @@ export default function Settings() {
     <Screen edges={['top', 'bottom']}>
       <Header back title="Settings" />
       <ScrollView contentContainerStyle={styles.body}>
-        {SECTIONS.map((s) => (
-          <SettingsRow
-            key={s.key}
-            label={s.label}
-            icon={s.icon}
-            onPress={() => (s.key === 'discovery' ? router.push('/me/preferences') : router.push({ pathname: '/settings/[section]', params: { section: s.key } }))}
-          />
-        ))}
-        <SettingsRow label="Logout" icon="log-out" onPress={logout} chevron={false} destructive />
+        <Group inset={GROUP_INSET.icon}>
+          {SECTIONS.map((s) => (
+            <SettingsRow
+              key={s.key}
+              label={s.label}
+              icon={s.icon}
+              onPress={() => (s.key === 'discovery' ? router.push('/me/preferences') : router.push({ pathname: '/settings/[section]', params: { section: s.key } }))}
+            />
+          ))}
+        </Group>
+        <Group inset={GROUP_INSET.icon} style={styles.logout}>
+          <SettingsRow label="Logout" icon="log-out" onPress={logout} chevron={false} destructive />
+        </Group>
         <Text style={[text.micro, styles.foot]}>
           {BRAND.name} · {BRAND.market}
         </Text>
@@ -48,6 +53,7 @@ export default function Settings() {
 }
 
 const styles = StyleSheet.create({
-  body: { paddingBottom: spacing.xxl },
+  body: { paddingTop: spacing.sm, paddingBottom: spacing.xxl },
+  logout: { marginTop: spacing.lg },
   foot: { textAlign: 'center', paddingTop: spacing.xl },
 });

@@ -61,7 +61,7 @@ export default function PreferencesScreen() {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <Header back title="Discovery preferences" right={<Button title="Save" size="small" onPress={save} loading={saving} disabled={!prefs} />} />
+      <Header back title="Preferences" right={<Button title="Save" size="small" onPress={save} loading={saving} disabled={!prefs} />} />
       {prefs ? (
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <PreferenceEditor prefs={prefs} onChange={setPrefs} areaId={areaId} maxDistanceMiles={distance} onAreaChange={setAreaId} onDistanceChange={setDistance} />

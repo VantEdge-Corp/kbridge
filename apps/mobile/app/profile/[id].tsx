@@ -23,6 +23,7 @@ import {
   type PublicProfile,
 } from '@peaches/core';
 import { Button } from '@/components/Button';
+import { Group } from '@/components/Group';
 import { Header } from '@/components/Header';
 import { Icon } from '@/components/Icon';
 import { IntroductionNoteSheet } from '@/components/IntroductionNoteSheet';
@@ -245,14 +246,21 @@ export default function ProfileView() {
         {posts.length > 0 ? (
           <View style={styles.section}>
             <Text style={text.eyebrow}>Posts</Text>
-            {posts.map((p) => (
-              <Pressable key={p.id} onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })} accessibilityRole="button" style={styles.postRow}>
-                <Text style={text.body} numberOfLines={3}>
-                  {p.body}
-                </Text>
-                <Text style={text.micro}>{timeAgo(p.createdAt)}</Text>
-              </Pressable>
-            ))}
+            <Group flush>
+              {posts.map((p) => (
+                <Pressable
+                  key={p.id}
+                  onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.postRow, pressed && { backgroundColor: colors.surfaceHover }]}
+                >
+                  <Text style={text.body} numberOfLines={3}>
+                    {p.body}
+                  </Text>
+                  <Text style={text.micro}>{timeAgo(p.createdAt)}</Text>
+                </Pressable>
+              ))}
+            </Group>
           </View>
         ) : null}
       </ScrollView>
@@ -291,11 +299,11 @@ const styles = StyleSheet.create({
   dots: { position: 'absolute', bottom: 12, alignSelf: 'center', flexDirection: 'row', gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ivory, opacity: 0.35 },
   dotOn: { opacity: 1 },
-  monogramWrap: { paddingHorizontal: spacing.lg },
-  basic: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: 4 },
+  monogramWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
+  basic: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl, gap: 4 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl, gap: spacing.md },
+  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, gap: spacing.md },
   badges: { gap: spacing.sm },
-  postRow: { paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 4 },
+  postRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 4 },
   actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.canvas, borderTopWidth: 1, borderTopColor: colors.border },
 });

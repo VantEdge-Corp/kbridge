@@ -35,6 +35,7 @@ import {
 import { Button } from '@/components/Button';
 import { ErrorText } from '@/components/ErrorText';
 import { Field } from '@/components/Field';
+import { Group } from '@/components/Group';
 import { Header } from '@/components/Header';
 import { Loading } from '@/components/Loading';
 import { PickerModal, type PickerOption } from '@/components/PickerModal';
@@ -283,9 +284,9 @@ export default function EditProfile() {
   return (
     <Screen edges={['top', 'bottom']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Header back title="Edit profile" right={<Button title="Save" size="small" onPress={save} loading={saving} />} />
+        <Header back title="Edit profile" right={<Button title="Save" size="small" variant="ghost" onPress={save} loading={saving} />} />
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <SectionHeader title="Basics" style={styles.firstSection} />
+          <SectionHeader title="Basics" first />
           <View style={styles.fields}>
             <Field label="First name" value={form.firstName} onChangeText={(v) => set('firstName', v)} autoCapitalize="words" />
             <View style={styles.pair}>
@@ -297,7 +298,9 @@ export default function EditProfile() {
           </View>
 
           <SectionHeader title="Location" />
-          <SettingsRow label="Your area" value={areaById(form.areaId)?.name ?? 'Choose'} onPress={() => setOpen('area')} />
+          <Group>
+            <SettingsRow label="Your area" value={areaById(form.areaId)?.name ?? 'Choose'} onPress={() => setOpen('area')} />
+          </Group>
           <Text style={[text.caption, styles.note]}>Private. Others see only a coarse label such as &quot;{areaById(form.areaId)?.publicLabel ?? 'Metro Atlanta'}&quot;.</Text>
 
           <SectionHeader title="Work" />
@@ -305,10 +308,12 @@ export default function EditProfile() {
             <Field label="What you do" value={form.occupation} onChangeText={(v) => set('occupation', v)} placeholder="e.g. Product designer" />
             <Field label="Employer" value={form.employer} onChangeText={(v) => set('employer', v)} />
           </View>
-          <SettingsRow label="Employment status" value={labelFor(EMPLOYMENT_STATUS_OPTIONS, form.employmentStatus) || 'Choose'} onPress={() => setOpen('employmentStatus')} />
-          <SettingsRow label="Field of work" value={labelFor(INDUSTRY_OPTIONS, form.industry) || 'Choose'} onPress={() => setOpen('industry')} />
-          <SettingsRow label="Student or professional" value={labelFor(STUDENT_STATUS_OPTIONS, form.studentStatus) || 'Choose'} onPress={() => setOpen('studentStatus')} />
-          <SettingsRow label="Show employer on profile" chevron={false} right={<Switch value={form.employerDisplayEnabled} onValueChange={(v) => set('employerDisplayEnabled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
+          <Group>
+            <SettingsRow label="Employment status" value={labelFor(EMPLOYMENT_STATUS_OPTIONS, form.employmentStatus) || 'Choose'} onPress={() => setOpen('employmentStatus')} />
+            <SettingsRow label="Field of work" value={labelFor(INDUSTRY_OPTIONS, form.industry) || 'Choose'} onPress={() => setOpen('industry')} />
+            <SettingsRow label="Student or professional" value={labelFor(STUDENT_STATUS_OPTIONS, form.studentStatus) || 'Choose'} onPress={() => setOpen('studentStatus')} />
+            <SettingsRow label="Show employer on profile" chevron={false} right={<Switch value={form.employerDisplayEnabled} onValueChange={(v) => set('employerDisplayEnabled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
+          </Group>
 
           <SectionHeader title="Education" />
           <View style={styles.fields}>
@@ -316,34 +321,50 @@ export default function EditProfile() {
             <Field label="Field of study" value={form.fieldOfStudy} onChangeText={(v) => set('fieldOfStudy', v)} />
             <Field label="Graduation year" value={form.graduationYear} onChangeText={(v) => set('graduationYear', v.replace(/[^0-9]/g, '').slice(0, 4))} keyboardType="number-pad" />
           </View>
-          <SettingsRow label="Degree level" value={labelFor(DEGREE_LEVEL_OPTIONS, form.degreeLevel) || 'Choose'} onPress={() => setOpen('degreeLevel')} />
-          <SettingsRow label="Currently enrolled" chevron={false} right={<Switch value={form.currentlyEnrolled} onValueChange={(v) => set('currentlyEnrolled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
-          <SettingsRow label="Show education on profile" chevron={false} right={<Switch value={form.educationDisplayEnabled} onValueChange={(v) => set('educationDisplayEnabled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
+          <Group>
+            <SettingsRow label="Degree level" value={labelFor(DEGREE_LEVEL_OPTIONS, form.degreeLevel) || 'Choose'} onPress={() => setOpen('degreeLevel')} />
+            <SettingsRow label="Currently enrolled" chevron={false} right={<Switch value={form.currentlyEnrolled} onValueChange={(v) => set('currentlyEnrolled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
+            <SettingsRow label="Show education on profile" chevron={false} right={<Switch value={form.educationDisplayEnabled} onValueChange={(v) => set('educationDisplayEnabled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
+          </Group>
 
           <SectionHeader title="Background" />
-          <SettingsRow label="Nationality" value={form.nationalities.length ? `${form.nationalities.length} selected` : 'Add'} onPress={() => setOpen('nationalities')} />
-          {chips(form.nationalities, countryName)}
-          <SettingsRow label="Race / ethnicity" value={form.preferNotToSay ? 'Prefer not to say' : form.raceEthnicities.length ? `${form.raceEthnicities.length} selected` : 'Optional'} onPress={() => setOpen('raceEthnicities')} />
-          {!form.preferNotToSay ? chips(form.raceEthnicities, (v) => labelFor(RACE_ETHNICITY_OPTIONS, v as RaceEthnicity)) : null}
-          <SettingsRow
-            label="Prefer not to say"
-            description="Hides race/ethnicity and never uses it in matching."
-            chevron={false}
-            right={<Switch value={form.preferNotToSay} onValueChange={(v) => setForm((f) => (f ? { ...f, preferNotToSay: v, raceEthnicities: v ? [] : f.raceEthnicities } : f))} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />}
-          />
-          <SettingsRow label="Languages" value={form.languages.length ? `${form.languages.length} selected` : 'Add'} onPress={() => setOpen('languages')} />
-          {chips(form.languages, (v) => labelFor(LANGUAGE_OPTIONS, v))}
+          <Group>
+            <View>
+              <SettingsRow label="Nationality" value={form.nationalities.length ? `${form.nationalities.length} selected` : 'Add'} onPress={() => setOpen('nationalities')} />
+              {chips(form.nationalities, countryName)}
+            </View>
+            <View>
+              <SettingsRow label="Race / ethnicity" value={form.preferNotToSay ? 'Prefer not to say' : form.raceEthnicities.length ? `${form.raceEthnicities.length} selected` : 'Optional'} onPress={() => setOpen('raceEthnicities')} />
+              {!form.preferNotToSay ? chips(form.raceEthnicities, (v) => labelFor(RACE_ETHNICITY_OPTIONS, v as RaceEthnicity)) : null}
+            </View>
+            <SettingsRow
+              label="Prefer not to say"
+              description="Hides race/ethnicity and never uses it in matching."
+              chevron={false}
+              right={<Switch value={form.preferNotToSay} onValueChange={(v) => setForm((f) => (f ? { ...f, preferNotToSay: v, raceEthnicities: v ? [] : f.raceEthnicities } : f))} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />}
+            />
+            <View>
+              <SettingsRow label="Languages" value={form.languages.length ? `${form.languages.length} selected` : 'Add'} onPress={() => setOpen('languages')} />
+              {chips(form.languages, (v) => labelFor(LANGUAGE_OPTIONS, v))}
+            </View>
+          </Group>
 
           <SectionHeader title="Intent & lifestyle" />
-          <SettingsRow label="Relationship intent" value={labelFor(RELATIONSHIP_INTENT_OPTIONS, form.relationshipIntent) || 'Choose'} onPress={() => setOpen('relationshipIntent')} />
-          <SettingsRow label="Drinking" value={labelFor(DRINKING_OPTIONS, form.drinking) || 'Optional'} onPress={() => setOpen('drinking')} />
-          <SettingsRow label="Smoking" value={labelFor(SMOKING_OPTIONS, form.smoking) || 'Optional'} onPress={() => setOpen('smoking')} />
-          <SettingsRow label="Exercise" value={labelFor(EXERCISE_OPTIONS, form.exercise) || 'Optional'} onPress={() => setOpen('exercise')} />
-          <SettingsRow label="Children" value={labelFor(CHILDREN_OPTIONS, form.children) || 'Optional'} onPress={() => setOpen('children')} />
+          <Group>
+            <SettingsRow label="Relationship intent" value={labelFor(RELATIONSHIP_INTENT_OPTIONS, form.relationshipIntent) || 'Choose'} onPress={() => setOpen('relationshipIntent')} />
+            <SettingsRow label="Drinking" value={labelFor(DRINKING_OPTIONS, form.drinking) || 'Optional'} onPress={() => setOpen('drinking')} />
+            <SettingsRow label="Smoking" value={labelFor(SMOKING_OPTIONS, form.smoking) || 'Optional'} onPress={() => setOpen('smoking')} />
+            <SettingsRow label="Exercise" value={labelFor(EXERCISE_OPTIONS, form.exercise) || 'Optional'} onPress={() => setOpen('exercise')} />
+            <SettingsRow label="Children" value={labelFor(CHILDREN_OPTIONS, form.children) || 'Optional'} onPress={() => setOpen('children')} />
+          </Group>
 
           <SectionHeader title="Interests" />
-          <SettingsRow label="Interests" value={form.interests.length ? `${form.interests.length}/${LIMITS.interestsMax}` : 'Add'} onPress={() => setOpen('interests')} />
-          {chips(form.interests, (v) => v)}
+          <Group>
+            <View>
+              <SettingsRow label="Interests" value={form.interests.length ? `${form.interests.length} of ${LIMITS.interestsMax}` : 'Add'} onPress={() => setOpen('interests')} />
+              {chips(form.interests, (v) => v)}
+            </View>
+          </Group>
 
           <ErrorText message={error} />
           <View style={styles.saveWrap}>
@@ -371,10 +392,9 @@ export default function EditProfile() {
 
 const styles = StyleSheet.create({
   body: { paddingBottom: spacing.xxxl },
-  firstSection: { paddingTop: spacing.sm },
-  fields: { paddingHorizontal: spacing.lg, gap: spacing.lg, paddingBottom: spacing.md },
+  fields: { paddingHorizontal: spacing.lg, gap: spacing.lg, paddingBottom: spacing.lg },
   pair: { flexDirection: 'row', gap: spacing.md },
-  note: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
-  chips: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
-  saveWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl },
+  note: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  chips: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md, marginTop: -spacing.xs },
+  saveWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl },
 });

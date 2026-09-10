@@ -18,9 +18,14 @@ interface Props {
   accessibilityLabel?: string;
 }
 
+/**
+ * 44px, radius md, 15px medium. Primary is ivory (one per screen); secondary
+ * is a 1px outline; ghost is text only; danger is a muted outline. Pressed
+ * state is 0.8 opacity.
+ */
 export function Button({ title, onPress, variant = 'primary', size = 'default', disabled, loading, icon, fullWidth, style, accessibilityLabel }: Props) {
   const inactive = disabled || loading;
-  const color = variant === 'primary' ? colors.onIvory : variant === 'danger' ? colors.danger : variant === 'ghost' ? colors.textSecondary : colors.ivory;
+  const color = variant === 'primary' ? colors.onIvory : variant === 'danger' ? colors.danger : variant === 'ghost' ? colors.text : colors.ivory;
   return (
     <Pressable
       accessibilityRole="button"
@@ -52,10 +57,10 @@ export function Button({ title, onPress, variant = 'primary', size = 'default', 
 const styles = StyleSheet.create({
   base: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
   regular: { minHeight: touch.minTarget },
-  small: { minHeight: 36, paddingHorizontal: spacing.md, borderRadius: radius.sm },
+  small: { minHeight: 36, paddingHorizontal: 14, borderRadius: radius.sm + 2 },
   primary: { backgroundColor: colors.ivory },
-  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.borderStrong },
-  ghost: { backgroundColor: 'transparent' },
+  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
+  ghost: { backgroundColor: 'transparent', paddingHorizontal: spacing.md },
   danger: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
   full: { alignSelf: 'stretch' },
   pressed: { opacity: 0.8 },

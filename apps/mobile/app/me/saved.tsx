@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet } from 'react-native';
+import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import type { Post } from '@peaches/core';
 import { EmptyState } from '@/components/EmptyState';
 import { Header } from '@/components/Header';
 import { Loading } from '@/components/Loading';
 import { PostCard } from '@/components/PostCard';
 import { Screen } from '@/components/Screen';
+import { spacing } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
@@ -57,7 +58,8 @@ export default function Saved() {
               onMore={() => router.push({ pathname: '/post/[id]', params: { id: item.id } })}
             />
           )}
-          contentContainerStyle={posts.length === 0 ? styles.empty : undefined}
+          contentContainerStyle={posts.length === 0 ? styles.empty : styles.content}
+          ItemSeparatorComponent={() => <View style={styles.gap} />}
           ListEmptyComponent={<EmptyState title="Nothing saved yet." body="Bookmark posts from the Feed to find them here." />}
         />
       )}
@@ -67,4 +69,6 @@ export default function Saved() {
 
 const styles = StyleSheet.create({
   empty: { flexGrow: 1, justifyContent: 'center' },
+  content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs, paddingBottom: 40 },
+  gap: { height: spacing.md },
 });

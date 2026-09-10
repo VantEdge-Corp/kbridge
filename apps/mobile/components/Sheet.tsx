@@ -10,14 +10,14 @@ interface Props {
   children: React.ReactNode;
 }
 
-/** Bottom sheet on the elevated surface. */
+/** Bottom sheet: `surfaceElevated`, top radius xl, a 36x4 grabber, 24px padding, soft shadow. */
 export function Sheet({ visible, onClose, title, children }: Props) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" accessibilityRole="button" />
-        <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, spacing.xl) }]}>
           <View style={styles.handle} />
           {title ? <Text style={[text.heading, styles.title]}>{title}</Text> : null}
           {children}
@@ -37,23 +37,25 @@ export function ActionSheet({ visible, onClose, title, actions }: { visible: boo
   return (
     <Sheet visible={visible} onClose={onClose} title={title}>
       <View style={styles.actions}>
-        {actions.map((a) => (
-          <Pressable
-            key={a.label}
-            accessibilityRole="button"
-            onPress={() => {
-              onClose();
-              a.onPress();
-            }}
-            style={({ pressed }) => [styles.action, pressed && { backgroundColor: colors.surfaceHover }]}
-          >
-            <Text style={[text.body, a.destructive && { color: colors.danger }]}>{a.label}</Text>
-          </Pressable>
+        {actions.map((a, i) => (
+          <React.Fragment key={a.label}>
+            {i > 0 ? <View style={styles.separator} /> : null}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                onClose();
+                a.onPress();
+              }}
+              style={({ pressed }) => [styles.action, pressed && { backgroundColor: colors.surfaceHover }]}
+            >
+              <Text style={[text.body, a.destructive && { color: colors.danger }]}>{a.label}</Text>
+            </Pressable>
+          </React.Fragment>
         ))}
-        <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.action, pressed && { backgroundColor: colors.surfaceHover }]}>
-          <Text style={text.bodySecondary}>Cancel</Text>
-        </Pressable>
       </View>
+      <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.cancel, pressed && { opacity: 0.8 }]}>
+        <Text style={[text.body, { color: colors.textSecondary }]}>Cancel</Text>
+      </Pressable>
     </Sheet>
   );
 }
@@ -64,13 +66,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderColor: colors.border,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: -8 },
+    elevation: 16,
   },
-  handle: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2, backgroundColor: colors.borderStrong, marginBottom: spacing.md },
-  title: { marginBottom: spacing.md },
-  actions: { gap: 2 },
-  action: { minHeight: 48, justifyContent: 'center', paddingHorizontal: spacing.sm, borderRadius: radius.md },
+  handle: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2, backgroundColor: colors.borderStrong, marginBottom: spacing.lg },
+  title: { marginBottom: spacing.lg },
+  actions: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden' },
+  separator: { height: 1, backgroundColor: colors.border, marginLeft: spacing.lg },
+  action: { minHeight: 52, justifyContent: 'center', paddingHorizontal: spacing.lg },
+  cancel: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: spacing.sm },
 });

@@ -41,7 +41,7 @@ export function MetaSection({ title, children }: { title: string; children: Reac
 }
 
 const styles = StyleSheet.create({
-  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl, gap: spacing.md },
+  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, gap: spacing.md },
   sectionTitle: { marginBottom: 2 },
   row: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
   label: { width: 92, paddingTop: 3 },

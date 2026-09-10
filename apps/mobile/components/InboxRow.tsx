@@ -17,7 +17,7 @@ interface Props {
   emphasize?: boolean;
 }
 
-/** Compact row with a 40px avatar. Tapping the avatar or name opens the profile; the row body opens the item. */
+/** Compact row with a 40px avatar for grouped lists. Tapping the avatar or name opens the profile; the row body opens the item. */
 export function InboxRow({ profile, subtitle, time, unread, onPress, onAvatarPress, children, emphasize }: Props) {
   return (
     <View style={styles.wrap}>
@@ -54,7 +54,7 @@ export function InboxRow({ profile, subtitle, time, unread, onPress, onAvatarPre
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  wrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   body: { flex: 1, minHeight: 40, justifyContent: 'center', gap: 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

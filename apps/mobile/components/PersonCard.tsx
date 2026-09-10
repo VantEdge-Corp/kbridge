@@ -13,7 +13,7 @@ interface Props {
   width: number;
 }
 
-/** 3:4 portrait, name and age in Georgia, a small verification mark, one metadata line. No like controls. */
+/** 3:4 portrait with a hairline ring, name and age in Georgia, a small verification mark, one metadata line. No like controls. */
 export const PersonCard = memo(function PersonCard({ profile, width }: Props) {
   const router = useRouter();
   const height = cardHeightFor(width);
@@ -28,7 +28,9 @@ export const PersonCard = memo(function PersonCard({ profile, width }: Props) {
       style={({ pressed }) => [{ width }, pressed && styles.pressed]}
     >
       {photo ? (
-        <Image source={{ uri: photo }} style={[styles.image, { width, height }]} contentFit="cover" transition={150} recyclingKey={profile.id} />
+        <View style={[styles.frame, { width, height }]}>
+          <Image source={{ uri: photo }} style={{ width, height }} contentFit="cover" transition={150} recyclingKey={profile.id} />
+        </View>
       ) : (
         <MonogramPortrait firstName={profile.firstName} width={width} height={height} radius={card.imageRadius} />
       )}
@@ -46,8 +48,14 @@ export const PersonCard = memo(function PersonCard({ profile, width }: Props) {
 });
 
 const styles = StyleSheet.create({
-  image: { borderRadius: card.imageRadius, backgroundColor: colors.surfaceElevated },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  frame: {
+    borderRadius: card.imageRadius,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.imageRing,
+  },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   name: { flexShrink: 1 },
   pressed: { opacity: 0.85 },
 });

@@ -8,6 +8,7 @@ import {
 } from '@peaches/core';
 import { colors, spacing, text } from '@/constants/theme';
 import { Button } from './Button';
+import { Group } from './Group';
 import { Icon } from './Icon';
 
 interface Props {
@@ -16,10 +17,10 @@ interface Props {
   busy?: VerificationDimension | null;
 }
 
-/** The member's own per-dimension states. Others only ever see `verified`. */
+/** The member's own per-dimension states in a grouped list. Others only ever see `verified`. */
 export function VerificationList({ verification, onRequest, busy }: Props) {
   return (
-    <View>
+    <Group inset={spacing.lg + 16 + spacing.md}>
       {VERIFICATION_DIMENSIONS.map((d) => {
         const state = verification[d];
         const color = state === 'verified' ? colors.verified : state === 'pending' ? colors.textSecondary : colors.textMuted;
@@ -36,11 +37,11 @@ export function VerificationList({ verification, onRequest, busy }: Props) {
           </View>
         );
       })}
-    </View>
+    </Group>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  textWrap: { flex: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: 56 },
+  textWrap: { flex: 1, gap: 1 },
 });
