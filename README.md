@@ -191,7 +191,7 @@ eight per rolling day and refuses requests across a block.
 | `npm test` | Matching engine and formatting tests |
 | `npm run seed:generate` | Regenerate `supabase/seed_demo.sql` from the dataset |
 | `npm run check:parity` | Compare SQL and TypeScript compatibility on a database (see the script header for env vars) |
-| `cd apps/web && npx playwright test` | Web end-to-end smoke test against a running Supabase |
+| `cd apps/web && npm run test:e2e` | Web end-to-end smoke test against a running, seeded Supabase |
 | `cd apps/mobile && npm run export:check` | Bundle the mobile app the way Expo Go loads it |
 
 ## Local end-to-end testing
