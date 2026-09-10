@@ -8,4 +8,15 @@ export default defineConfig({
     port: 5173,
     open: false,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/@supabase')) return 'supabase';
+          if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) return 'react';
+          return undefined;
+        },
+      },
+    },
+  },
 });

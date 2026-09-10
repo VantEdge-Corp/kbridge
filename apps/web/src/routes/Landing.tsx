@@ -1,0 +1,128 @@
+import { Link } from 'react-router-dom';
+import { BRAND, VERIFICATION_DIMENSIONS, VERIFICATION_LABEL } from '@peaches/core';
+import { useAuth } from '../auth/AuthProvider';
+import { homeFor } from '../auth/guards';
+import { LinkButton } from '../components/Button';
+import { Eyebrow } from '../components/Field';
+import { Wordmark } from '../components/Wordmark';
+import { usePageTitle } from '../hooks/usePageTitle';
+
+const STEPS = [
+  { n: 'I', title: 'Apply', body: 'A short application: who you are, what you do, and why you want to meet people this way. No photos or documents are required to apply.' },
+  { n: 'II', title: 'Committee review', body: 'Every application is read by a person. Most decisions take a few days. You can check your status any time with the link we give you.' },
+  { n: 'III', title: 'Create your account', body: 'Once admitted, choose a password and complete your profile. From there you meet people through introductions, not browsing.' },
+];
+
+const VERIFICATION_COPY: Record<(typeof VERIFICATION_DIMENSIONS)[number], string> = {
+  identity: 'That you are who your profile says you are.',
+  education: 'The school and degree you list.',
+  student: 'Current enrollment, for students.',
+  employment: 'Your occupation and employer.',
+};
+
+export function Landing() {
+  usePageTitle();
+  const { user, profile, adminAsMember } = useAuth();
+  const signedIn = !!user && !!profile;
+  return (
+    <div className="min-h-dvh flex flex-col">
+      <header className="h-16 px-5 md:px-10 flex items-center justify-between">
+        <Wordmark />
+        <nav className="flex items-center gap-5 text-body-sm">
+          {signedIn ? (
+            <Link to={homeFor(profile, adminAsMember)} className="text-text-secondary hover:text-text">
+              Open {BRAND.name}
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="text-text-secondary hover:text-text">
+                Sign in
+              </Link>
+              <LinkButton to="/apply" size="sm">
+                Apply
+              </LinkButton>
+            </>
+          )}
+        </nav>
+      </header>
+
+      <main className="flex-1 w-full max-w-[960px] mx-auto px-5 md:px-10">
+        <section className="pt-16 md:pt-28 pb-16 md:pb-24">
+          <Eyebrow className="mb-4">{BRAND.market}</Eyebrow>
+          <h1 className="font-display text-[40px] md:text-[60px] leading-[1.04] text-text max-w-[12ch]">{BRAND.tagline}</h1>
+          <p className="mt-6 text-body md:text-subheading text-text-secondary max-w-[54ch] leading-relaxed">
+            {BRAND.name} is a verified, application-based way to meet people in {BRAND.market}. It is intentional, discreet, and for
+            adults who would rather be introduced than browsed. Membership is by application, reviewed by a committee, and
+            every profile can be verified one dimension at a time.
+          </p>
+          <div className="mt-8 flex items-center gap-5">
+            <LinkButton to="/apply">Apply</LinkButton>
+            {!signedIn ? (
+              <Link to="/login" className="text-body text-text-secondary hover:text-text underline-offset-4 hover:underline">
+                Sign in
+              </Link>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="py-12 md:py-16 border-t border-border">
+          <Eyebrow className="mb-6">How admission works</Eyebrow>
+          <ol className="grid md:grid-cols-3 gap-8">
+            {STEPS.map((s) => (
+              <li key={s.n}>
+                <p className="font-display text-heading text-text-muted">{s.n}</p>
+                <p className="mt-2 font-display text-subheading text-text">{s.title}</p>
+                <p className="mt-2 text-body-sm text-text-secondary leading-relaxed">{s.body}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="py-12 md:py-16 border-t border-border">
+          <Eyebrow className="mb-6">What verification means</Eyebrow>
+          <p className="text-body text-text-secondary max-w-[60ch] leading-relaxed">
+            Verification is not a single checkmark. Each of four dimensions is reviewed on its own by the committee, and a
+            profile shows only the ones that have been confirmed. We do not collect government IDs or biometric data.
+          </p>
+          <dl className="mt-8 grid sm:grid-cols-2 gap-x-8 gap-y-5">
+            {VERIFICATION_DIMENSIONS.map((d) => (
+              <div key={d} className="border-l border-border pl-4">
+                <dt className="text-body text-text">{VERIFICATION_LABEL[d]}</dt>
+                <dd className="text-body-sm text-text-muted">{VERIFICATION_COPY[d]}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section className="py-12 md:py-16 border-t border-border">
+          <div className="max-w-[60ch]">
+            <p className="font-display text-heading text-text leading-snug">
+              Discreet by design. At a glance, {BRAND.name} looks like a members&apos; app. In use, it is about meeting people well.
+            </p>
+            <p className="mt-4 text-body-sm text-text-secondary leading-relaxed">
+              Your exact location is never shown, only an area like &ldquo;Duluth area.&rdquo; Nationality, race or ethnicity, and
+              lifestyle details are optional, and &ldquo;prefer not to say&rdquo; is always available. Nothing about you is ranked publicly.
+            </p>
+            <div className="mt-8">
+              <LinkButton to="/apply">Apply for membership</LinkButton>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="h-16 px-5 md:px-10 flex items-center justify-between border-t border-border text-caption text-text-muted">
+        <span>
+          &copy; {new Date().getFullYear()} {BRAND.name} · {BRAND.market}
+        </span>
+        <nav className="flex gap-5">
+          <Link to="/privacy" className="hover:text-text">
+            Privacy
+          </Link>
+          <Link to="/terms" className="hover:text-text">
+            Terms
+          </Link>
+        </nav>
+      </footer>
+    </div>
+  );
+}

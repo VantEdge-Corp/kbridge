@@ -1,5 +1,5 @@
 import type { Client } from './client';
-import { ApiError, uniqueChannelName, unwrap } from './client';
+import { ApiError, uniqueChannelName, unwrap, unwrapMaybe } from './client';
 import { BUCKETS, publicUrl, removeObjects, uploadImage, type UploadBody } from './storage';
 import type { PostCommentRow, PostRow } from './rows';
 import type { ProfilesApi } from './profiles';
@@ -53,6 +53,13 @@ export function createPostsApi(client: Client, profiles: ProfilesApi) {
     if (options.before) query = query.lt('created_at', options.before);
     const rows = unwrap(await query) as PostRow[];
     return hydrate(rows, viewerId);
+  }
+
+  async function get(postId: string, viewerId: string): Promise<Post | null> {
+    const row = unwrapMaybe(await client.from('posts').select(POST_COLUMNS).eq('id', postId).maybeSingle()) as PostRow | null;
+    if (!row) return null;
+    const [post] = await hydrate([row], viewerId);
+    return post ?? null;
   }
 
   async function listByAuthor(authorId: string, viewerId: string, limit = 20): Promise<Post[]> {
@@ -134,7 +141,7 @@ export function createPostsApi(client: Client, profiles: ProfilesApi) {
     };
   }
 
-  return { listFeed, listByAuthor, listSaved, create, remove, setSaved, listComments, addComment, removeComment, subscribeFeed };
+  return { get, listFeed, listByAuthor, listSaved, create, remove, setSaved, listComments, addComment, removeComment, subscribeFeed };
 }
 
 export type PostsApi = ReturnType<typeof createPostsApi>;
