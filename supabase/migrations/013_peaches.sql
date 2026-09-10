@@ -563,7 +563,8 @@ create view public.public_profiles as
     p.race_ethnicities,
     p.race_ethnicity_disclosure,
     p.languages,
-    p.display_area,
+    -- Derived live from the private area so it can never drift from it.
+    coalesce(a.public_label, 'Metro Atlanta') as display_area,
     p.relationship_intent,
     p.lifestyle,
     p.interests,
@@ -575,6 +576,8 @@ create view public.public_profiles as
       case when p.verification_employment = 'verified' then 'employment' end
     ], null)::text[] as verified_badges
   from public.profiles p
+  left join public.member_private mp on mp.user_id = p.id
+  left join public.areas a on a.id = mp.area_id
   where p.onboarding_complete and p.suspended_at is null;
 
 revoke all on public.public_profiles from anon, public;

@@ -1,0 +1,39 @@
+import { useRouter } from 'expo-router';
+import { StyleSheet, Text, View } from 'react-native';
+import { BRAND } from '@peaches/core';
+import { Button } from '@/components/Button';
+import { Screen } from '@/components/Screen';
+import { Wordmark } from '@/components/Wordmark';
+import { colors, fonts, spacing, text } from '@/constants/theme';
+
+export default function Welcome() {
+  const router = useRouter();
+  return (
+    <Screen edges={['top', 'bottom']}>
+      <View style={styles.body}>
+        <View style={styles.brand}>
+          <Wordmark size={26} />
+          <Text style={styles.tagline}>{BRAND.tagline}</Text>
+          <Text style={[text.bodySmall, styles.lede]}>
+            A verified community for meeting people in {BRAND.market}, by application.
+          </Text>
+        </View>
+        <View style={styles.actions}>
+          <Button title="Apply for membership" onPress={() => router.push('/(auth)/apply')} fullWidth />
+          <Button title="Sign in" variant="secondary" onPress={() => router.push('/(auth)/login')} fullWidth />
+          <Button title="Check application status" variant="ghost" onPress={() => router.push('/(auth)/status')} fullWidth />
+        </View>
+        <Text style={[text.micro, styles.foot]}>Members only. Every application is read by a person.</Text>
+      </View>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  body: { flex: 1, paddingHorizontal: spacing.xl, justifyContent: 'space-between', paddingBottom: spacing.xl },
+  brand: { flex: 1, justifyContent: 'center', gap: spacing.md },
+  tagline: { fontFamily: fonts.display, fontSize: 30, lineHeight: 36, color: colors.text, marginTop: spacing.sm },
+  lede: { maxWidth: 300 },
+  actions: { gap: spacing.md },
+  foot: { textAlign: 'center', marginTop: spacing.lg },
+});
