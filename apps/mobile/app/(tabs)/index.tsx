@@ -1,37 +1,107 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { HOME_SECTIONS, rankSection, type HomeSection } from '@peaches/core';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HOME_SECTIONS, rankSection, type HomeSection, type PublicProfile } from '@peaches/core';
+import { Button } from '@/components/Button';
+import { DiscoverCard } from '@/components/DiscoverCard';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorText } from '@/components/ErrorText';
 import { Header } from '@/components/Header';
+import { IntroductionNoteSheet } from '@/components/IntroductionNoteSheet';
 import { Loading } from '@/components/Loading';
-import { PeopleGrid } from '@/components/PeopleGrid';
+import { ReportSheet } from '@/components/ReportSheet';
 import { Screen } from '@/components/Screen';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
-import { Button } from '@/components/Button';
+import { ActionSheet } from '@/components/Sheet';
 import { spacing } from '@/constants/theme';
-import { useTheme } from '@/lib/theme';
+import { useStyles, type Theme } from '@/lib/theme';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
+import { api } from '@/lib/api';
+import { useMember } from '@/lib/auth';
+import { errorMessage } from '@/lib/errors';
 
 const EMPTY: Record<HomeSection, string> = {
-  for_you: 'No one new right now.',
-  nearby: 'No one within your distance right now.',
-  new: 'No new members in the last two weeks.',
-  active: 'No recently active members right now.',
+  for_you: 'You have met everyone for now',
+  nearby: 'No one within your distance right now',
+  new: 'No new members in the last two weeks',
+  active: 'No recently active members right now',
 };
 
+/**
+ * Home: one member at a time, as their full profile story. "Not now" hides
+ * them for a while; "Interested" opens the written introduction. Either way
+ * the next person slides in. The section tabs choose which ranking feeds it.
+ */
 export default function Home() {
-  const { text } = useTheme();
+  const styles = useStyles(makeStyles);
   const router = useRouter();
-  const { viewer, areaId, candidates, loading, refreshing, error, refresh, reload, reportImpressions } = useCandidates();
+  const insets = useSafeAreaInsets();
+  const { userId } = useMember();
+  const { viewer, areaId, candidates, loading, error, refresh, reload, reportImpressions, removeCandidate } = useCandidates();
   const [section, setSection] = useState<HomeSection>('for_you');
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [dismissSignal, setDismissSignal] = useState(0);
   useRefreshOnFocus(refresh);
 
-  const people = useMemo(() => (viewer ? rankSection(section, viewer, candidates).map((c) => c.profile) : []), [section, viewer, candidates]);
+  const ranked = useMemo(() => (viewer ? rankSection(section, viewer, candidates).map((c) => c.profile) : []), [section, viewer, candidates]);
+  const current: PublicProfile | undefined = ranked[0];
 
-  const onViewed = useCallback((ids: string[]) => reportImpressions(ids), [reportImpressions]);
+  useEffect(() => {
+    if (current) reportImpressions([current.id]);
+  }, [current, reportImpressions]);
+
+  const pass = useCallback(() => {
+    if (!current) return;
+    const id = current.id;
+    removeCandidate(id);
+    setDismissSignal(0);
+    api.discovery.pass(id).catch((e) => Alert.alert('Could not save that', errorMessage(e)));
+  }, [current, removeCandidate]);
+
+  const sendRequest = async (note: string) => {
+    if (!current) return;
+    await api.introductions.request({ viewerId: userId, recipientId: current.id, note });
+    setNoteOpen(false);
+    removeCandidate(current.id);
+  };
+
+  const openProfile = () => current && router.push({ pathname: '/profile/[id]', params: { id: current.id } });
+
+  const block = () => {
+    if (!current) return;
+    const person = current;
+    Alert.alert(`Block ${person.firstName}?`, 'You will no longer see each other anywhere in Peaches.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Block',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.safety.block(userId, person.id);
+            removeCandidate(person.id);
+          } catch (e) {
+            Alert.alert('Could not block', errorMessage(e));
+          }
+        },
+      },
+    ]);
+  };
+
+  const fileReport = async (reason: string) => {
+    if (!current) return;
+    try {
+      await api.safety.report({ reporterId: userId, reportedId: current.id, reason });
+      Alert.alert('Report received', 'Our team will review it.');
+    } catch (e) {
+      Alert.alert('Could not report', errorMessage(e));
+    } finally {
+      setReportOpen(false);
+    }
+  };
 
   return (
     <Screen>
@@ -44,34 +114,70 @@ export default function Home() {
           <ErrorText message={error} />
           <Button title="Try again" variant="secondary" size="small" onPress={reload} />
         </View>
+      ) : !areaId ? (
+        <EmptyState
+          icon="map-pin"
+          title="Set your area to see people near you"
+          body="Others only ever see a coarse label like “Midtown Atlanta”."
+          actionTitle="Choose area"
+          onAction={() => router.push('/me/preferences')}
+        />
+      ) : current ? (
+        <View style={styles.stack}>
+          <DiscoverCard
+            key={current.id}
+            profile={current}
+            onPass={pass}
+            onInterested={() => setNoteOpen(true)}
+            onOpenProfile={openProfile}
+            onMore={() => setMoreOpen(true)}
+            dismissSignal={dismissSignal}
+          />
+          <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+            <Button title="Not now" variant="secondary" onPress={() => setDismissSignal((n) => n + 1)} style={{ flex: 1 }} />
+            <Button title="Interested" onPress={() => setNoteOpen(true)} style={{ flex: 2 }} />
+          </View>
+        </View>
       ) : (
-        <PeopleGrid
-          people={people}
-          refreshing={refreshing}
-          onRefresh={refresh}
-          onViewed={onViewed}
-          ListEmptyComponent={
-            !areaId ? (
-              <EmptyState
-                title="Set your area to see people near you."
-                body="Others only ever see a coarse label like “Midtown Atlanta”."
-                actionTitle="Choose area"
-                onAction={() => router.push('/me/preferences')}
-              />
-            ) : (
-              <EmptyState title={EMPTY[section]} body={section === 'for_you' ? 'Widen your distance or preferences in Explore to see more people.' : undefined} />
-            )
-          }
+        <EmptyState
+          icon="users"
+          title={EMPTY[section]}
+          body={section === 'for_you' ? 'New members appear here as they join. Widen your distance or preferences in Explore to see more people.' : 'Try another section, or widen your preferences in Explore.'}
+          actionTitle="Open Explore"
+          onAction={() => router.push('/explore')}
         />
       )}
-      {!loading && !error && people.length > 0 ? (
-        <Text style={[text.micro, styles.count]}>{people.length} people</Text>
-      ) : null}
+
+      <IntroductionNoteSheet visible={noteOpen} onClose={() => setNoteOpen(false)} recipientFirstName={current?.firstName ?? ''} onSubmit={sendRequest} />
+      <ActionSheet
+        visible={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        actions={[
+          { label: 'View full profile', onPress: openProfile },
+          { label: 'Report', destructive: true, onPress: () => setReportOpen(true) },
+          { label: `Block ${current?.firstName ?? ''}`, destructive: true, onPress: block },
+        ]}
+      />
+      <ReportSheet visible={reportOpen} onClose={() => setReportOpen(false)} onSelect={fileReport} title={`Report ${current?.firstName ?? ''}`} />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
-  errorWrap: { alignItems: 'center', gap: spacing.md, paddingTop: spacing.xl },
-  count: { position: 'absolute', right: spacing.lg, top: 16, opacity: 0.001 },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    errorWrap: { alignItems: 'center', gap: spacing.md, paddingTop: spacing.xl },
+    stack: { flex: 1 },
+    actionBar: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      flexDirection: 'row',
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      backgroundColor: colors.canvas,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+  });

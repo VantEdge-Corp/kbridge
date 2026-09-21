@@ -53,7 +53,12 @@ export function createDiscoveryApi(client: Client, profiles: ProfilesApi) {
     await client.rpc('touch_last_active');
   }
 
-  return { getViewer, fetchCandidates, recordImpressions, touchActivity };
+  /** "Not now": hides the member from the viewer's pool for 30 days. One-directional; they still see the viewer. */
+  async function pass(memberId: string): Promise<void> {
+    unwrap(await client.rpc('pass_member', { p_member: memberId }));
+  }
+
+  return { getViewer, fetchCandidates, recordImpressions, touchActivity, pass };
 }
 
 export type DiscoveryApi = ReturnType<typeof createDiscoveryApi>;

@@ -17,7 +17,7 @@ This repository holds the whole product on one Supabase project:
 | `apps/web` | Web app: public landing and admission flow, member experience, legal pages, committee admin panel. Vite 7, React 19, TypeScript, Tailwind v4. Deploys to Vercel. |
 | `apps/mobile` | iOS/Android app for members. Expo SDK 57, Expo Router, TypeScript. Runs in Expo Go. |
 | `packages/core` | `@peaches/core`: TypeScript models, taxonomies, Metro Atlanta areas, design tokens, the deterministic matching engine, the Supabase data layer, legal documents, and the fictional demo dataset. Both apps import it. |
-| `supabase/` | SQL migrations `001`-`014` and the two seed scripts. |
+| `supabase/` | SQL migrations `001`-`015` and the two seed scripts. |
 | `docs/DESIGN.md` | The design system both apps follow. |
 
 ## Requirements
@@ -39,7 +39,7 @@ One install at the repository root covers all three workspaces.
 ### 2. Create the database
 
 In the Supabase SQL Editor run the migrations in `supabase/migrations/` in
-order, `001` through `014`. Each one is a separate file; paste and run one at a
+order, `001` through `015`. Each one is a separate file; paste and run one at a
 time. Notes that matter:
 
 - `013_peaches.sql` is the Peaches model: areas, structured public profiles,
@@ -50,6 +50,9 @@ time. Notes that matter:
 - `014_introduction_response_policy.sql` fixes the update policy on
   introduction requests so members can accept, decline, and withdraw (the
   policy from `006` rejected every status change). Required; idempotent.
+- `015_discovery_passes.sql` adds "Not now" on Home: a `pass_member` RPC and
+  the discovery function restated with a 30-day pass exclusion. Required;
+  idempotent.
 - `001`, `006`, `007`, and `010` are not idempotent. Run them once. The others
   can be re-run safely.
 - After `013`, no manual Replication or Storage steps are needed. Confirm in

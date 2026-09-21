@@ -1,25 +1,23 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Animated, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { VERIFICATION_LABEL, nameAge, timeAgo, type IntroductionRequest, type Post, type PublicProfile } from '@peaches/core';
+import { timeAgo, type IntroductionRequest, type Post, type PublicProfile } from '@peaches/core';
 import { Button } from '@/components/Button';
-import { GROUP_INSET, Group } from '@/components/Group';
 import { Header, HeaderIconButton } from '@/components/Header';
 import { IntroductionNoteSheet } from '@/components/IntroductionNoteSheet';
 import { Loading } from '@/components/Loading';
-import { DetailRow, NoteCard, ProfilePhoto, ProfileSection, PullQuote, VitalsStrip } from '@/components/ProfileBlocks';
+import { NoteCard } from '@/components/ProfileBlocks';
+import { ProfileStory } from '@/components/ProfileStory';
 import { ReportSheet } from '@/components/ReportSheet';
 import { Screen } from '@/components/Screen';
 import { ActionSheet } from '@/components/Sheet';
-import { ChipRow, TagChip } from '@/components/TagChip';
 import { VerificationBadge } from '@/components/VerificationBadge';
-import { radius, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
-import { detailsFor, metaLineFor, vitalsFor } from '@/lib/profileCopy';
 
 type Relationship = { kind: 'none' } | { kind: 'pending' } | { kind: 'incoming'; request: IntroductionRequest } | { kind: 'connected'; matchId: string };
 
@@ -28,7 +26,7 @@ const NAME_FADE_DISTANCE = 24;
 
 export default function ProfileView() {
   const styles = useStyles(makeStyles);
-  const { colors, text } = useTheme();
+  const { text } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId } = useMember();
@@ -167,97 +165,8 @@ export default function ProfileView() {
 
   const contentWidth = width - spacing.lg * 2;
   const verified = profile.publicVerificationBadges.length > 0;
-  const meta = metaLineFor(profile);
-  const vitals = vitalsFor(profile);
-  const details = detailsFor(profile);
   const fadeStart = Math.max(nameY, 1);
   const headerNameOpacity = scrollY.interpolate({ inputRange: [fadeStart, fadeStart + NAME_FADE_DISTANCE], outputRange: [0, 1], extrapolate: 'clamp' });
-
-  /* The story: main photo, identity, note, bio; then the remaining photos interleaved between the content blocks. */
-  const photos: Array<string | null> = profile.photos.length > 0 ? profile.photos : [null];
-  const photoBlock = (i: number) => <ProfilePhoto key={`photo-${i}`} uri={photos[i] ?? null} firstName={profile.firstName} index={i} width={contentWidth} />;
-
-  const later: React.ReactNode[] = [];
-  if (vitals.length > 0) later.push(<VitalsStrip key="vitals" items={vitals} />);
-  if (details.length > 0) {
-    later.push(
-      <Group key="details" inset={GROUP_INSET.icon}>
-        {details.map((d) => (
-          <DetailRow key={d.label} icon={d.icon} label={d.label} value={d.value} />
-        ))}
-      </Group>,
-    );
-  }
-  if (profile.interests.length > 0) {
-    later.push(
-      <ProfileSection key="interests" title="Interests">
-        <ChipRow>
-          {profile.interests.map((i) => (
-            <TagChip key={i} label={i} />
-          ))}
-        </ChipRow>
-      </ProfileSection>,
-    );
-  }
-  if (verified) {
-    later.push(
-      <ProfileSection key="verification" title="Verification">
-        <View style={styles.verificationCard}>
-          {profile.publicVerificationBadges.map((b) => (
-            <VerificationBadge key={b} label={`${VERIFICATION_LABEL[b]} verified`} size={15} />
-          ))}
-          <Text style={[text.caption, { marginTop: spacing.xs }]}>Verified means our team reviewed the details this member provided.</Text>
-        </View>
-      </ProfileSection>,
-    );
-  }
-  if (posts.length > 0) {
-    later.push(
-      <ProfileSection key="posts" title="Posts">
-        <Group flush>
-          {posts.map((p) => (
-            <Pressable
-              key={p.id}
-              onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.postRow, pressed && { backgroundColor: colors.surfaceHover }]}
-            >
-              <Text style={text.body} numberOfLines={3}>
-                {p.body}
-              </Text>
-              <Text style={text.micro}>{timeAgo(p.createdAt)}</Text>
-            </Pressable>
-          ))}
-        </Group>
-      </ProfileSection>,
-    );
-  }
-
-  const blocks: React.ReactNode[] = [photoBlock(0)];
-  blocks.push(
-    <View key="identity" style={styles.identity} onLayout={(e) => setNameY(e.nativeEvent.layout.y)}>
-      <View style={styles.nameRow}>
-        <Text style={[text.title, styles.name]}>{nameAge(profile.firstName, profile.age)}</Text>
-        {verified ? <VerificationBadge size={18} /> : null}
-      </View>
-      {meta ? <Text style={text.bodySecondary}>{meta}</Text> : null}
-      {own ? <Text style={[text.caption, { marginTop: spacing.xs }]}>This is you, as other members see you.</Text> : null}
-    </View>,
-  );
-  if (relationship.kind === 'incoming') {
-    blocks.push(
-      <NoteCard key="note" eyebrow={`${profile.firstName} wrote to you · ${timeAgo(relationship.request.createdAt)}`}>
-        {relationship.request.note}
-      </NoteCard>,
-    );
-  }
-  if (profile.bio) blocks.push(<PullQuote key="bio" eyebrow={`About ${profile.firstName}`}>{profile.bio}</PullQuote>);
-  let nextPhoto = 1;
-  for (const block of later) {
-    if (nextPhoto < photos.length) blocks.push(photoBlock(nextPhoto++));
-    blocks.push(block);
-  }
-  while (nextPhoto < photos.length) blocks.push(photoBlock(nextPhoto++));
 
   return (
     <Screen edges={['top']}>
@@ -285,7 +194,18 @@ export default function ProfileView() {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
-        {blocks}
+        <ProfileStory
+          profile={profile}
+          width={contentWidth}
+          posts={posts}
+          own={own}
+          onIdentityLayout={setNameY}
+          afterIdentity={
+            relationship.kind === 'incoming' ? (
+              <NoteCard eyebrow={`${profile.firstName} wrote to you · ${timeAgo(relationship.request.createdAt)}`}>{relationship.request.note}</NoteCard>
+            ) : undefined
+          }
+        />
       </Animated.ScrollView>
 
       {!own ? (
@@ -319,15 +239,11 @@ export default function ProfileView() {
   );
 }
 
-const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  content: { paddingTop: spacing.xs, gap: spacing.lg },
-  headerName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  identity: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.xs },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  name: { flexShrink: 1 },
-  verificationCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
-  postRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 4 },
-  decision: { flexDirection: 'row', gap: spacing.md },
-  actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.canvas, borderTopWidth: 1, borderTopColor: colors.border },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+    content: { paddingTop: spacing.xs, gap: spacing.lg },
+    headerName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    decision: { flexDirection: 'row', gap: spacing.md },
+    actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.canvas, borderTopWidth: 1, borderTopColor: colors.border },
+  });

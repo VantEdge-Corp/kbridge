@@ -1,7 +1,7 @@
 -- ============================================================================
 -- supabase/tests/functional.sql
 -- Functional checks for the Peaches model (migration 013), run against a
--- local Supabase stack with migrations 001-014 applied:
+-- local Supabase stack with migrations 001-015 applied:
 --
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/functional.sql
 --
@@ -44,6 +44,7 @@ end $$;
 select pg_temp.mk_member('t_alice@peaches.test', 'Alice', 29, 'midtown-atlanta') as alice \gset
 select pg_temp.mk_member('t_ben@peaches.test', 'Ben', 33, 'duluth') as ben \gset
 select pg_temp.mk_member('t_cara@peaches.test', 'Cara', 27, 'athens') as cara \gset
+select pg_temp.mk_member('t_dev@peaches.test', 'Dev', 31, 'decatur') as dev \gset
 
 -- Signup hydration created the companion rows.
 select pg_temp.check('signup creates member_private, preferences and signals',
@@ -110,6 +111,21 @@ select public.record_impressions(array[:'ben'::uuid]);
 select pg_temp.check('impressions are bucketed',
   (select exposure_bucket = 2 from public.get_discovery_candidates(500) where profile_id = :'ben'::uuid));
 
+-- "Not now": a pass hides Dev from Alice for a while, and only from Alice.
+select pg_temp.check('a nearby member is in the pool before a pass',
+  exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'dev'::uuid));
+select public.pass_member(:'dev');
+select public.pass_member(:'dev');
+select pg_temp.check('a pass removes the member from the viewer''s pool',
+  not exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'dev'::uuid));
+do $$
+begin
+  perform public.pass_member(auth.uid());
+  raise exception 'FAILED: a member passed on themselves';
+exception when invalid_parameter_value then
+  raise notice 'ok: passing on yourself is refused';
+end $$;
+
 -- A pending request removes the pair from both pools.
 insert into public.introduction_requests (requester_id, recipient_id, note)
 values (:'alice', :'ben', 'Hello Ben, I noticed we both play tennis around Midtown.');
@@ -128,6 +144,10 @@ select pg_temp.check('the recipient sees the pending request',
   (select count(*) from public.introduction_requests where recipient_id = auth.uid() and status = 'pending') = 1);
 select pg_temp.check('the requester is out of the recipient''s pool',
   not exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'alice'::uuid));
+select pg_temp.act_as(:'dev');
+select pg_temp.check('a pass is one-directional: the passed member still sees the viewer',
+  exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'alice'::uuid));
+select pg_temp.act_as(:'ben');
 
 -- Responding: the recipient may accept (which opens a connection) but never withdraw; the requester may only withdraw.
 do $$

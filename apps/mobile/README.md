@@ -25,13 +25,13 @@ from production bundles.
 ```
 app/_layout.tsx           providers, splash, signed-out / signed-in gates
 app/(auth)/               welcome, login, apply, status, signup
-app/(tabs)/               index (Home), explore, feed, inbox, me
+app/(tabs)/               index (Home: one member at a time), explore (grid), feed, inbox, me
 app/profile/[id].tsx      reusable Profile View with the single Interested action
 app/chat/[matchId].tsx    conversation
 app/post/                 new, [id] (comments)
 app/me/                   edit, preferences, photos, saved
 app/settings/             index, [section]
-components/               PersonCard, VerificationBadge, PreferenceStrengthSelector, ...
+components/               DiscoverCard, ProfileStory, PersonCard, VerificationBadge, ...
 constants/theme.ts        spacing, radii, icon sizes, Georgia / serif fonts, text style factory
 lib/theme.tsx             ThemeProvider, useTheme, useStyles: light and dark palettes, System / Light / Dark preference
 lib/                      supabase client, api binding, auth context, image picking

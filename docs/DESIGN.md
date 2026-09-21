@@ -250,6 +250,26 @@ hub-style Me tab. Borrow the structure, never the look: everything stays dark,
 restrained, and free of hearts and like buttons. When these rules conflict
 with an earlier line, these win on the phone.
 
+### Home: one member at a time
+
+- Home is not a grid. It shows one member at a time as their full profile
+  story (below), led by the identity block so the name is read before the
+  first photo, with a small "more" action (full profile, report, block) on
+  the identity row. The section tabs (For You, Nearby, New, Active) choose
+  which ranking feeds it; Explore keeps the grid for browsing.
+- The action bar holds `Not now` (secondary, 1 part) and `Interested`
+  (primary, 2 parts). `Interested` opens the written introduction; sending it
+  moves to the next member. `Not now` slides the card out to the left and
+  hides that member from the viewer's pool for 30 days, one-directionally
+  (they still see the viewer). Either way the next member fades in.
+- A horizontal drag mirrors the two buttons: left is `Not now`, right is
+  `Interested` (the card springs back and the note sheet opens). The card
+  follows the finger with at most 3 degrees of rotation, and a small ivory
+  pill with the exact button label fades in at the top. Vertical movement
+  scrolls the story; the drag only wins once it is clearly horizontal.
+  The gesture never appears in copy: no "swipe right", no hearts, no X.
+- The member is reported as an impression when their card is shown.
+
 ### Profile View
 
 - One vertical story, not a photo pager with a form under it. Blocks, in

@@ -54,6 +54,8 @@ export function useCandidates() {
   const refresh = useCallback(() => load('refresh'), [load]);
   const setViewer = useCallback((viewer: Viewer) => setState((s) => ({ ...s, viewer })), []);
   const setAreaId = useCallback((areaId: string | null) => setState((s) => ({ ...s, areaId })), []);
+  /** Drops a member the viewer has acted on (passed, or wrote to) until the next reload. */
+  const removeCandidate = useCallback((id: string) => setState((s) => ({ ...s, candidates: s.candidates.filter((c) => c.profile.id !== id) })), []);
 
-  return { ...state, reload, refresh, setViewer, setAreaId, reportImpressions };
+  return { ...state, reload, refresh, setViewer, setAreaId, reportImpressions, removeCandidate };
 }

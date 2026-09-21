@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApiError, BRAND, isSchemaOutOfDate } from '@peaches/core';
 import { Button } from '@/components/Button';
@@ -14,14 +15,16 @@ import { ThemeProvider } from '@/lib/theme';
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <ThemedStatusBar />
-          <RootStack />
-        </AuthProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ThemedStatusBar />
+            <RootStack />
+          </AuthProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -134,6 +137,8 @@ function RootStack() {
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   splash: { flex: 1, backgroundColor: colors.canvas, alignItems: 'center', justifyContent: 'center' },
