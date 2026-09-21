@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useStyles, type Theme } from '@/lib/theme';
 
 interface Props<K extends string> {
   items: ReadonlyArray<{ key: K; label: string; badge?: number }>;
@@ -9,6 +10,7 @@ interface Props<K extends string> {
 
 /** Text tabs, 14px medium, 20px apart. The active tab is ivory with a 2px underline that hugs the label. */
 export function SegmentedTabs<K extends string>({ items, value, onChange }: Props<K>) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.wrap}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
@@ -36,7 +38,7 @@ export function SegmentedTabs<K extends string>({ items, value, onChange }: Prop
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   wrap: { borderBottomWidth: 1, borderBottomColor: colors.border },
   row: { paddingHorizontal: spacing.lg, gap: 20 },
   tab: { paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },

@@ -1,7 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, text } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 
 export function CompletenessBar({ percent }: { percent: number }) {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const p = Math.max(0, Math.min(100, percent));
   return (
     <View style={styles.wrap} accessibilityLabel={`Profile ${p} percent complete`}>
@@ -16,7 +18,7 @@ export function CompletenessBar({ percent }: { percent: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   wrap: { gap: 8 },
   labels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   track: { height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' },

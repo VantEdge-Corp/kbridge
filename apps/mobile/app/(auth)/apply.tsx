@@ -11,7 +11,8 @@ import { PickerModal } from '@/components/PickerModal';
 import { Group } from '@/components/Group';
 import { Screen } from '@/components/Screen';
 import { SettingsRow } from '@/components/SettingsRow';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { errorMessage } from '@/lib/errors';
 import { saveStatusToken } from '@/lib/storage';
@@ -72,6 +73,8 @@ function validate(f: Form): Partial<Record<keyof Form, string>> {
 const AREA_OPTIONS = AREAS.map((a) => ({ value: a.id, label: a.name }));
 
 export default function Apply() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const router = useRouter();
   const [form, setForm] = useState<Form>(EMPTY);
   const [touched, setTouched] = useState(false);
@@ -184,7 +187,7 @@ export default function Apply() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, text }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxxl, gap: spacing.lg },
   pair: { flexDirection: 'row', gap: spacing.md },
   firstSection: { marginTop: spacing.sm },

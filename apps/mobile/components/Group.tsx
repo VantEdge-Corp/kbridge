@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, type Theme } from '@/lib/theme';
 
 /** Separator insets measured from the container edge: text rows, rows with an 18px icon, rows with a 40px avatar. */
 export const GROUP_INSET = {
@@ -24,6 +25,7 @@ interface Props {
  * the leading avatar or icon.
  */
 export function Group({ children, inset = GROUP_INSET.text, flush, style }: Props) {
+  const styles = useStyles(makeStyles);
   const items = React.Children.toArray(children).filter(Boolean);
   return (
     <View style={[styles.group, !flush && styles.margins, style]}>
@@ -37,7 +39,7 @@ export function Group({ children, inset = GROUP_INSET.text, flush, style }: Prop
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   group: {
     backgroundColor: colors.surface,
     borderWidth: 1,

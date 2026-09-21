@@ -12,12 +12,15 @@ import { PostCard } from '@/components/PostCard';
 import { ReportSheet } from '@/components/ReportSheet';
 import { Screen } from '@/components/Screen';
 import { ActionSheet } from '@/components/Sheet';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 
 export default function PostDetail() {
+  const styles = useStyles(makeStyles);
+  const { colors, text, isDark } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId } = useMember();
@@ -173,7 +176,7 @@ export default function PostDetail() {
             multiline
             maxLength={LIMITS.commentBodyMax}
             style={styles.input}
-            keyboardAppearance="dark"
+            keyboardAppearance={isDark ? 'dark' : 'light'}
             accessibilityLabel="Comment"
           />
           <Pressable accessibilityRole="button" accessibilityLabel="Send comment" onPress={send} disabled={!draft.trim() || sending} style={[styles.send, (!draft.trim() || sending) && { opacity: 0.4 }]}>
@@ -197,7 +200,7 @@ export default function PostDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
   body: { paddingBottom: spacing.xl },
   cardWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },

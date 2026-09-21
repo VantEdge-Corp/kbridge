@@ -10,7 +10,8 @@ import { PeopleGrid } from '@/components/PeopleGrid';
 import { Screen } from '@/components/Screen';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
 import { Button } from '@/components/Button';
-import { spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 
@@ -22,6 +23,7 @@ const EMPTY: Record<HomeSection, string> = {
 };
 
 export default function Home() {
+  const { text } = useTheme();
   const router = useRouter();
   const { viewer, areaId, candidates, loading, refreshing, error, refresh, reload, reportImpressions } = useCandidates();
   const [section, setSection] = useState<HomeSection>('for_you');

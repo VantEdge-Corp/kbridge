@@ -1,7 +1,9 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { colors, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 
 export function Loading({ inline }: { inline?: boolean }) {
+  const { colors } = useTheme();
   return (
     <View style={inline ? styles.inline : styles.full}>
       <ActivityIndicator color={colors.textSecondary} />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { colors, spacing, touch } from '@/constants/theme';
+import { spacing, touch } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { Icon } from './Icon';
 
 interface Props {
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export function Checkbox({ checked, onChange, children, accessibilityLabel }: Props) {
+  const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
       <Pressable
@@ -29,7 +32,7 @@ export function Checkbox({ checked, onChange, children, accessibilityLabel }: Pr
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   target: { width: touch.minTarget - 12, height: touch.minTarget - 12, alignItems: 'center', justifyContent: 'center', marginTop: -6 },
   box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },

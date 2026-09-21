@@ -2,8 +2,8 @@ import React, { useCallback, useRef } from 'react';
 import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, type ViewToken } from 'react-native';
 import type { PublicProfile } from '@peaches/core';
 import { GRID_GAP, PAGE_PADDING, cardWidthFor } from '@/constants/layout';
-import { colors } from '@/constants/theme';
 import { PersonCard } from './PersonCard';
+import { useTheme } from '@/lib/theme';
 
 interface Props {
   people: PublicProfile[];
@@ -17,6 +17,7 @@ interface Props {
 
 /** Two-column, vertically scrolling grid of PersonCard. Card width is computed from the window. */
 export function PeopleGrid({ people, refreshing, onRefresh, ListEmptyComponent, ListHeaderComponent, onViewed }: Props) {
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const cardWidth = cardWidthFor(width);
   const onViewedRef = useRef(onViewed);

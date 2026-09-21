@@ -1,7 +1,8 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 
 interface Props {
   visible: boolean;
@@ -12,6 +13,8 @@ interface Props {
 
 /** Bottom sheet: `surfaceElevated`, top radius xl, a 36x4 grabber, 24px padding, soft shadow. */
 export function Sheet({ visible, onClose, title, children }: Props) {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -34,6 +37,8 @@ export interface SheetAction {
 }
 
 export function ActionSheet({ visible, onClose, title, actions }: { visible: boolean; onClose: () => void; title?: string; actions: SheetAction[] }) {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   return (
     <Sheet visible={visible} onClose={onClose} title={title}>
       <View style={styles.actions}>
@@ -60,7 +65,7 @@ export function ActionSheet({ visible, onClose, title, actions }: { visible: boo
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
   panel: {
     backgroundColor: colors.surfaceElevated,

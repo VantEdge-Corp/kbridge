@@ -14,7 +14,8 @@ import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SettingsRow } from '@/components/SettingsRow';
 import { VerificationList } from '@/components/VerificationList';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { THEME_PREFERENCES, useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
@@ -22,6 +23,7 @@ import { LEGAL_URLS, supabase } from '@/lib/supabase';
 
 const TITLES: Record<string, string> = {
   account: 'Account',
+  appearance: 'Appearance',
   privacy: 'Privacy',
   notifications: 'Notifications',
   verification: 'Verification',
@@ -30,9 +32,14 @@ const TITLES: Record<string, string> = {
   data: 'Data & account',
 };
 
-const switchColors = { trackColor: { true: colors.ivory, false: colors.borderStrong }, thumbColor: colors.canvas };
+/** Switch tints for the active palette. */
+function useSwitchColors() {
+  const { colors } = useTheme();
+  return { trackColor: { true: colors.ivory, false: colors.borderStrong }, thumbColor: colors.canvas };
+}
 
 export default function SettingsSection() {
+  const styles = useStyles(makeStyles);
   const { section } = useLocalSearchParams<{ section: string }>();
   const key = section ?? 'account';
   return (
@@ -40,6 +47,7 @@ export default function SettingsSection() {
       <Header back title={TITLES[key] ?? 'Settings'} />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {key === 'account' ? <Account /> : null}
+        {key === 'appearance' ? <Appearance /> : null}
         {key === 'privacy' ? <Privacy /> : null}
         {key === 'notifications' ? <Notifications /> : null}
         {key === 'verification' ? <Verification /> : null}
@@ -52,6 +60,7 @@ export default function SettingsSection() {
 }
 
 function Account() {
+  const styles = useStyles(makeStyles);
   const { email, profile } = useMember();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -92,6 +101,9 @@ function Account() {
 }
 
 function Privacy() {
+  const switchColors = useSwitchColors();
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const { userId, email, profile, refreshProfile } = useMember();
   const [priv, setPriv] = useState<PrivateUserData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +169,32 @@ function Privacy() {
   );
 }
 
+/** System, Light, or Dark. The choice is stored on the device and applied immediately. */
+function Appearance() {
+  const styles = useStyles(makeStyles);
+  const { text, colors, preference, setPreference } = useTheme();
+  return (
+    <View>
+      <Group inset={GROUP_INSET.text}>
+        {THEME_PREFERENCES.map((option) => (
+          <SettingsRow
+            key={option.value}
+            label={option.label}
+            description={option.description}
+            chevron={false}
+            onPress={() => setPreference(option.value)}
+            right={option.value === preference ? <Icon name="check" size={18} color={colors.ivory} /> : <View style={styles.checkSpace} />}
+          />
+        ))}
+      </Group>
+      <Text style={[text.caption, styles.note]}>System follows the device appearance and switches with it.</Text>
+    </View>
+  );
+}
+
 function Notifications() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   return (
     <View style={styles.fields}>
       <Text style={text.body}>Push notifications are not enabled in this build.</Text>
@@ -170,6 +207,8 @@ function Notifications() {
 }
 
 function Verification() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const { profile, refreshProfile } = useMember();
   const [busy, setBusy] = useState<VerificationDimension | null>(null);
   if (!profile) return <Loading />;
@@ -197,6 +236,8 @@ function Verification() {
 }
 
 function Blocked() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const { userId } = useMember();
   const [people, setPeople] = useState<PublicProfile[] | null>(null);
   const load = useCallback(() => api.safety.listBlocked(userId).then(setPeople).catch(() => setPeople([])), [userId]);
@@ -230,6 +271,8 @@ function Blocked() {
 }
 
 function Safety() {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const tips = [
     'Meet in public places for the first few times, and tell a friend where you will be.',
     'Keep conversations in the app until you feel comfortable.',
@@ -253,6 +296,8 @@ function Safety() {
 }
 
 function DataAndAccount() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const router = useRouter();
   const { profile, signOut } = useMember();
   const [armed, setArmed] = useState(false);
@@ -297,10 +342,11 @@ function DataAndAccount() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingBottom: spacing.xxl },
   fields: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, gap: spacing.lg },
   note: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+  checkSpace: { width: 18, height: 18 },
   firstGroup: { marginTop: spacing.sm },
   blockedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: 56 },
   tip: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },

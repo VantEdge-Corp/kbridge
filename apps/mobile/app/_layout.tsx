@@ -6,23 +6,33 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApiError, BRAND, isSchemaOutOfDate } from '@peaches/core';
 import { Button } from '@/components/Button';
 import { Wordmark } from '@/components/Wordmark';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { AuthProvider, useAuth } from '@/lib/auth';
-
+import { ThemeProvider } from '@/lib/theme';
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="light" />
-        <RootStack />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemedStatusBar />
+          <RootStack />
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
 
+function ThemedStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
+}
+
 function Splash() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   return (
     <View style={styles.splash}>
       <Wordmark size={24} />
@@ -48,6 +58,8 @@ function useActivityPing(signedIn: boolean) {
  * this build points at is missing the latest migration; say so plainly.
  */
 function ProfileProblem() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const { profileError, refreshProfile, signOut } = useAuth();
   const [retrying, setRetrying] = React.useState(false);
   const schemaProblem = !!profileError && isSchemaOutOfDate(new ApiError(profileError, guessCode(profileError)));
@@ -93,6 +105,7 @@ function guessCode(message: string): string | null {
 }
 
 function RootStack() {
+  const { colors } = useTheme();
   const { session, booting, profile, profileReady } = useAuth();
   const signedIn = !!session;
   useActivityPing(signedIn);
@@ -122,7 +135,7 @@ function RootStack() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   splash: { flex: 1, backgroundColor: colors.canvas, alignItems: 'center', justifyContent: 'center' },
   problem: { flex: 1, backgroundColor: colors.canvas, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.lg },
   problemText: { textAlign: 'center', color: colors.textSecondary, maxWidth: 360 },

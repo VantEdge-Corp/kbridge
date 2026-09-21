@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { Icon, type IconName } from './Icon';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 
 /** A row for grouped lists. No borders of its own; the Group draws the separators. */
 export function SettingsRow({ label, value, onPress, icon, destructive, chevron = true, right, description }: Props) {
+  const { colors, text } = useTheme();
   return (
     <Pressable
       accessibilityRole={onPress ? 'button' : undefined}

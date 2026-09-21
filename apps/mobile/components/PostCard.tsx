@@ -3,7 +3,8 @@ import React, { memo } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { timeAgo, type Post } from '@peaches/core';
 import { PAGE_PADDING } from '@/constants/layout';
-import { avatar, colors, radius, spacing, text } from '@/constants/theme';
+import { avatar, radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { Avatar } from './Avatar';
 import { Button } from './Button';
 import { Icon } from './Icon';
@@ -24,6 +25,8 @@ const CARD_PADDING = spacing.lg;
 
 /** A grouped card: 36px avatar, text, optional photo, thin 20px action icons. No follower counts, no public popularity, no viral metrics. */
 export const PostCard = memo(function PostCard({ post, onOpen, onAuthor, onToggleSave, onRequestConversation, onMore, detail }: Props) {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const { width } = useWindowDimensions();
   const imageWidth = width - PAGE_PADDING * 2 - CARD_PADDING * 2 - 2;
   return (
@@ -77,7 +80,7 @@ export const PostCard = memo(function PostCard({ post, onOpen, onAuthor, onToggl
   );
 });
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   card: {
     padding: CARD_PADDING,
     backgroundColor: colors.surface,

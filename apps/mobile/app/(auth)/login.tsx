@@ -7,11 +7,14 @@ import { ErrorText } from '@/components/ErrorText';
 import { Field } from '@/components/Field';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { errorMessage } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
 export default function Login() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const router = useRouter();
   const { confirm, email: emailParam } = useLocalSearchParams<{ confirm?: string; email?: string }>();
   const [email, setEmail] = useState(emailParam ?? '');
@@ -60,7 +63,7 @@ export default function Login() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
   banner: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg },
   links: { alignItems: 'center', gap: 4, marginTop: spacing.sm },

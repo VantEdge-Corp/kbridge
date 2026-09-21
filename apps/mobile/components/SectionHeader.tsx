@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 
 interface Props {
   title: string;
@@ -12,6 +13,7 @@ interface Props {
 
 /** Uppercase eyebrow for section headers only. 32px above (12px for the first), 12px below. */
 export function SectionHeader({ title, right, style, first }: Props) {
+  const { text } = useTheme();
   return (
     <View style={[styles.row, first && styles.first, style]}>
       <Text style={text.eyebrow}>{title}</Text>

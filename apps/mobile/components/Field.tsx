@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 
 interface Props extends TextInputProps {
   label?: string;
@@ -15,6 +16,8 @@ interface Props extends TextInputProps {
  * ivory ring at 8% through the outer wrapper.
  */
 export function Field({ label, error, helper, containerStyle, style, multiline, onFocus, onBlur, ...rest }: Props) {
+  const styles = useStyles(makeStyles);
+  const { colors, isDark } = useTheme();
   const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.wrap, containerStyle]}>
@@ -25,7 +28,7 @@ export function Field({ label, error, helper, containerStyle, style, multiline, 
           multiline={multiline}
           placeholderTextColor={colors.textMuted}
           selectionColor={colors.ivory}
-          keyboardAppearance="dark"
+          keyboardAppearance={isDark ? 'dark' : 'light'}
           accessibilityLabel={rest.accessibilityLabel ?? label}
           onFocus={(e) => {
             setFocused(true);
@@ -43,7 +46,7 @@ export function Field({ label, error, helper, containerStyle, style, multiline, 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors, text }: Theme) => StyleSheet.create({
   wrap: { gap: 6 },
   label: { ...text.label },
   ring: { borderRadius: radius.md + 2, padding: 2, margin: -2, backgroundColor: 'transparent' },

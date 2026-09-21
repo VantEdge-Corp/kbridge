@@ -7,7 +7,8 @@ import { Header } from '@/components/Header';
 import { Icon } from '@/components/Icon';
 import { Loading } from '@/components/Loading';
 import { Screen } from '@/components/Screen';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
@@ -17,6 +18,8 @@ const COLUMNS = 3;
 const GAP = 8;
 
 export default function Photos() {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const { userId, profile, refreshProfile } = useMember();
   const { width } = useWindowDimensions();
   const [busy, setBusy] = useState(false);
@@ -110,7 +113,7 @@ export default function Photos() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl, gap: spacing.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   main: { position: 'absolute', left: 6, bottom: 6, backgroundColor: colors.overlay, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.sm },

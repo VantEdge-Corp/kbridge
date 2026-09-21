@@ -9,7 +9,8 @@ import { Header } from '@/components/Header';
 import { Icon, type IconName } from '@/components/Icon';
 import { Loading } from '@/components/Loading';
 import { Screen } from '@/components/Screen';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { errorMessage } from '@/lib/errors';
 import { loadStatusToken, saveStatusToken } from '@/lib/storage';
@@ -22,6 +23,8 @@ const VIEW: Record<PublicApplicationStatus, { icon: IconName; eyebrow: string; t
 };
 
 export default function Status() {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ token?: string; submitted?: string }>();
   const [input, setInput] = useState(params.token ?? '');
@@ -120,7 +123,7 @@ export default function Status() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
   tokenBox: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
   token: { color: colors.ivory, fontSize: 15, fontFamily: 'Menlo', letterSpacing: 0.5 },

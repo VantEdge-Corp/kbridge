@@ -8,7 +8,8 @@ import { Field } from '@/components/Field';
 import { Header } from '@/components/Header';
 import { Loading } from '@/components/Loading';
 import { Screen } from '@/components/Screen';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { errorMessage } from '@/lib/errors';
 import { LEGAL_URLS, supabase } from '@/lib/supabase';
@@ -16,6 +17,8 @@ import { LEGAL_URLS, supabase } from '@/lib/supabase';
 const MIN_PASSWORD = 6;
 
 export default function Signup() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const router = useRouter();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
@@ -116,7 +119,7 @@ export default function Signup() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
   link: { color: colors.ivory, textDecorationLine: 'underline' },
 });

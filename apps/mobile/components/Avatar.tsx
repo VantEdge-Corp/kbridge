@@ -1,10 +1,11 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
-import { colors } from '@/constants/theme';
 import { MonogramPortrait } from './MonogramPortrait';
+import { useStyles, type Theme } from '@/lib/theme';
 
 /** Always circular. Inbox rows 40, feed 36, small 28. */
 export function Avatar({ uri, firstName, size }: { uri: string | null | undefined; firstName: string; size: number }) {
+  const styles = useStyles(makeStyles);
   if (!uri) return <MonogramPortrait firstName={firstName} width={size} height={size} radius={size / 2} />;
   return (
     <View style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]}>
@@ -13,6 +14,6 @@ export function Avatar({ uri, firstName, size }: { uri: string | null | undefine
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   ring: { overflow: 'hidden', backgroundColor: colors.surfaceElevated },
 });

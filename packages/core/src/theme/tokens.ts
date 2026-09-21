@@ -2,11 +2,17 @@
  * Peaches design tokens. Platform-agnostic values; the web maps them to CSS
  * variables and Tailwind, the mobile app to StyleSheet values.
  *
- * The product is 90-95% dark surfaces: near-black, charcoal, graphite, and a
- * very dark warm gray. Warm ivory is reserved for text, selected controls,
- * small buttons, and important information. There are no large light cards.
+ * Two palettes share one set of semantic names. Dark is the brand default:
+ * 90-95% dark surfaces (near-black, charcoal, graphite, a very dark warm
+ * gray) with warm ivory reserved for text, selected controls, small buttons,
+ * and important information. Light keeps the same restraint on warm
+ * off-white: white cards, near-black ink where dark uses ivory.
+ *
+ * `ivory` / `onIvory` name the primary control color and the text on it:
+ * warm ivory with near-black text in dark mode, near-black ink with warm
+ * off-white text in light mode.
  */
-export const colors = {
+export const darkColors = {
   /** Page background: near-black. */
   canvas: '#0b0b0c',
   /** Default surface: charcoal. */
@@ -43,6 +49,36 @@ export const colors = {
   portraitA: '#2a2622',
   portraitB: '#3a3129',
 } as const;
+
+export type ColorTokens = { readonly [K in keyof typeof darkColors]: string };
+
+/** Light palette: the same semantic tokens on warm off-white. */
+export const lightColors: ColorTokens = {
+  canvas: '#f7f5f1',
+  surface: '#ffffff',
+  surfaceElevated: '#f3f0ea',
+  surfaceWarm: '#f1ede5',
+  border: '#e7e3dc',
+  borderStrong: '#d6d1c8',
+  ivory: '#161513',
+  text: '#161513',
+  textSecondary: '#5f5a52',
+  textMuted: '#8b857b',
+  textFaint: '#b8b2a8',
+  onIvory: '#f7f5f1',
+  verified: '#4c7c5c',
+  danger: '#b2544a',
+  surfaceHover: '#efece6',
+  overlay: 'rgba(22, 21, 19, 0.4)',
+  focusRing: 'rgba(22, 21, 19, 0.08)',
+  imageRing: 'rgba(22, 21, 19, 0.06)',
+  ivoryHover: '#2b2925',
+  portraitA: '#d9d1c5',
+  portraitB: '#ebe4d8',
+};
+
+/** The brand default palette. The web reads this; the mobile app picks per scheme. */
+export const colors = darkColors;
 
 export const spacing = {
   xxs: 2,

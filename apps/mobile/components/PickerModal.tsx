@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { Button } from './Button';
 import { Field } from './Field';
 import { Header } from './Header';
@@ -31,6 +32,8 @@ interface Props {
 
 /** Full-screen list with a search field on top and a Done button. Selected rows show a trailing check. */
 export function PickerModal({ visible, onClose, title, options, selected, onChange, multi, max, searchable = true, header, clearable }: Props) {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -113,7 +116,7 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
   search: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
   count: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },

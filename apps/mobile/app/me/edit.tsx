@@ -43,7 +43,8 @@ import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SettingsRow } from '@/components/SettingsRow';
 import { ChipRow, TagChip } from '@/components/TagChip';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
@@ -101,6 +102,7 @@ interface Form {
 }
 
 export default function EditProfile() {
+  const { colors, text } = useTheme();
   const router = useRouter();
   const { userId, email, profile, refreshProfile } = useMember();
   const [form, setForm] = useState<Form | null>(null);

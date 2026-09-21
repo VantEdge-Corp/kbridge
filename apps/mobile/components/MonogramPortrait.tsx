@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 import { initials } from '@peaches/core';
-import { colors, fonts } from '@/constants/theme';
+import { fonts } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 
 interface Props {
   firstName: string;
@@ -13,6 +14,8 @@ interface Props {
 
 /** Placeholder portrait for members without photos: a warm dark gradient with the initial in Georgia and a hairline ring. */
 export function MonogramPortrait({ firstName, width, height, radius = 16, style }: Props) {
+  const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
   const fontSize = Math.round(Math.min(width, height) * 0.36);
   return (
     <LinearGradient
@@ -27,7 +30,7 @@ export function MonogramPortrait({ firstName, width, height, radius = 16, style 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   root: {
     alignItems: 'center',
     justifyContent: 'center',

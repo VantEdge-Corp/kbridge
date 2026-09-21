@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PREFERENCE_STRENGTHS, type PreferenceStrength } from '@peaches/core';
-import { colors, radius } from '@/constants/theme';
+import { radius } from '@/constants/theme';
+import { useStyles, type Theme } from '@/lib/theme';
 
 const LABEL: Record<PreferenceStrength, string> = { required: 'Required', preferred: 'Preferred', any: 'Any' };
 
 /** One compact segmented control per preference row. Never three large buttons. */
 export function PreferenceStrengthSelector({ value, onChange }: { value: PreferenceStrength; onChange: (next: PreferenceStrength) => void }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.wrap} accessibilityRole="radiogroup">
       {PREFERENCE_STRENGTHS.map((s) => {
@@ -28,7 +30,7 @@ export function PreferenceStrengthSelector({ value, onChange }: { value: Prefere
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   wrap: { flexDirection: 'row', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, padding: 2, height: 30 },
   segment: { paddingHorizontal: 9, borderRadius: radius.pill, justifyContent: 'center' },
   on: { backgroundColor: colors.ivory },

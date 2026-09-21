@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, iconSizes, spacing, text, touch } from '@/constants/theme';
+import { iconSizes, spacing, touch } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { Icon, type IconName } from './Icon';
 import { Wordmark } from './Wordmark';
 
@@ -13,10 +14,13 @@ interface Props {
   right?: React.ReactNode;
   /** Small line under the title. */
   subtitle?: string;
+  /** Content centered over the bar, e.g. a name that fades in as the page scrolls. Not interactive. */
+  center?: React.ReactNode;
 }
 
 /** Back arrow, Georgia 28 title, one small trailing action. */
-export function Header({ title, wordmark, back, onBack, right, subtitle }: Props) {
+export function Header({ title, wordmark, back, onBack, right, subtitle, center }: Props) {
+  const { colors, text } = useTheme();
   const router = useRouter();
   const goBack = () => {
     if (onBack) return onBack();
@@ -25,6 +29,11 @@ export function Header({ title, wordmark, back, onBack, right, subtitle }: Props
   };
   return (
     <View style={styles.row}>
+      {center ? (
+        <View style={styles.center} pointerEvents="none">
+          {center}
+        </View>
+      ) : null}
       {back ? (
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={goBack} hitSlop={8} style={({ pressed }) => [styles.back, pressed && styles.pressed]}>
           <Icon name="arrow-left" size={iconSizes.lg} color={colors.ivory} />
@@ -51,6 +60,7 @@ export function Header({ title, wordmark, back, onBack, right, subtitle }: Props
 
 /** A 40px icon-only trailing action for headers. */
 export function HeaderIconButton({ name, label, onPress }: { name: IconName; label: string; onPress: () => void }) {
+  const { colors } = useTheme();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={6} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
       <Icon name={name} size={iconSizes.md} color={colors.textSecondary} />
@@ -68,6 +78,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 72 },
   back: { width: touch.minTarget, height: touch.minTarget, alignItems: 'flex-start', justifyContent: 'center', marginLeft: -spacing.xs },
   titleWrap: { flex: 1, justifyContent: 'center' },
   right: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

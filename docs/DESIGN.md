@@ -18,6 +18,35 @@ never hard-code a color, size, or radius that exists there.
   Cupid, romantic gradients, sexual imagery, "hot singles", "crush",
   "soulmate", "swipe right", or childish dating language.
 
+## Themes
+
+Two palettes share one set of semantic token names. **Dark** is the brand
+default and the one described throughout this document. **Light** keeps the
+same restraint on warm off-white and exists so members can choose; the phone
+app follows the device appearance by default and offers System / Light / Dark
+under Settings > Appearance (stored on the device, applied immediately, and
+mirrored into the native appearance so alerts, keyboards, and sheets follow).
+
+`ivory` / `onIvory` name the primary control color and the text on it, not a
+literal hue: warm ivory with near-black text in dark mode, near-black ink with
+warm off-white text in light mode. Never hard-code either; read the active
+palette from `useTheme()` on the phone.
+
+| Token | Dark | Light |
+|---|---|---|
+| `canvas` | `#0b0b0c` | `#f7f5f1` |
+| `surface` | `#131315` | `#ffffff` |
+| `surfaceElevated` | `#1b1b1e` | `#f3f0ea` |
+| `border` / `borderStrong` | `#26262a` / `#36363b` | `#e7e3dc` / `#d6d1c8` |
+| `ivory` / `onIvory` | `#f1ece2` / `#0f0f10` | `#161513` / `#f7f5f1` |
+| `text` / `textSecondary` / `textMuted` | `#f1ece2` / `#b7b1a6` / `#7f7a71` | `#161513` / `#5f5a52` / `#8b857b` |
+| `verified` | `#9db8a5` | `#4c7c5c` |
+| `danger` | `#c9908a` | `#b2544a` |
+| `portraitA` / `portraitB` | `#2a2622` / `#3a3129` | `#d9d1c5` / `#ebe4d8` |
+
+Everything below describes the dark palette; the light palette maps
+one-to-one (white cards on warm off-white, ink where ivory is named).
+
 ## Surfaces
 
 90-95% of every screen is dark.
@@ -211,3 +240,85 @@ line, these win.
   16px side margins.
 - Pickers and multi-selects: full-screen modal with a search field on top and
   a Done button; selected rows show a check at the trailing edge.
+
+## Phone pass: profile story, requests, inbox, Me
+
+The structure of the best consumer profile UIs is worth borrowing: a profile
+that reads as one scrollable story of photo and text cards, a vitals strip, an
+icon-led details list, conversations split into your turn and their turn, a
+hub-style Me tab. Borrow the structure, never the look: everything stays dark,
+restrained, and free of hearts and like buttons. When these rules conflict
+with an earlier line, these win on the phone.
+
+### Profile View
+
+- One vertical story, not a photo pager with a form under it. Blocks, in
+  order: main photo, identity block, request note (when they wrote to you),
+  bio card, vitals strip, details list, interests, verification, posts. The
+  remaining photos are interleaved one at a time between the content blocks
+  so every photo is seen in context; any left over follow at the end.
+- Photo cards are inset 16px, 4:5, radius lg, with the hairline image ring.
+  The main photo is the first thing on the screen. A member without photos
+  gets the monogram portrait in the same frame.
+- Identity block: name and age in Georgia 28/34 with the verification mark
+  to the right, then one metadata line (`Product designer · Midtown Atlanta`)
+  in 15px `textSecondary`. As the block scrolls under the header, the name
+  fades into the header (Georgia 17, centered) over 24px of travel.
+- Bio card: `surface`, 1px `border`, radius lg, 20px padding, an eyebrow
+  (`About Priya`) and the bio in Georgia 20/28 ivory. This is the one
+  sanctioned editorial use of Georgia for body copy; it reads like a
+  pull-quote, never like a form field.
+- Vitals strip: one horizontally scrolling `surface` card, radius lg. Items
+  are an 18px icon and a 15px value with 16px padding, separated by 1px
+  vertical `border` lines. Contents, when present: height, area,
+  relationship intent, children, drinking, smoking, exercise. No labels: the
+  icon and a self-describing value carry the meaning (`Drinks socially`,
+  `Wants children`, `Doesn't smoke`).
+- Details list: a grouped container of icon rows (work, education, field and
+  standing, nationality, languages, ethnicity when disclosed). Values are
+  readable phrases (`Speaks Korean, English`, `From Nigeria`). No label
+  column; the label is the accessibility name.
+- Verification: a `surface` card with the verified dimensions as calm badge
+  rows and one caption. Shown only when at least one dimension is verified.
+- Action bar: the only primary button on the screen. For an incoming request
+  the bar holds Decline (secondary, 1 part) and Accept (primary, 2 parts).
+
+### Requests ("liked you")
+
+- Requests are portrait cards, not rows: the same 3:4 PersonCard grid as
+  Home, with a two-line excerpt of the note in place of the metadata line.
+  Tapping a card opens the profile; the decision is made there, with the
+  whole profile in view and the note as a card under the identity block.
+- Requests the member sent stay as rows under a `Sent by you` header, with
+  a Withdraw ghost action.
+
+### Inbox
+
+- Two sections: `Requests` and `Connections`. A fresh connection with no
+  messages is a conversation like any other.
+- Connections are grouped into `Your turn` and `Their turn`: collapsible
+  grouped lists, each header with a count pill and a chevron. It is your turn
+  when the last message is theirs, or when nobody has written yet and you
+  were the one who accepted; it is their turn otherwise.
+- Conversation rows: 48px avatar, name 15px medium (ivory when it is your
+  turn), one preview line (`You: ...` for your own last message, `Say hello`
+  for a fresh connection), a time on the right, an ivory unread pill.
+- The Inbox tab shows a badge with pending requests plus unread messages.
+
+### Me
+
+- Me is a hub, not an editor. A centered 96px circular portrait with a small
+  ivory edit disc at its corner (opens Photos); name and age in Georgia 22
+  with the verification mark; one metadata line; then the completeness card
+  and the grouped rows. Photos are managed on the Photos screen; the bio is
+  edited in Edit profile and previewed with `View as others see you`.
+
+### Empty states and Explore
+
+- Empty states may lead with a 48px `surface` disc holding a 20px muted
+  icon. The title is Georgia 20/26 ivory, the body 13px `textMuted`, with
+  one optional secondary action.
+- Explore shows the active filters as a chip row above the grid: a round
+  sliders chip first, then distance, then each required (ivory) and
+  preferred (outline) dimension with a short value. Tapping any chip opens
+  the filter sheet. The people count sits under the row as a caption.

@@ -10,12 +10,15 @@ import { Loading } from '@/components/Loading';
 import { ReportSheet } from '@/components/ReportSheet';
 import { Screen } from '@/components/Screen';
 import { ActionSheet } from '@/components/Sheet';
-import { colors, radius, spacing, text, touch } from '@/constants/theme';
+import { radius, spacing, touch } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 
 export default function Chat() {
+  const styles = useStyles(makeStyles);
+  const { colors, text, isDark } = useTheme();
   const router = useRouter();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { userId } = useMember();
@@ -191,7 +194,7 @@ export default function Chat() {
             placeholderTextColor={colors.textMuted}
             multiline
             style={styles.input}
-            keyboardAppearance="dark"
+            keyboardAppearance={isDark ? 'dark' : 'light'}
             accessibilityLabel="Message"
           />
           <Pressable
@@ -220,7 +223,7 @@ export default function Chat() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
   header: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: spacing.sm },
   more: { width: touch.minTarget, height: touch.minTarget, alignItems: 'flex-end', justifyContent: 'center' },

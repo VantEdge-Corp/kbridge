@@ -6,7 +6,8 @@ import {
   type VerificationData,
   type VerificationDimension,
 } from '@peaches/core';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { Button } from './Button';
 import { Group } from './Group';
 import { Icon } from './Icon';
@@ -19,6 +20,7 @@ interface Props {
 
 /** The member's own per-dimension states in a grouped list. Others only ever see `verified`. */
 export function VerificationList({ verification, onRequest, busy }: Props) {
+  const { colors, text } = useTheme();
   return (
     <Group inset={spacing.lg + 16 + spacing.md}>
       {VERIFICATION_DIMENSIONS.map((d) => {

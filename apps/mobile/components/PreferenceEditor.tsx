@@ -23,7 +23,8 @@ import {
   type Preferences,
   type PreferenceStrength,
 } from '@peaches/core';
-import { spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { FilterRow } from './FilterRow';
 import { Group } from './Group';
 import { PickerModal, type PickerOption } from './PickerModal';
@@ -39,7 +40,7 @@ interface Props {
   onDistanceChange: (miles: number) => void;
 }
 
-const OPTIONS: Record<MultiPreferenceKey, ReadonlyArray<PickerOption>> = {
+export const PREFERENCE_OPTIONS: Record<MultiPreferenceKey, ReadonlyArray<PickerOption>> = {
   nationalities: COUNTRIES.map((c) => ({ value: c.code, label: c.name })),
   raceEthnicities: RACE_ETHNICITY_OPTIONS,
   languages: LANGUAGE_OPTIONS,
@@ -65,25 +66,25 @@ const DISTANCE_OPTIONS: PickerOption[] = DISTANCE_OPTIONS_MILES.map((m) => ({ va
 
 type Open = MultiPreferenceKey | 'area' | 'distance' | null;
 
+/** "Korean, English +1" for a multi preference; "Any" when nothing is selected. */
+export function summarizeValues(key: MultiPreferenceKey, values: readonly string[], max = 3): string {
+  if (values.length === 0) return 'Any';
+  const labels = values.map((v) => PREFERENCE_OPTIONS[key].find((o) => o.value === v)?.label ?? v);
+  return labels.length > max ? `${labels.slice(0, max).join(', ')} +${labels.length - max}` : labels.join(', ');
+}
+
 /**
  * Every dimension carries its own Required / Preferred / Any strength.
  * Location and distance are the viewer's private search region; distance is
  * always a hard boundary, so it has no strength control.
  */
 export function PreferenceEditor({ prefs, onChange, areaId, maxDistanceMiles, onAreaChange, onDistanceChange }: Props) {
+  const { text } = useTheme();
   const [open, setOpen] = useState<Open>(null);
 
   const summaries = useMemo(() => {
     const out = {} as Record<MultiPreferenceKey, string>;
-    for (const key of Object.keys(OPTIONS) as MultiPreferenceKey[]) {
-      const values = prefs[key].values;
-      if (values.length === 0) {
-        out[key] = 'Any';
-        continue;
-      }
-      const labels = values.map((v) => OPTIONS[key].find((o) => o.value === v)?.label ?? v);
-      out[key] = labels.length > 3 ? `${labels.slice(0, 3).join(', ')} +${labels.length - 3}` : labels.join(', ');
-    }
+    for (const key of Object.keys(PREFERENCE_OPTIONS) as MultiPreferenceKey[]) out[key] = summarizeValues(key, prefs[key].values);
     return out;
   }, [prefs]);
 
@@ -167,7 +168,7 @@ export function PreferenceEditor({ prefs, onChange, areaId, maxDistanceMiles, on
           visible
           onClose={() => setOpen(null)}
           title={PREFERENCE_LABEL[open]}
-          options={OPTIONS[open]}
+          options={PREFERENCE_OPTIONS[open]}
           selected={prefs[open].values}
           onChange={(values) => setValues(open, values)}
           multi

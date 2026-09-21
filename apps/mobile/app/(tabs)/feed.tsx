@@ -12,13 +12,15 @@ import { PostCard } from '@/components/PostCard';
 import { ReportSheet } from '@/components/ReportSheet';
 import { Screen } from '@/components/Screen';
 import { ActionSheet } from '@/components/Sheet';
-import { colors, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 
 export default function Feed() {
+  const { colors } = useTheme();
   const router = useRouter();
   const { userId } = useMember();
   const [posts, setPosts] = useState<Post[] | null>(null);

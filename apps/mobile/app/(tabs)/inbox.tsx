@@ -1,28 +1,48 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { timeAgo, truncate, type Connection, type IntroductionRequest } from '@peaches/core';
 import { Button } from '@/components/Button';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorText } from '@/components/ErrorText';
 import { GROUP_INSET, Group } from '@/components/Group';
 import { Header } from '@/components/Header';
 import { InboxRow } from '@/components/InboxRow';
 import { Loading } from '@/components/Loading';
+import { PersonCard } from '@/components/PersonCard';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
-import { colors, spacing, text } from '@/constants/theme';
+import { GRID_GAP, PAGE_PADDING, cardWidthFor } from '@/constants/layout';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 
-type Section = 'requests' | 'connections' | 'messages';
+type Section = 'requests' | 'connections';
+
+const CONVERSATION_AVATAR = 48;
+const CONVERSATION_INSET = spacing.lg + CONVERSATION_AVATAR + spacing.md;
+
+/** Your turn: their message is the latest, or nobody has written yet and you were the one who accepted. */
+function isViewerTurn(c: Connection, viewerId: string): boolean {
+  if (c.lastMessage) return c.lastMessage.senderId !== viewerId;
+  return c.introducedBy !== 'viewer';
+}
+
+function preview(c: Connection, viewerId: string): string {
+  if (c.lastMessage) return `${c.lastMessage.senderId === viewerId ? 'You: ' : ''}${c.lastMessage.body}`;
+  return c.introducedBy === 'viewer' ? 'Accepted your introduction' : 'Say hello';
+}
 
 export default function Inbox() {
+  const { colors } = useTheme();
   const router = useRouter();
   const { userId } = useMember();
+  const { width } = useWindowDimensions();
   const [section, setSection] = useState<Section>('requests');
   const [incoming, setIncoming] = useState<IntroductionRequest[]>([]);
   const [outgoing, setOutgoing] = useState<IntroductionRequest[]>([]);
@@ -30,7 +50,6 @@ export default function Inbox() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async (mode: 'initial' | 'refresh' = 'initial') => {
@@ -57,35 +76,10 @@ export default function Inbox() {
   const matchIds = useMemo(() => connections.map((c) => c.matchId), [connections]);
   useEffect(() => api.connections.subscribeInbox(matchIds, () => void load()), [matchIds, load]);
 
-  const fresh = useMemo(() => connections.filter((c) => !c.lastMessage), [connections]);
-  const threads = useMemo(() => connections.filter((c) => !!c.lastMessage), [connections]);
-  const unreadTotal = useMemo(() => threads.reduce((n, c) => n + c.unreadCount, 0), [threads]);
-
-  const accept = async (req: IntroductionRequest) => {
-    setBusy(req.id);
-    try {
-      const matchId = await api.introductions.accept(req.id);
-      setIncoming((list) => list.filter((r) => r.id !== req.id));
-      router.push({ pathname: '/chat/[matchId]', params: { matchId } });
-      void load();
-    } catch (e) {
-      Alert.alert('Could not accept', errorMessage(e));
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const decline = async (req: IntroductionRequest) => {
-    setBusy(req.id);
-    try {
-      await api.introductions.decline(req.id);
-      setIncoming((list) => list.filter((r) => r.id !== req.id));
-    } catch (e) {
-      Alert.alert('Could not decline', errorMessage(e));
-    } finally {
-      setBusy(null);
-    }
-  };
+  const yourTurn = useMemo(() => connections.filter((c) => isViewerTurn(c, userId)), [connections, userId]);
+  const theirTurn = useMemo(() => connections.filter((c) => !isViewerTurn(c, userId)), [connections, userId]);
+  /** Unread messages plus fresh connections waiting on the viewer's first message. */
+  const waiting = useMemo(() => connections.reduce((n, c) => n + c.unreadCount, 0) + yourTurn.filter((c) => !c.lastMessage).length, [connections, yourTurn]);
 
   const withdraw = async (req: IntroductionRequest) => {
     setBusy(req.id);
@@ -101,6 +95,21 @@ export default function Inbox() {
 
   const openProfile = (id: string) => router.push({ pathname: '/profile/[id]', params: { id } });
   const openChat = (matchId: string) => router.push({ pathname: '/chat/[matchId]', params: { matchId } });
+  const cardWidth = cardWidthFor(width);
+
+  const conversationRow = (c: Connection, yours: boolean) => (
+    <InboxRow
+      key={c.matchId}
+      profile={c.counterpart}
+      subtitle={preview(c, userId)}
+      time={timeAgo(c.lastMessage?.createdAt ?? c.createdAt)}
+      unread={c.unreadCount}
+      emphasize={yours}
+      avatarSize={CONVERSATION_AVATAR}
+      onPress={() => openChat(c.matchId)}
+      onAvatarPress={() => openProfile(c.counterpart.id)}
+    />
+  );
 
   return (
     <Screen>
@@ -108,8 +117,7 @@ export default function Inbox() {
       <SegmentedTabs
         items={[
           { key: 'requests', label: 'Requests', badge: incoming.length },
-          { key: 'connections', label: 'Connections', badge: fresh.length },
-          { key: 'messages', label: 'Messages', badge: unreadTotal },
+          { key: 'connections', label: 'Connections', badge: waiting },
         ]}
         value={section}
         onChange={setSection}
@@ -125,33 +133,26 @@ export default function Inbox() {
           {section === 'requests' ? (
             <>
               {incoming.length === 0 ? (
-                <EmptyState title="No requests waiting." body="When someone writes to you, their note appears here first." />
+                <EmptyState
+                  icon="mail"
+                  title="No requests yet"
+                  body="When someone writes to you, their note and profile appear here first."
+                  actionTitle="Explore people"
+                  onAction={() => router.push('/explore')}
+                />
               ) : (
-                <Group inset={GROUP_INSET.avatar} style={styles.group}>
+                <View style={styles.grid}>
                   {incoming.map((req) => (
-                    <InboxRow
+                    <PersonCard
                       key={req.id}
                       profile={req.counterpart}
-                      subtitle={expanded === req.id ? 'Tap to collapse' : truncate(req.note, 70)}
-                      time={timeAgo(req.createdAt)}
-                      emphasize
-                      onPress={() => setExpanded(expanded === req.id ? null : req.id)}
-                      onAvatarPress={() => openProfile(req.counterpart.id)}
-                    >
-                      {expanded === req.id ? (
-                        <View style={styles.expanded}>
-                          <Text style={text.body}>{req.note}</Text>
-                          <View style={styles.actions}>
-                            <Button title="Accept" size="small" onPress={() => accept(req)} loading={busy === req.id} />
-                            <Button title="Decline" size="small" variant="ghost" onPress={() => decline(req)} disabled={busy === req.id} />
-                            <View style={{ flex: 1 }} />
-                            <Button title="View profile" size="small" variant="ghost" onPress={() => openProfile(req.counterpart.id)} />
-                          </View>
-                        </View>
-                      ) : null}
-                    </InboxRow>
+                      width={cardWidth}
+                      caption={`“${truncate(req.note, 80)}”`}
+                      captionLines={2}
+                      onPress={() => openProfile(req.counterpart.id)}
+                    />
                   ))}
-                </Group>
+                </View>
               )}
               {outgoing.length > 0 ? (
                 <>
@@ -175,41 +176,21 @@ export default function Inbox() {
                 </>
               ) : null}
             </>
-          ) : section === 'connections' ? (
-            fresh.length === 0 ? (
-              <EmptyState title="No new connections." body="Accepted introductions land here until the first message." />
-            ) : (
-              <Group inset={GROUP_INSET.avatar} style={styles.group}>
-                {fresh.map((c) => (
-                  <InboxRow
-                    key={c.matchId}
-                    profile={c.counterpart}
-                    subtitle={c.introducedBy === 'viewer' ? 'They accepted your introduction · Say hello' : 'You accepted their introduction · Say hello'}
-                    time={timeAgo(c.createdAt)}
-                    emphasize
-                    onPress={() => openChat(c.matchId)}
-                    onAvatarPress={() => openProfile(c.counterpart.id)}
-                  />
-                ))}
-              </Group>
-            )
-          ) : threads.length === 0 ? (
-            <EmptyState title="No conversations yet." />
+          ) : connections.length === 0 ? (
+            <EmptyState icon="message-circle" title="No conversations yet" body="Accepted introductions become conversations here." />
           ) : (
-            <Group inset={GROUP_INSET.avatar} style={styles.group}>
-              {threads.map((c) => (
-                <InboxRow
-                  key={c.matchId}
-                  profile={c.counterpart}
-                  subtitle={`${c.lastMessage?.senderId === userId ? 'You: ' : ''}${c.lastMessage?.body ?? ''}`}
-                  time={c.lastMessage ? timeAgo(c.lastMessage.createdAt) : undefined}
-                  unread={c.unreadCount}
-                  emphasize={c.unreadCount > 0}
-                  onPress={() => openChat(c.matchId)}
-                  onAvatarPress={() => openProfile(c.counterpart.id)}
-                />
-              ))}
-            </Group>
+            <>
+              {yourTurn.length > 0 ? (
+                <CollapsibleSection title="Your turn" count={yourTurn.length}>
+                  <Group inset={CONVERSATION_INSET}>{yourTurn.map((c) => conversationRow(c, true))}</Group>
+                </CollapsibleSection>
+              ) : null}
+              {theirTurn.length > 0 ? (
+                <CollapsibleSection title="Their turn" count={theirTurn.length} initiallyOpen={yourTurn.length === 0 || theirTurn.length <= 12}>
+                  <Group inset={CONVERSATION_INSET}>{theirTurn.map((c) => conversationRow(c, false))}</Group>
+                </CollapsibleSection>
+              ) : null}
+            </>
           )}
         </ScrollView>
       )}
@@ -219,8 +200,6 @@ export default function Inbox() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 40, flexGrow: 1 },
-  group: { marginTop: spacing.md },
-  expanded: { marginTop: spacing.md, paddingLeft: 40 + spacing.md, gap: spacing.md },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginLeft: -(40 + spacing.md) },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP, rowGap: 20, paddingHorizontal: PAGE_PADDING, paddingTop: PAGE_PADDING },
   actionsRight: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.xs },
 });

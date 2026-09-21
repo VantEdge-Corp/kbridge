@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { Icon } from './Icon';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export function TagChip({ label, selected, onPress, onRemove }: Props) {
+  const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
   const body = (
     <View style={[styles.chip, selected && styles.selected]}>
       <Text style={[styles.label, selected && styles.labelSelected]} numberOfLines={1}>
@@ -31,10 +34,11 @@ export function TagChip({ label, selected, onPress, onRemove }: Props) {
 }
 
 export function ChipRow({ children }: { children: React.ReactNode }) {
+  const styles = useStyles(makeStyles);
   return <View style={styles.row}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

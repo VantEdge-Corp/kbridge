@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, radius, spacing, touch } from '@/constants/theme';
+import { radius, spacing, touch } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { Icon, type IconName } from './Icon';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -24,6 +25,8 @@ interface Props {
  * state is 0.8 opacity.
  */
 export function Button({ title, onPress, variant = 'primary', size = 'default', disabled, loading, icon, fullWidth, style, accessibilityLabel }: Props) {
+  const styles = useStyles(makeStyles);
+  const { colors } = useTheme();
   const inactive = disabled || loading;
   const color = variant === 'primary' ? colors.onIvory : variant === 'danger' ? colors.danger : variant === 'ghost' ? colors.text : colors.ivory;
   return (
@@ -54,7 +57,7 @@ export function Button({ title, onPress, variant = 'primary', size = 'default', 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   base: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
   regular: { minHeight: touch.minTarget },
   small: { minHeight: 36, paddingHorizontal: 14, borderRadius: radius.sm + 2 },

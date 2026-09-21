@@ -4,9 +4,12 @@ import { BRAND } from '@peaches/core';
 import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
 import { Wordmark } from '@/components/Wordmark';
-import { colors, fonts, spacing, text } from '@/constants/theme';
+import { fonts, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 
 export default function Welcome() {
+  const styles = useStyles(makeStyles);
+  const { text } = useTheme();
   const router = useRouter();
   return (
     <Screen edges={['top', 'bottom']}>
@@ -29,7 +32,7 @@ export default function Welcome() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { flex: 1, paddingHorizontal: spacing.xl, justifyContent: 'space-between', paddingBottom: spacing.xl },
   brand: { flex: 1, justifyContent: 'center', gap: spacing.md },
   tagline: { fontFamily: fonts.display, fontSize: 32, lineHeight: 38, color: colors.text, marginTop: spacing.md },

@@ -9,13 +9,16 @@ import { Field } from '@/components/Field';
 import { Header } from '@/components/Header';
 import { Icon } from '@/components/Icon';
 import { Screen } from '@/components/Screen';
-import { colors, radius, spacing, text } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { pickImage } from '@/lib/images';
 
 export default function NewPost() {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const router = useRouter();
   const { userId } = useMember();
   const [body, setBody] = useState('');
@@ -80,7 +83,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return globalThis.btoa(binary);
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl, gap: spacing.lg },
   preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.lg, backgroundColor: colors.surfaceElevated, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing },
   remove: { position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { PreferenceStrength } from '@peaches/core';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { Icon } from './Icon';
 import { PreferenceStrengthSelector } from './PreferenceStrengthSelector';
 
@@ -17,6 +18,7 @@ interface Props {
 
 /** Two compact lines for grouped filter lists: label with its strength selector, then the current value. */
 export function FilterRow({ label, summary, onPress, strength, onStrengthChange, control }: Props) {
+  const { colors, text } = useTheme();
   return (
     <View style={styles.row}>
       <View style={styles.top}>

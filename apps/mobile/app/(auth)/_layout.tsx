@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 
 export const unstable_settings = { initialRouteName: 'welcome' };
 
 export default function AuthLayout() {
+  const { colors } = useTheme();
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
       <Stack.Screen name="welcome" />

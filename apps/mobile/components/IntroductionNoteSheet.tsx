@@ -1,7 +1,8 @@
 import { LIMITS, validateIntroNote } from '@peaches/core';
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { useTheme } from '@/lib/theme';
 import { errorMessage } from '@/lib/errors';
 import { Button } from './Button';
 import { Field } from './Field';
@@ -19,6 +20,7 @@ interface Props {
 
 /** The one restrained primary action: a written introduction, never a like. */
 export function IntroductionNoteSheet({ visible, onClose, recipientFirstName, onSubmit, context }: Props) {
+  const { colors, text } = useTheme();
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);

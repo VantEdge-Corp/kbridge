@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
-import { colors } from '@/constants/theme';
+import { useStyles, type Theme } from '@/lib/theme';
 
 interface Props {
   children: React.ReactNode;
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export function Screen({ children, edges = ['top'], style }: Props) {
+  const styles = useStyles(makeStyles);
   return (
     <SafeAreaView edges={edges} style={[styles.root, style]}>
       {children}
@@ -18,6 +19,6 @@ export function Screen({ children, edges = ['top'], style }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
 });

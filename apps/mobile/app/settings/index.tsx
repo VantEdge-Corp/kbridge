@@ -5,11 +5,13 @@ import { GROUP_INSET, Group } from '@/components/Group';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
 import { SettingsRow } from '@/components/SettingsRow';
-import { spacing, text } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
+import { THEME_PREFERENCES, useTheme } from '@/lib/theme';
 import { useMember } from '@/lib/auth';
 
 export const SECTIONS = [
   { key: 'account', label: 'Account', icon: 'user' },
+  { key: 'appearance', label: 'Appearance', icon: 'sun' },
   { key: 'privacy', label: 'Privacy', icon: 'eye-off' },
   { key: 'discovery', label: 'Discovery Preferences', icon: 'sliders' },
   { key: 'notifications', label: 'Notifications', icon: 'bell' },
@@ -20,7 +22,9 @@ export const SECTIONS = [
 ] as const;
 
 export default function Settings() {
+  const { text, preference } = useTheme();
   const router = useRouter();
+  const appearance = THEME_PREFERENCES.find((p) => p.value === preference)?.label;
   const { signOut } = useMember();
   const logout = () =>
     Alert.alert('Log out?', undefined, [
@@ -37,6 +41,7 @@ export default function Settings() {
               key={s.key}
               label={s.label}
               icon={s.icon}
+              value={s.key === 'appearance' ? appearance : undefined}
               onPress={() => (s.key === 'discovery' ? router.push('/me/preferences') : router.push({ pathname: '/settings/[section]', params: { section: s.key } }))}
             />
           ))}

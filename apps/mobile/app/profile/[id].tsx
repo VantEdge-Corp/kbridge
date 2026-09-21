@@ -1,48 +1,34 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  CHILDREN_OPTIONS,
-  DRINKING_OPTIONS,
-  EXERCISE_OPTIONS,
-  INDUSTRY_OPTIONS,
-  LANGUAGE_OPTIONS,
-  RACE_ETHNICITY_OPTIONS,
-  RELATIONSHIP_INTENT_OPTIONS,
-  SMOKING_OPTIONS,
-  STUDENT_STATUS_OPTIONS,
-  VERIFICATION_LABEL,
-  countryName,
-  formatHeight,
-  labelFor,
-  nameAge,
-  timeAgo,
-  type Post,
-  type PublicProfile,
-} from '@peaches/core';
+import { VERIFICATION_LABEL, nameAge, timeAgo, type IntroductionRequest, type Post, type PublicProfile } from '@peaches/core';
 import { Button } from '@/components/Button';
-import { Group } from '@/components/Group';
-import { Header } from '@/components/Header';
-import { Icon } from '@/components/Icon';
+import { GROUP_INSET, Group } from '@/components/Group';
+import { Header, HeaderIconButton } from '@/components/Header';
 import { IntroductionNoteSheet } from '@/components/IntroductionNoteSheet';
 import { Loading } from '@/components/Loading';
-import { MonogramPortrait } from '@/components/MonogramPortrait';
-import { MetaChips, MetaRow, MetaSection } from '@/components/ProfileMetadata';
+import { DetailRow, NoteCard, ProfilePhoto, ProfileSection, PullQuote, VitalsStrip } from '@/components/ProfileBlocks';
 import { ReportSheet } from '@/components/ReportSheet';
 import { Screen } from '@/components/Screen';
 import { ActionSheet } from '@/components/Sheet';
 import { ChipRow, TagChip } from '@/components/TagChip';
 import { VerificationBadge } from '@/components/VerificationBadge';
-import { colors, radius, spacing, text, touch } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
+import { detailsFor, metaLineFor, vitalsFor } from '@/lib/profileCopy';
 
-type Relationship = { kind: 'none' } | { kind: 'pending' } | { kind: 'incoming' } | { kind: 'connected'; matchId: string };
+type Relationship = { kind: 'none' } | { kind: 'pending' } | { kind: 'incoming'; request: IntroductionRequest } | { kind: 'connected'; matchId: string };
+
+/** How far the identity block travels under the header before the name has fully faded in there. */
+const NAME_FADE_DISTANCE = 24;
 
 export default function ProfileView() {
+  const styles = useStyles(makeStyles);
+  const { colors, text } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { userId } = useMember();
@@ -51,10 +37,12 @@ export default function ProfileView() {
   const [profile, setProfile] = useState<PublicProfile | null | undefined>(undefined);
   const [posts, setPosts] = useState<Post[]>([]);
   const [relationship, setRelationship] = useState<Relationship>({ kind: 'none' });
-  const [page, setPage] = useState(0);
   const [noteOpen, setNoteOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [nameY, setNameY] = useState(0);
+  const scrollY = useRef(new Animated.Value(0)).current;
   const own = id === userId;
 
   const load = useCallback(async () => {
@@ -70,8 +58,9 @@ export default function ProfileView() {
           api.connections.list(userId),
         ]);
         const connection = connections.find((c) => c.counterpart.id === id);
+        const request = incoming.find((r) => r.counterpart.id === id);
         if (connection) setRelationship({ kind: 'connected', matchId: connection.matchId });
-        else if (incoming.some((r) => r.counterpart.id === id)) setRelationship({ kind: 'incoming' });
+        else if (request) setRelationship({ kind: 'incoming', request });
         else if (outgoing.some((r) => r.counterpart.id === id)) setRelationship({ kind: 'pending' });
         else setRelationship({ kind: 'none' });
       }
@@ -90,6 +79,40 @@ export default function ProfileView() {
     await api.introductions.request({ viewerId: userId, recipientId: profile.id, note });
     setNoteOpen(false);
     setRelationship({ kind: 'pending' });
+  };
+
+  const accept = async () => {
+    if (relationship.kind !== 'incoming') return;
+    setBusy(true);
+    try {
+      const matchId = await api.introductions.accept(relationship.request.id);
+      router.replace({ pathname: '/chat/[matchId]', params: { matchId } });
+    } catch (e) {
+      Alert.alert('Could not accept', errorMessage(e));
+      setBusy(false);
+    }
+  };
+
+  const decline = () => {
+    if (relationship.kind !== 'incoming' || !profile) return;
+    const { request } = relationship;
+    Alert.alert(`Decline ${profile.firstName}'s request?`, 'The request is closed quietly. They are not told.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Decline',
+        style: 'destructive',
+        onPress: async () => {
+          setBusy(true);
+          try {
+            await api.introductions.decline(request.id);
+            router.back();
+          } catch (e) {
+            Alert.alert('Could not decline', errorMessage(e));
+            setBusy(false);
+          }
+        },
+      },
+    ]);
   };
 
   const block = () => {
@@ -142,128 +165,128 @@ export default function ProfileView() {
     );
   }
 
-  const photoHeight = Math.round(width / 0.75);
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => setPage(Math.round(e.nativeEvent.contentOffset.x / width));
-  const disclosedRace = profile.raceEthnicityDisclosure === 'disclosed' ? profile.raceEthnicities.map((r) => labelFor(RACE_ETHNICITY_OPTIONS, r)) : [];
-  const lifestyle = [
-    profile.lifestyle.drinking && profile.lifestyle.drinking !== 'prefer_not_to_say' ? `Drinks: ${labelFor(DRINKING_OPTIONS, profile.lifestyle.drinking).toLowerCase()}` : null,
-    profile.lifestyle.smoking && profile.lifestyle.smoking !== 'prefer_not_to_say' ? `Smokes: ${labelFor(SMOKING_OPTIONS, profile.lifestyle.smoking).toLowerCase()}` : null,
-    profile.lifestyle.exercise ? `Exercise: ${labelFor(EXERCISE_OPTIONS, profile.lifestyle.exercise).toLowerCase()}` : null,
-    profile.lifestyle.children && profile.lifestyle.children !== 'prefer_not_to_say' ? labelFor(CHILDREN_OPTIONS, profile.lifestyle.children) : null,
-  ].filter((v): v is string => !!v);
+  const contentWidth = width - spacing.lg * 2;
+  const verified = profile.publicVerificationBadges.length > 0;
+  const meta = metaLineFor(profile);
+  const vitals = vitalsFor(profile);
+  const details = detailsFor(profile);
+  const fadeStart = Math.max(nameY, 1);
+  const headerNameOpacity = scrollY.interpolate({ inputRange: [fadeStart, fadeStart + NAME_FADE_DISTANCE], outputRange: [0, 1], extrapolate: 'clamp' });
+
+  /* The story: main photo, identity, note, bio; then the remaining photos interleaved between the content blocks. */
+  const photos: Array<string | null> = profile.photos.length > 0 ? profile.photos : [null];
+  const photoBlock = (i: number) => <ProfilePhoto key={`photo-${i}`} uri={photos[i] ?? null} firstName={profile.firstName} index={i} width={contentWidth} />;
+
+  const later: React.ReactNode[] = [];
+  if (vitals.length > 0) later.push(<VitalsStrip key="vitals" items={vitals} />);
+  if (details.length > 0) {
+    later.push(
+      <Group key="details" inset={GROUP_INSET.icon}>
+        {details.map((d) => (
+          <DetailRow key={d.label} icon={d.icon} label={d.label} value={d.value} />
+        ))}
+      </Group>,
+    );
+  }
+  if (profile.interests.length > 0) {
+    later.push(
+      <ProfileSection key="interests" title="Interests">
+        <ChipRow>
+          {profile.interests.map((i) => (
+            <TagChip key={i} label={i} />
+          ))}
+        </ChipRow>
+      </ProfileSection>,
+    );
+  }
+  if (verified) {
+    later.push(
+      <ProfileSection key="verification" title="Verification">
+        <View style={styles.verificationCard}>
+          {profile.publicVerificationBadges.map((b) => (
+            <VerificationBadge key={b} label={`${VERIFICATION_LABEL[b]} verified`} size={15} />
+          ))}
+          <Text style={[text.caption, { marginTop: spacing.xs }]}>Verified means our team reviewed the details this member provided.</Text>
+        </View>
+      </ProfileSection>,
+    );
+  }
+  if (posts.length > 0) {
+    later.push(
+      <ProfileSection key="posts" title="Posts">
+        <Group flush>
+          {posts.map((p) => (
+            <Pressable
+              key={p.id}
+              onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.postRow, pressed && { backgroundColor: colors.surfaceHover }]}
+            >
+              <Text style={text.body} numberOfLines={3}>
+                {p.body}
+              </Text>
+              <Text style={text.micro}>{timeAgo(p.createdAt)}</Text>
+            </Pressable>
+          ))}
+        </Group>
+      </ProfileSection>,
+    );
+  }
+
+  const blocks: React.ReactNode[] = [photoBlock(0)];
+  blocks.push(
+    <View key="identity" style={styles.identity} onLayout={(e) => setNameY(e.nativeEvent.layout.y)}>
+      <View style={styles.nameRow}>
+        <Text style={[text.title, styles.name]}>{nameAge(profile.firstName, profile.age)}</Text>
+        {verified ? <VerificationBadge size={18} /> : null}
+      </View>
+      {meta ? <Text style={text.bodySecondary}>{meta}</Text> : null}
+      {own ? <Text style={[text.caption, { marginTop: spacing.xs }]}>This is you, as other members see you.</Text> : null}
+    </View>,
+  );
+  if (relationship.kind === 'incoming') {
+    blocks.push(
+      <NoteCard key="note" eyebrow={`${profile.firstName} wrote to you · ${timeAgo(relationship.request.createdAt)}`}>
+        {relationship.request.note}
+      </NoteCard>,
+    );
+  }
+  if (profile.bio) blocks.push(<PullQuote key="bio" eyebrow={`About ${profile.firstName}`}>{profile.bio}</PullQuote>);
+  let nextPhoto = 1;
+  for (const block of later) {
+    if (nextPhoto < photos.length) blocks.push(photoBlock(nextPhoto++));
+    blocks.push(block);
+  }
+  while (nextPhoto < photos.length) blocks.push(photoBlock(nextPhoto++));
 
   return (
     <Screen edges={['top']}>
       <Header
         back
+        center={
+          <Animated.View style={[styles.headerName, { opacity: headerNameOpacity }]}>
+            <Text style={text.name} numberOfLines={1}>
+              {profile.firstName}
+            </Text>
+            {verified ? <VerificationBadge size={14} /> : null}
+          </Animated.View>
+        }
         right={
           !own ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="More options" onPress={() => setMoreOpen(true)} style={styles.more} hitSlop={6}>
-              <Icon name="more-horizontal" size={20} color={colors.textSecondary} />
-            </Pressable>
+            <HeaderIconButton name="more-horizontal" label="More options" onPress={() => setMoreOpen(true)} />
           ) : (
             <Button title="Edit" size="small" variant="ghost" onPress={() => router.push('/me/edit')} />
           )
         }
       />
-      <ScrollView contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
-        {profile.photos.length > 0 ? (
-          <View>
-            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={onScroll} scrollEventThrottle={16}>
-              {profile.photos.map((uri, i) => (
-                <Image key={uri} source={{ uri }} style={{ width, height: photoHeight, backgroundColor: colors.surfaceElevated }} contentFit="cover" transition={150} accessibilityLabel={`${profile.firstName}'s photo ${i + 1}`} />
-              ))}
-            </ScrollView>
-            {profile.photos.length > 1 ? (
-              <View style={styles.dots}>
-                {profile.photos.map((uri, i) => (
-                  <View key={uri} style={[styles.dot, i === page && styles.dotOn]} />
-                ))}
-              </View>
-            ) : null}
-          </View>
-        ) : (
-          <View style={styles.monogramWrap}>
-            <MonogramPortrait firstName={profile.firstName} width={width - spacing.lg * 2} height={Math.round((width - spacing.lg * 2) * 0.9)} radius={radius.lg} />
-          </View>
-        )}
-
-        <View style={styles.basic}>
-          <View style={styles.nameRow}>
-            <Text style={text.heading}>{nameAge(profile.firstName, profile.age)}</Text>
-            {profile.publicVerificationBadges.length > 0 ? <VerificationBadge size={16} /> : null}
-          </View>
-          <Text style={text.bodySmall}>
-            {[profile.displayArea, profile.height ? formatHeight(profile.height) : null].filter(Boolean).join(' · ')}
-          </Text>
-          {own ? <Text style={[text.caption, { marginTop: spacing.xs }]}>This is you, as other members see you.</Text> : null}
-          {profile.bio ? <Text style={[text.body, { marginTop: spacing.md }]}>{profile.bio}</Text> : null}
-        </View>
-
-        <MetaSection title="Background">
-          <MetaRow label="Work" value={profile.employmentDisplay || profile.occupation} />
-          <MetaRow label="Education" value={profile.educationDisplay} />
-          <MetaRow label="Field" value={labelFor(INDUSTRY_OPTIONS, profile.industry)} />
-          <MetaRow label="Status" value={labelFor(STUDENT_STATUS_OPTIONS, profile.studentStatus)} />
-          <MetaChips label="Nationality" items={profile.nationalities.map(countryName)} />
-          <MetaChips label="Ethnicity" items={disclosedRace} />
-          <MetaChips label="Languages" items={profile.languages.map((l) => labelFor(LANGUAGE_OPTIONS, l))} />
-        </MetaSection>
-
-        <MetaSection title="Intent">
-          <MetaRow label="Looking for" value={labelFor(RELATIONSHIP_INTENT_OPTIONS, profile.relationshipIntent)} />
-        </MetaSection>
-
-        <MetaSection title="Lifestyle">
-          <MetaChips label="Habits" items={lifestyle} />
-        </MetaSection>
-
-        {profile.interests.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={text.eyebrow}>Interests</Text>
-            <ChipRow>
-              {profile.interests.map((i) => (
-                <TagChip key={i} label={i} />
-              ))}
-            </ChipRow>
-          </View>
-        ) : null}
-
-        <View style={styles.section}>
-          <Text style={text.eyebrow}>Verification</Text>
-          {profile.publicVerificationBadges.length > 0 ? (
-            <View style={styles.badges}>
-              {profile.publicVerificationBadges.map((b) => (
-                <VerificationBadge key={b} label={`${VERIFICATION_LABEL[b]} verified`} size={15} />
-              ))}
-            </View>
-          ) : (
-            <Text style={text.caption}>No verified details yet.</Text>
-          )}
-          <Text style={text.caption}>Verified means our team reviewed the details this member provided.</Text>
-        </View>
-
-        {posts.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={text.eyebrow}>Posts</Text>
-            <Group flush>
-              {posts.map((p) => (
-                <Pressable
-                  key={p.id}
-                  onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })}
-                  accessibilityRole="button"
-                  style={({ pressed }) => [styles.postRow, pressed && { backgroundColor: colors.surfaceHover }]}
-                >
-                  <Text style={text.body} numberOfLines={3}>
-                    {p.body}
-                  </Text>
-                  <Text style={text.micro}>{timeAgo(p.createdAt)}</Text>
-                </Pressable>
-              ))}
-            </Group>
-          </View>
-        ) : null}
-      </ScrollView>
+      <Animated.ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: (own ? 24 : 96) + insets.bottom }]}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+      >
+        {blocks}
+      </Animated.ScrollView>
 
       {!own ? (
         <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
@@ -272,7 +295,10 @@ export default function ProfileView() {
           ) : relationship.kind === 'pending' ? (
             <Button title="Request sent" fullWidth disabled />
           ) : relationship.kind === 'incoming' ? (
-            <Button title={`${profile.firstName} wrote to you · Respond in Inbox`} fullWidth onPress={() => router.push('/inbox')} />
+            <View style={styles.decision}>
+              <Button title="Decline" variant="secondary" onPress={decline} disabled={busy} style={{ flex: 1 }} />
+              <Button title="Accept" onPress={accept} loading={busy} style={{ flex: 2 }} />
+            </View>
           ) : (
             <Button title="Interested" fullWidth onPress={() => setNoteOpen(true)} />
           )}
@@ -293,17 +319,15 @@ export default function ProfileView() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  more: { width: touch.minTarget, height: touch.minTarget, alignItems: 'flex-end', justifyContent: 'center' },
-  dots: { position: 'absolute', bottom: 12, alignSelf: 'center', flexDirection: 'row', gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ivory, opacity: 0.35 },
-  dotOn: { opacity: 1 },
-  monogramWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs },
-  basic: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl, gap: 4 },
+  content: { paddingTop: spacing.xs, gap: spacing.lg },
+  headerName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  identity: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.xs },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, gap: spacing.md },
-  badges: { gap: spacing.sm },
+  name: { flexShrink: 1 },
+  verificationCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
   postRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 4 },
+  decision: { flexDirection: 'row', gap: spacing.md },
   actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.canvas, borderTopWidth: 1, borderTopColor: colors.border },
 });

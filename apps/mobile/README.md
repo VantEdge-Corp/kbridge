@@ -32,9 +32,10 @@ app/post/                 new, [id] (comments)
 app/me/                   edit, preferences, photos, saved
 app/settings/             index, [section]
 components/               PersonCard, VerificationBadge, PreferenceStrengthSelector, ...
-constants/theme.ts        shared tokens + Georgia / serif fonts
+constants/theme.ts        spacing, radii, icon sizes, Georgia / serif fonts, text style factory
+lib/theme.tsx             ThemeProvider, useTheme, useStyles: light and dark palettes, System / Light / Dark preference
 lib/                      supabase client, api binding, auth context, image picking
-hooks/                    useCandidates, useRefreshOnFocus
+hooks/                    useCandidates, useRefreshOnFocus, useInboxBadge
 ```
 
 ## Checks

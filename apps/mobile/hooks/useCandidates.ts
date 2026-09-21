@@ -21,7 +21,9 @@ export function useCandidates() {
 
   const load = useCallback(
     async (mode: 'initial' | 'refresh' = 'initial') => {
-      setState((s) => ({ ...s, loading: mode === 'initial' && !s.viewer, refreshing: mode === 'refresh', error: null }));
+      // Until the first viewer arrives the screen is loading, whatever triggered the call; otherwise an
+      // early focus-refresh would flash an empty state (no area, no people) over nothing.
+      setState((s) => ({ ...s, loading: !s.viewer, refreshing: mode === 'refresh' && !!s.viewer, error: null }));
       try {
         const [viewer, candidates, priv] = await Promise.all([
           api.discovery.getViewer(userId, email),

@@ -1,7 +1,7 @@
 -- ============================================================================
 -- supabase/tests/functional.sql
 -- Functional checks for the Peaches model (migration 013), run against a
--- local Supabase stack with migrations 001-013 applied:
+-- local Supabase stack with migrations 001-014 applied:
 --
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/functional.sql
 --
@@ -128,6 +128,25 @@ select pg_temp.check('the recipient sees the pending request',
   (select count(*) from public.introduction_requests where recipient_id = auth.uid() and status = 'pending') = 1);
 select pg_temp.check('the requester is out of the recipient''s pool',
   not exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'alice'::uuid));
+
+-- Responding: the recipient may accept (which opens a connection) but never withdraw; the requester may only withdraw.
+do $$
+begin
+  update public.introduction_requests set status = 'withdrawn' where recipient_id = auth.uid();
+  raise exception 'FAILED: the recipient withdrew a request';
+exception when insufficient_privilege then
+  raise notice 'ok: the recipient cannot withdraw';
+end $$;
+update public.introduction_requests set status = 'accepted' where recipient_id = auth.uid() and status = 'pending';
+select pg_temp.check('the recipient accepts and a connection opens',
+  (select status = 'accepted' and match_id is not null and responded_at is not null
+     from public.introduction_requests where recipient_id = auth.uid())
+  and exists (select 1 from public.matches where (user_a = :'alice'::uuid and user_b = auth.uid()) or (user_a = auth.uid() and user_b = :'alice'::uuid)));
+insert into public.introduction_requests (requester_id, recipient_id, note)
+values (auth.uid(), :'cara', 'Hi Cara, your Athens weekend posts read like a guidebook.');
+update public.introduction_requests set status = 'withdrawn' where requester_id = auth.uid() and recipient_id = :'cara' and status = 'pending';
+select pg_temp.check('the requester withdraws',
+  (select status = 'withdrawn' and responded_at is not null from public.introduction_requests where requester_id = auth.uid() and recipient_id = :'cara'));
 do $$
 begin
   perform public.set_verification(auth.uid(), 'identity', 'verified');
