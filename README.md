@@ -98,6 +98,10 @@ npm run dev            # web at http://localhost:5173
 npm run dev:mobile     # Expo dev server; scan the QR code with Expo Go
 ```
 
+The Expo app is `apps/mobile`, not the repository root, so run `npx expo`
+commands there. From the root, pass Expo flags after `--`, for example
+`npm run dev:mobile -- -c` to clear the bundler cache.
+
 Expo Go supports only the current Expo SDK. This app tracks SDK 57; when Expo
 Go updates, upgrade with `npx expo install expo@latest --fix` inside
 `apps/mobile`.
