@@ -13,6 +13,14 @@ interface State {
   error: string | null;
 }
 
+/** Filters the member just saved from the filter sheet. */
+export interface AppliedFilters {
+  viewer: Viewer;
+  areaId: string | null;
+  /** The pool itself depends on the area, so a new one means fetching it again. */
+  areaChanged: boolean;
+}
+
 /** Loads the viewer and the discovery pool; ranking happens in the screen. */
 export function useCandidates() {
   const { userId, email } = useMember();
@@ -52,10 +60,16 @@ export function useCandidates() {
 
   const reload = useCallback(() => load('initial'), [load]);
   const refresh = useCallback(() => load('refresh'), [load]);
-  const setViewer = useCallback((viewer: Viewer) => setState((s) => ({ ...s, viewer })), []);
-  const setAreaId = useCallback((areaId: string | null) => setState((s) => ({ ...s, areaId })), []);
+  /** Ranking and eligibility run on the client, so new preferences apply without a refetch. */
+  const adoptFilters = useCallback(
+    ({ viewer, areaId, areaChanged }: AppliedFilters) => {
+      setState((s) => ({ ...s, viewer, areaId }));
+      if (areaChanged) void load('initial');
+    },
+    [load],
+  );
   /** Drops a member the viewer has acted on (passed, or wrote to) until the next reload. */
   const removeCandidate = useCallback((id: string) => setState((s) => ({ ...s, candidates: s.candidates.filter((c) => c.profile.id !== id) })), []);
 
-  return { ...state, reload, refresh, setViewer, setAreaId, reportImpressions, removeCandidate };
+  return { ...state, reload, refresh, adoptFilters, reportImpressions, removeCandidate };
 }

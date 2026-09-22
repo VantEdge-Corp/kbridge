@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { timeAgo, truncate, type Connection, type IntroductionRequest } from '@peaches/core';
@@ -43,7 +43,10 @@ export default function Inbox() {
   const router = useRouter();
   const { userId } = useMember();
   const { width } = useWindowDimensions();
-  const [section, setSection] = useState<Section>('requests');
+  // The section lives in the route, so a link from Home (`/inbox?section=requests`) always lands on it.
+  const params = useLocalSearchParams<{ section?: string }>();
+  const section: Section = params.section === 'connections' ? 'connections' : 'requests';
+  const setSection = (next: Section) => router.setParams({ section: next });
   const [incoming, setIncoming] = useState<IntroductionRequest[]>([]);
   const [outgoing, setOutgoing] = useState<IntroductionRequest[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);

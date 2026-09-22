@@ -24,8 +24,15 @@ export function EmptyState({ title, body, icon, actionTitle, onAction }: Props) 
           <Icon name={icon} size={20} color={colors.textMuted} />
         </View>
       ) : null}
-      <Text style={styles.title}>{title}</Text>
-      {body ? <Text style={[text.bodySmall, styles.body]}>{body}</Text> : null}
+      {/* push-out keeps a single word from ending up alone on the last line of centered text. */}
+      <Text style={styles.title} lineBreakStrategyIOS="push-out">
+        {title}
+      </Text>
+      {body ? (
+        <Text style={[text.bodySmall, styles.body]} lineBreakStrategyIOS="push-out">
+          {body}
+        </Text>
+      ) : null}
       {actionTitle && onAction ? <Button title={actionTitle} variant="secondary" size="small" onPress={onAction} style={{ marginTop: spacing.xl }} /> : null}
     </View>
   );

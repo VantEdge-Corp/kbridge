@@ -2,8 +2,8 @@ import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 import { iconSizes } from '@/constants/theme';
+import { InboxSummaryProvider, useInboxSummary } from '@/lib/inboxSummary';
 import { useTheme } from '@/lib/theme';
-import { useInboxBadge } from '@/hooks/useInboxBadge';
 
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
 
@@ -13,10 +13,18 @@ function icon(name: FeatherName) {
   };
 }
 
-/** Exactly five tabs. Settings is reached from Me, never from here. */
 export default function TabsLayout() {
+  return (
+    <InboxSummaryProvider>
+      <FiveTabs />
+    </InboxSummaryProvider>
+  );
+}
+
+/** Exactly five tabs. Settings is reached from Me, never from here. */
+function FiveTabs() {
   const { colors } = useTheme();
-  const inboxBadge = useInboxBadge();
+  const { badge } = useInboxSummary();
   return (
     <Tabs
       screenOptions={{
@@ -34,7 +42,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="feed" options={{ title: 'Feed', tabBarIcon: icon('layers') }} />
       <Tabs.Screen
         name="inbox"
-        options={{ title: 'Inbox', tabBarIcon: icon('inbox'), tabBarBadge: inboxBadge > 0 ? (inboxBadge > 99 ? '99+' : inboxBadge) : undefined }}
+        options={{ title: 'Inbox', tabBarIcon: icon('inbox'), tabBarBadge: badge > 0 ? (badge > 99 ? '99+' : badge) : undefined }}
       />
       <Tabs.Screen name="me" options={{ title: 'Me', tabBarIcon: icon('user') }} />
     </Tabs>

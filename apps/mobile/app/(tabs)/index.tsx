@@ -7,10 +7,12 @@ import { Button } from '@/components/Button';
 import { DiscoverCard } from '@/components/DiscoverCard';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorText } from '@/components/ErrorText';
-import { Header } from '@/components/Header';
+import { FiltersSheet } from '@/components/FiltersSheet';
+import { Header, HeaderIconButton } from '@/components/Header';
 import { IntroductionNoteSheet } from '@/components/IntroductionNoteSheet';
 import { Loading } from '@/components/Loading';
 import { ReportSheet } from '@/components/ReportSheet';
+import { RequestsRow } from '@/components/RequestsRow';
 import { Screen } from '@/components/Screen';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
 import { ActionSheet } from '@/components/Sheet';
@@ -21,6 +23,7 @@ import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
+import { useInboxSummary } from '@/lib/inboxSummary';
 
 const EMPTY: Record<HomeSection, string> = {
   for_you: 'You have met everyone for now',
@@ -32,20 +35,24 @@ const EMPTY: Record<HomeSection, string> = {
 /**
  * Home: one member at a time, as their full profile story. "Not now" hides
  * them for a while; "Interested" opens the written introduction. Either way
- * the next person slides in. The section tabs choose which ranking feeds it.
+ * the next person slides in. The section tabs choose which ranking feeds it,
+ * the Filters sheet (shared with Explore) decides who is in it, and a row
+ * above the card leads to anyone who has asked to meet the member.
  */
 export default function Home() {
   const styles = useStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { userId } = useMember();
-  const { viewer, areaId, candidates, loading, error, refresh, reload, reportImpressions, removeCandidate } = useCandidates();
+  const { viewer, areaId, candidates, loading, error, refresh, reload, reportImpressions, removeCandidate, adoptFilters } = useCandidates();
+  const { incoming, reload: reloadInbox } = useInboxSummary();
   const [section, setSection] = useState<HomeSection>('for_you');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [dismissSignal, setDismissSignal] = useState(0);
-  useRefreshOnFocus(refresh);
+  useRefreshOnFocus(() => Promise.all([refresh(), reloadInbox()]));
 
   const ranked = useMemo(() => (viewer ? rankSection(section, viewer, candidates).map((c) => c.profile) : []), [section, viewer, candidates]);
   const current: PublicProfile | undefined = ranked[0];
@@ -70,6 +77,7 @@ export default function Home() {
   };
 
   const openProfile = () => current && router.push({ pathname: '/profile/[id]', params: { id: current.id } });
+  const openRequests = () => router.navigate({ pathname: '/inbox', params: { section: 'requests' } });
 
   const block = () => {
     if (!current) return;
@@ -105,8 +113,9 @@ export default function Home() {
 
   return (
     <Screen>
-      <Header wordmark />
+      <Header wordmark right={<HeaderIconButton name="sliders" label="Filters" onPress={() => setFiltersOpen(true)} />} />
       <SegmentedTabs items={HOME_SECTIONS} value={section} onChange={setSection} />
+      <RequestsRow requests={incoming} onPress={openRequests} />
       {loading ? (
         <Loading />
       ) : error ? (
@@ -120,7 +129,7 @@ export default function Home() {
           title="Set your area to see people near you"
           body="Others only ever see a coarse label like “Midtown Atlanta”."
           actionTitle="Choose area"
-          onAction={() => router.push('/me/preferences')}
+          onAction={() => setFiltersOpen(true)}
         />
       ) : current ? (
         <View style={styles.stack}>
@@ -142,12 +151,13 @@ export default function Home() {
         <EmptyState
           icon="users"
           title={EMPTY[section]}
-          body={section === 'for_you' ? 'New members appear here as they join. Widen your distance or preferences in Explore to see more people.' : 'Try another section, or widen your preferences in Explore.'}
-          actionTitle="Open Explore"
-          onAction={() => router.push('/explore')}
+          body={section === 'for_you' ? 'New members appear here as they join. Widen your distance or filters to see more people.' : 'Try another section, or widen your filters.'}
+          actionTitle="Edit filters"
+          onAction={() => setFiltersOpen(true)}
         />
       )}
 
+      <FiltersSheet visible={filtersOpen} onClose={() => setFiltersOpen(false)} viewer={viewer} areaId={areaId} onApplied={adoptFilters} />
       <IntroductionNoteSheet visible={noteOpen} onClose={() => setNoteOpen(false)} recipientFirstName={current?.firstName ?? ''} onSubmit={sendRequest} />
       <ActionSheet
         visible={moreOpen}

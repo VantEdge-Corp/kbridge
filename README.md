@@ -5,10 +5,10 @@
 Peaches is a serious, verified social discovery and dating platform launching in
 Metro Atlanta. Membership is by application: anyone can apply, a committee
 reviews each application by hand, and only admitted applicants create an
-account. Members discover people through a calm two-column grid (no swiping),
-send a written introduction request, and message once it is accepted. Identity,
-education, student status, and employment are each verified separately and
-only verified badges are ever shown.
+account. Members meet people one at a time on Home or browse them as a grid in
+Explore, send a written introduction request, and message once it is accepted.
+Identity, education, student status, and employment are each verified
+separately and only verified badges are ever shown.
 
 This repository holds the whole product on one Supabase project:
 
@@ -168,9 +168,10 @@ Discovery is deterministic and lives in `packages/core/src/matching/`:
 `get_discovery_candidates()` returns candidate ids with coarse signals (whole
 miles, bucketed counters, day-truncated timestamps, reverse compatibility);
 the client joins them to public profiles and ranks the four Home sections
-(For You, Nearby, New, Active). Explore applies the member's saved preferences
-manually. The SQL mirror of the compatibility rules is checked against the
-TypeScript implementation by `npm run check:parity`.
+(For You, Nearby, New, Active). Home and Explore both apply the member's saved
+preferences, which either screen edits through the same filter sheet. The SQL
+mirror of the compatibility rules is checked against the TypeScript
+implementation by `npm run check:parity`.
 
 Rules enforced in code and tests: nationality and race/ethnicity affect
 matching only when a member selects them in their own preferences; they are

@@ -1,24 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MULTI_PREFERENCE_KEYS, PREFERENCE_LABEL, RANGE_PREFERENCE_KEYS, effectiveStrength, formatHeight, rankForYou, type Preferences } from '@peaches/core';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorText } from '@/components/ErrorText';
+import { FiltersSheet } from '@/components/FiltersSheet';
 import { Header } from '@/components/Header';
 import { Icon } from '@/components/Icon';
 import { Loading } from '@/components/Loading';
 import { PeopleGrid } from '@/components/PeopleGrid';
-import { PreferenceEditor, summarizeValues } from '@/components/PreferenceEditor';
+import { summarizeValues } from '@/components/PreferenceEditor';
 import { Screen } from '@/components/Screen';
 import { TagChip } from '@/components/TagChip';
 import { radius, spacing } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
-import { api } from '@/lib/api';
-import { useMember } from '@/lib/auth';
-import { errorMessage } from '@/lib/errors';
 
 interface ActiveFilter {
   key: string;
@@ -57,51 +54,12 @@ function activeFilters(prefs: Preferences, maxDistanceMiles: number): ActiveFilt
 export default function Explore() {
   const styles = useStyles(makeStyles);
   const { colors, text } = useTheme();
-  const { userId } = useMember();
-  const { viewer, areaId, candidates, loading, refreshing, error, refresh, reload, reportImpressions, setViewer, setAreaId } = useCandidates();
+  const { viewer, areaId, candidates, loading, refreshing, error, refresh, reload, reportImpressions, adoptFilters } = useCandidates();
   useRefreshOnFocus(refresh);
-
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<Preferences | null>(null);
-  const [draftArea, setDraftArea] = useState<string | null>(null);
-  const [draftDistance, setDraftDistance] = useState(25);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (viewer && !open) {
-      setDraft(viewer.preferences);
-      setDraftDistance(viewer.maxDistanceMiles);
-    }
-  }, [viewer, open]);
-  useEffect(() => {
-    if (!open) setDraftArea(areaId);
-  }, [areaId, open]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const people = useMemo(() => (viewer ? rankForYou(viewer, candidates).map((c) => c.profile) : []), [viewer, candidates]);
   const filters = useMemo(() => (viewer ? activeFilters(viewer.preferences, viewer.maxDistanceMiles) : []), [viewer]);
-
-  const apply = useCallback(async () => {
-    if (!viewer || !draft) return;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const areaChanged = draftArea !== areaId;
-      const distanceChanged = draftDistance !== viewer.maxDistanceMiles;
-      await api.profiles.savePreferences(userId, draft);
-      if (areaChanged || distanceChanged) {
-        await api.profiles.updatePrivate(userId, { areaId: draftArea, maxDistanceMiles: draftDistance });
-      }
-      setViewer({ ...viewer, preferences: draft, maxDistanceMiles: draftDistance });
-      setAreaId(draftArea);
-      setOpen(false);
-      if (areaChanged) void reload();
-    } catch (e) {
-      setSaveError(errorMessage(e));
-    } finally {
-      setSaving(false);
-    }
-  }, [viewer, draft, draftArea, draftDistance, areaId, userId, setViewer, setAreaId, reload]);
 
   return (
     <Screen>
@@ -125,13 +83,13 @@ export default function Explore() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Filters"
-                  onPress={() => setOpen(true)}
+                  onPress={() => setFiltersOpen(true)}
                   style={({ pressed }) => [styles.slidersChip, pressed && { opacity: 0.8 }]}
                 >
                   <Icon name="sliders" size={16} color={colors.ivory} />
                 </Pressable>
                 {filters.map((f) => (
-                  <TagChip key={f.key} label={f.label} selected={f.required} onPress={() => setOpen(true)} />
+                  <TagChip key={f.key} label={f.label} selected={f.required} onPress={() => setFiltersOpen(true)} />
                 ))}
               </ScrollView>
               <Text style={[text.caption, styles.summary]}>
@@ -139,30 +97,11 @@ export default function Explore() {
               </Text>
             </View>
           }
-          ListEmptyComponent={<EmptyState title="No one matches every requirement." body="Relax a required filter to Preferred to see more people." actionTitle="Edit filters" onAction={() => setOpen(true)} />}
+          ListEmptyComponent={<EmptyState title="No one matches every requirement." body="Relax a required filter to Preferred to see more people." actionTitle="Edit filters" onAction={() => setFiltersOpen(true)} />}
         />
       )}
 
-      <Modal visible={open} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setOpen(false)}>
-        <SafeAreaView edges={['top', 'bottom']} style={styles.modal}>
-          <Header title="Filters" right={<Button title="Apply" size="small" onPress={apply} loading={saving} />} back onBack={() => setOpen(false)} />
-          {draft ? (
-            <ScrollView contentContainerStyle={styles.modalBody} keyboardShouldPersistTaps="handled">
-              <PreferenceEditor
-                prefs={draft}
-                onChange={setDraft}
-                areaId={draftArea}
-                maxDistanceMiles={draftDistance}
-                onAreaChange={setDraftArea}
-                onDistanceChange={setDraftDistance}
-              />
-              <ErrorText message={saveError} />
-            </ScrollView>
-          ) : (
-            <Loading />
-          )}
-        </SafeAreaView>
-      </Modal>
+      <FiltersSheet visible={filtersOpen} onClose={() => setFiltersOpen(false)} viewer={viewer} areaId={areaId} onApplied={adoptFilters} />
     </Screen>
   );
 }
@@ -173,6 +112,4 @@ const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   chips: { paddingHorizontal: spacing.lg, gap: spacing.sm, alignItems: 'center' },
   slidersChip: { width: 32, height: 32, borderRadius: radius.pill, backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   summary: { paddingHorizontal: spacing.lg },
-  modal: { flex: 1, backgroundColor: colors.canvas },
-  modalBody: { paddingBottom: spacing.xxxl },
 });

@@ -257,6 +257,18 @@ with an earlier line, these win on the phone.
   first photo, with a small "more" action (full profile, report, block) on
   the identity row. The section tabs (For You, Nearby, New, Active) choose
   which ranking feeds it; Explore keeps the grid for browsing.
+- Filters live on the deck: a sliders icon at the top right opens the same
+  filter sheet Explore uses. Filters are the member's saved preferences, so a
+  change from either screen applies to both, and to Me > Discovery
+  preferences. Home's empty states offer `Edit filters` (or `Choose area`)
+  and open that sheet in place.
+- When anyone has asked to meet the member, one row sits between the section
+  tabs and the card: up to three of the newest faces (28px, overlapping by
+  8px, each with a 2px ring in the row color), then `Priya wants to meet you`
+  for one person or `3 people want to meet you` for more, then a chevron. It
+  is a `surface` container with a 1px `border` and radius lg, at least 52px
+  tall, 16px below the tabs and 16px above the identity block. It opens
+  Inbox > Requests; the decision is never made on Home.
 - The action bar holds `Not now` (secondary, 1 part) and `Interested`
   (primary, 2 parts). `Interested` opens the written introduction; sending it
   moves to the next member. `Not now` slides the card out to the left and
@@ -311,6 +323,8 @@ with an earlier line, these win on the phone.
   whole profile in view and the note as a card under the identity block.
 - Requests the member sent stay as rows under a `Sent by you` header, with
   a Withdraw ghost action.
+- The Inbox section is part of its route (`/inbox?section=requests`), so the
+  requests row on Home always lands on Requests, whichever section was open.
 
 ### Inbox
 
@@ -341,4 +355,7 @@ with an earlier line, these win on the phone.
 - Explore shows the active filters as a chip row above the grid: a round
   sliders chip first, then distance, then each required (ivory) and
   preferred (outline) dimension with a short value. Tapping any chip opens
-  the filter sheet. The people count sits under the row as a caption.
+  the filter sheet (the same sheet as Home's). The people count sits under
+  the row as a caption.
+- Centered titles and bodies never leave one word alone on the last line
+  (`lineBreakStrategyIOS="push-out"` on the phone).
