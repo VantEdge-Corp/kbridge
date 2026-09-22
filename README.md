@@ -220,7 +220,8 @@ default ports, change the `port` values in the scratch `config.toml`.
 
 - **Web**: `vercel.json` at the root builds `apps/web` from the monorepo. Set
   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the Vercel project.
-- **Mobile**: see `apps/mobile/README.md` for EAS build and App Store notes.
+- **Mobile**: see `apps/mobile/README.md` for EAS builds and the App Store and
+  Google Play checklists.
 
 ## Legal
 

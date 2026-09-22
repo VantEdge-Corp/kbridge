@@ -27,6 +27,9 @@
     },
     "android": {
       "package": "com.peaches.app",
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#0b0b0c",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -41,7 +44,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Peaches uses your photo library so you can add profile photos and post photos.",
-          "cameraPermission": false
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       "expo-image",
