@@ -89,9 +89,12 @@ time.
 
 Both stores need a demo account for review. Reviewers cannot pass the
 committee gate, so run `supabase/seed_demo.sql` and give them
-`review@peaches.app` / `review123`. Both also need the real app icon:
-`assets/icon.png` and the `assets/android-icon-*.png` layers are still Expo's
-template.
+`review@peaches.app` / `review123`. Keep those fictional members out of real
+members' discovery before launch; nothing separates them today. Both stores
+also reject placeholders: `assets/icon.png` and the `assets/android-icon-*.png`
+layers are still Expo's template, and the legal documents still contain
+`[LEGAL ENTITY NAME]`, `[privacy@your-domain.com]`, `[MAILING ADDRESS]`,
+`[STATE]`, and `[REVIEW WITH COUNSEL]`.
 
 ### App Store
 
@@ -100,7 +103,16 @@ template.
 
 App Store Connect checklist:
 
-- Age rating 17+ (required for dating).
+- Age rating 18+. Apple replaced 17+ with 13+, 16+, and 18+ in 2025; the
+  Terms require members to be 18.
+- Guideline 4.3(b) names dating as a saturated category: Apple accepts a new
+  dating app only if it is meaningfully different. Say what is in the review
+  notes: committee-reviewed membership, manually verified details, written
+  introductions instead of likes, one metro area.
+- Guideline 1.2 (user-generated content) asks for a filter for objectionable
+  posts and messages, reporting with action within 24 hours, blocking, and
+  published contact information. Reporting, blocking, and the admin Reports
+  tab exist; there is no automatic filter yet.
 - App Privacy labels: contact info (email), photos, coarse location (area),
   user content. They must match the Privacy Policy.
 - Support URL and Privacy Policy URL (`https://<your-domain>/privacy`).
