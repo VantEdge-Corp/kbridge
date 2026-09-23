@@ -57,6 +57,9 @@ export function App() {
             />
             <Route path="/privacy" element={<Legal doc="privacy" />} />
             <Route path="/terms" element={<Legal doc="terms" />} />
+            <Route path="/child-safety" element={<Legal doc="child-safety" />} />
+            <Route path="/delete-account" element={<Legal doc="delete-account" />} />
+            <Route path="/support" element={<Legal doc="support" />} />
 
             <Route element={<MemberLayout />}>
               <Route path="/home" element={<Home />} />

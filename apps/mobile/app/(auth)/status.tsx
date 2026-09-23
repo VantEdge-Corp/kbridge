@@ -89,7 +89,7 @@ export default function Status() {
           <Loading />
         ) : error ? (
           <>
-            <ErrorText message={error} />
+            <ErrorText message={error} flush />
             <Button title="Try another token" variant="secondary" onPress={reset} fullWidth />
             <Button title="Submit a new application" variant="ghost" onPress={() => router.replace('/(auth)/apply')} fullWidth />
           </>

@@ -177,7 +177,7 @@ export default function Apply() {
             {show('agreeTerms') ? <Text style={styles.err}>{errors.agreeTerms}</Text> : null}
           </Checkbox>
 
-          <ErrorText message={error} />
+          <ErrorText message={error} flush />
           <Button title="Submit application" onPress={submit} loading={busy} fullWidth />
           <Text style={[text.micro, { textAlign: 'center' }]}>You will receive a reference token to check your status.</Text>
         </ScrollView>

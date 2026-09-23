@@ -34,4 +34,5 @@ export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL || 'https://peaches.app'
 export const LEGAL_URLS = {
   privacy: `${WEB_URL}/privacy`,
   terms: `${WEB_URL}/terms`,
+  childSafety: `${WEB_URL}/child-safety`,
 };

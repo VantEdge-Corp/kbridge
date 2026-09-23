@@ -39,7 +39,7 @@ One install at the repository root covers all three workspaces.
 ### 2. Create the database
 
 In the Supabase SQL Editor run the migrations in `supabase/migrations/` in
-order, `001` through `015`. Each one is a separate file; paste and run one at a
+order, `001` through `016`. Each one is a separate file; paste and run one at a
 time. Notes that matter:
 
 - `013_peaches.sql` is the Peaches model: areas, structured public profiles,
@@ -53,6 +53,14 @@ time. Notes that matter:
 - `015_discovery_passes.sql` adds "Not now" on Home: a `pass_member` RPC and
   the discovery function restated with a 30-day pass exclusion. Required;
   idempotent.
+- `016_review_safety.sql` is what app review asks for. Demo members (the
+  `is_demo` flag) and real members never see or reach each other, and
+  objectionable text is refused where it is written: slurs, sexual content
+  involving minors, and telling someone to kill themselves everywhere; strong
+  profanity and explicit sexual terms in profiles, posts, comments, and
+  introduction notes. The patterns live in `public.moderation_terms`.
+  Required; idempotent. It restates policies and functions from `013` and
+  `015`, so if you re-run either of those, run `016` again afterwards.
 - `001`, `006`, `007`, and `010` are not idempotent. Run them once. The others
   can be re-run safely.
 - After `013`, no manual Replication or Storage steps are needed. Confirm in
@@ -68,7 +76,9 @@ Then run the seeds:
    creates twenty fictional members, posts, introduction requests, two
    connections, and one conversation. Review account: `review@peaches.app` /
    `review123`. A second account, `elena@peaches.app` with the same password,
-   can sign in for two-sided testing. No other demo member can sign in.
+   can sign in for two-sided testing. No other demo member can sign in. The
+   demo members are flagged `is_demo`, so real members never see them and the
+   demo accounts see only each other; running it on the live project is safe.
 
 `seed_demo.sql` is generated. Edit `packages/core/src/mock/people.ts` and run
 `npm run seed:generate`; never edit the SQL by hand.
@@ -202,7 +212,7 @@ eight per rolling day and refuses requests across a block.
 | `npm test` | Matching engine and formatting tests |
 | `npm run seed:generate` | Regenerate `supabase/seed_demo.sql` from the dataset |
 | `npm run check:parity` | Compare SQL and TypeScript compatibility on a database (see the script header for env vars) |
-| `DATABASE_URL=... npm run db:test` | Transactional functional checks of the schema: row security, derived fields, discovery, requests, blocks (24 checks, rolls back) |
+| `DATABASE_URL=... npm run db:test` | Transactional functional checks of the schema: row security, derived fields, discovery, requests, blocks, demo separation, the text filter (43 checks, rolls back) |
 | `cd apps/web && npm run test:e2e` | Web end-to-end smoke test against a running, seeded Supabase |
 | `cd apps/mobile && npm run export:check` | Bundle the mobile app the way Expo Go loads it |
 
@@ -226,11 +236,17 @@ default ports, change the `port` values in the scratch `config.toml`.
 ## Legal
 
 `packages/core/src/legal/documents.ts` holds the Privacy Policy and Terms of
-Service rendered at `/privacy` and `/terms`. They are starter drafts with
-bracketed placeholders (entity, contact, address, governing law) and have not
-been reviewed by counsel. Bump `LEGAL_VERSIONS` in
-`packages/core/src/constants/limits.ts` on any material change so consent is
+Service (`/privacy`, `/terms`) and the public pages the app stores ask for:
+Child Safety Standards (`/child-safety`), account deletion
+(`/delete-account`), and support (`/support`). Peaches is operated by HyberTec
+LLC; the Terms choose Georgia law and Georgia courts. The company name and the
+support and child-safety addresses come from `BRAND` in
+`packages/core/src/constants/limits.ts`. The documents have not been reviewed
+by counsel. Bump `LEGAL_VERSIONS` there on any material change so consent is
 re-recorded.
+
+The Terms and the support pages promise that reports are reviewed within 24
+hours, and child safety reports first.
 
 ## Not built yet
 

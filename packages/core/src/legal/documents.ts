@@ -1,20 +1,21 @@
 /**
  * Canonical Privacy Policy and Terms of Service for Peaches, plus the version
- * strings the consent flow records against. The web app renders these at
- * /privacy and /terms; the mobile app links to those hosted pages and records
- * the same versions.
+ * strings the consent flow records against, and the public pages the app
+ * stores ask for: Child Safety Standards, account deletion, and support. The
+ * web app renders every page here (/privacy, /terms, /child-safety,
+ * /delete-account, /support); the mobile app links to those hosted pages and
+ * records the same versions.
  *
  * Membership is decided by human review. Peaches does not collect government
  * IDs or biometric data; verification is a manual committee review of the
  * information members provide, recorded per dimension (identity, education,
  * student status, employment).
  *
- * DRAFT - NOT LEGAL ADVICE. Starter drafts, not reviewed by a licensed
- * attorney. Before relying on them: have counsel review (especially the
- * release, arbitration, limitation of liability, and the "not based on
- * protected characteristics" representation), replace every [BRACKETED]
- * placeholder, and bump LEGAL_VERSIONS in constants/limits.ts on any material
- * wording change so the consent flow records the new acceptance.
+ * DRAFT - NOT LEGAL ADVICE. Not yet reviewed by a licensed attorney. Have
+ * counsel review them (especially the release, limitation of liability, the
+ * choice of Georgia courts, and the "not based on protected characteristics"
+ * representation), and bump LEGAL_VERSIONS in constants/limits.ts on any
+ * material wording change so the consent flow records the new acceptance.
  */
 import { BRAND, LEGAL_EFFECTIVE_DATE, LEGAL_VERSIONS } from '../constants/limits';
 
@@ -23,20 +24,28 @@ export interface LegalSection {
   p: string[];
 }
 
-export interface LegalDocument {
-  key: 'privacy' | 'terms';
+export type LegalPageKey = 'privacy' | 'terms' | 'child-safety' | 'delete-account' | 'support';
+
+export interface LegalPage {
+  key: LegalPageKey;
   title: string;
-  version: string;
+  /** Only the documents members accept (Privacy Policy, Terms) carry a version. */
+  version?: string;
   effectiveDate: string;
   intro: string;
   sections: LegalSection[];
 }
 
-// Placeholders: replace with real details before launch.
-const ENTITY = '[LEGAL ENTITY NAME]';
-const CONTACT = '[privacy@your-domain.com]';
-const ADDRESS = '[MAILING ADDRESS]';
-const GOVERNING_LAW = '[STATE]';
+/** A document members accept; the consent flow records its version. */
+export interface LegalDocument extends LegalPage {
+  key: 'privacy' | 'terms';
+  version: string;
+}
+
+const ENTITY = BRAND.company;
+const CONTACT = BRAND.supportEmail;
+const CHILD_SAFETY_CONTACT = BRAND.childSafetyEmail;
+const GOVERNING_LAW = 'Georgia';
 const NAME = BRAND.name;
 
 export const PRIVACY: LegalDocument = {
@@ -50,8 +59,8 @@ export const PRIVACY: LegalDocument = {
     `and website (the "Service"). By using the Service you agree to this Policy.`,
   sections: [
     { h: '1. Who we are', p: [
-      `The Service is operated by ${ENTITY}, ${ADDRESS}. For any privacy question, or to exercise ` +
-      `the rights described below, contact us at ${CONTACT}.`,
+      `The Service is operated by ${ENTITY}. For any privacy question, or to exercise the rights ` +
+      `described below, contact us at ${CONTACT}.`,
     ]},
     { h: '2. Information you give us', p: [
       'When you apply, we collect the information in the application form: your name, age, the ' +
@@ -123,8 +132,9 @@ export const PRIVACY: LegalDocument = {
       'Depending on where you live (for example, under the CCPA/CPRA in California or GDPR in the ' +
       'EEA/UK), you may have the right to access, correct, delete, or port your data, to opt out of ' +
       'certain processing, and to withdraw consent. California residents may exercise rights over ' +
-      '"sensitive personal information." You can delete your account from within the app, or ' +
-      `contact us at ${CONTACT}. We will not discriminate against you for exercising these rights.`,
+      '"sensitive personal information." You can delete your account from within the app or from ' +
+      `Settings on our website, or by contacting us at ${CONTACT}. We will not discriminate against ` +
+      'you for exercising these rights.',
     ]},
     { h: '11. Security', p: [
       'We use administrative and technical safeguards, including access controls and encryption in ' +
@@ -146,7 +156,7 @@ export const PRIVACY: LegalDocument = {
       'the Service.',
     ]},
     { h: '15. Contact', p: [
-      `Questions or requests: ${CONTACT}, or ${ENTITY}, ${ADDRESS}.`,
+      `Questions or requests: ${CONTACT} (${ENTITY}).`,
     ]},
   ],
 };
@@ -190,7 +200,7 @@ export const TERMS: LegalDocument = {
     { h: '5. Your account', p: [
       'Keep your credentials confidential; you are responsible for activity on your account. ' +
       'Provide accurate information and keep it current. You may delete your account at any time ' +
-      'from within the app.',
+      'from within the app or from Settings on our website.',
     ]},
     { h: '6. Your representations and warranties', p: [
       'By using the Service you represent and warrant that: you are at least 18 years old; all ' +
@@ -201,10 +211,17 @@ export const TERMS: LegalDocument = {
     ]},
     { h: '7. Community conduct', p: [
       'You agree not to: harass, threaten, or harm other members; impersonate anyone; post unlawful, ' +
-      'hateful, or sexually exploitative content; solicit money or engage in commercial or ' +
-      'fraudulent activity; or collect other members\' information. We may remove content and ' +
-      'suspend or terminate accounts that violate these Terms. You can report or block other ' +
-      'members, and report posts and conversations, in the app, and we act on reports.',
+      'hateful, or sexually explicit or exploitative content; solicit money or engage in commercial ' +
+      'or fraudulent activity; or collect other members\' information.',
+      'We have zero tolerance for objectionable content and abusive members. Text containing slurs, ' +
+      'threats, or explicit sexual content is blocked when it is written, and you can report any ' +
+      'member, post, comment, or conversation and block any member from within the app. We review ' +
+      'reports within 24 hours, remove content that violates these Terms, and suspend or remove the ' +
+      'members responsible.',
+      `Child sexual abuse and exploitation of any kind is prohibited. ${NAME} is for adults only. We ` +
+      'remove such content, permanently remove the accounts involved, and report it to the National ' +
+      'Center for Missing & Exploited Children and to law enforcement as the law requires. Our Child ' +
+      'Safety Standards describe how we prevent, review, and report it.',
     ]},
     { h: '8. Your content', p: [
       'You retain ownership of the content you submit, including posts and comments. You grant us a ' +
@@ -252,10 +269,11 @@ export const TERMS: LegalDocument = {
       'or your violation of these Terms or of any law or the rights of another.',
     ]},
     { h: '15. Dispute resolution', p: [
-      '[REVIEW WITH COUNSEL] The parties agree to resolve disputes through binding individual ' +
-      'arbitration and waive class actions, to the extent permitted by law. Consult counsel before ' +
-      'relying on this clause; its enforceability varies by jurisdiction and it must be presented ' +
-      'correctly to be effective.',
+      `Before bringing a claim, please contact us at ${CONTACT}; most concerns can be resolved ` +
+      'informally. Any dispute arising out of or relating to these Terms or the Service will be ' +
+      `resolved exclusively in the state or federal courts located in the State of ${GOVERNING_LAW}, ` +
+      'and you and we consent to the personal jurisdiction of those courts. Either party may instead ' +
+      'bring an individual claim in small claims court where it qualifies.',
     ]},
     { h: '16. Governing law', p: [
       `These Terms are governed by the laws of the State of ${GOVERNING_LAW}, without regard to its ` +
@@ -266,9 +284,121 @@ export const TERMS: LegalDocument = {
       'required, ask you to accept the new version before continuing.',
     ]},
     { h: '18. Contact', p: [
-      `${CONTACT} · ${ENTITY}, ${ADDRESS}.`,
+      `${CONTACT} · ${ENTITY}.`,
+    ]},
+  ],
+};
+
+/** Google Play's Child Safety Standards policy, which applies to dating apps. */
+export const CHILD_SAFETY: LegalPage = {
+  key: 'child-safety',
+  title: 'Child Safety Standards',
+  effectiveDate: LEGAL_EFFECTIVE_DATE,
+  intro:
+    `${NAME} is a members-only community for adults 18 and older, operated by ${ENTITY}. We have ` +
+    'zero tolerance for child sexual abuse and exploitation (CSAE).',
+  sections: [
+    { h: 'Our standards', p: [
+      `Child sexual abuse and exploitation of any kind is prohibited on ${NAME}. That includes ` +
+      'sexual content involving anyone under 18 (child sexual abuse material, or CSAM), grooming, ' +
+      'sexualizing minors, sextortion, trafficking, and any attempt to contact a minor for sexual ' +
+      'purposes. These standards are part of our Terms of Service and apply to profiles, photos, ' +
+      'posts, comments, introduction notes, and messages.',
+    ]},
+    { h: 'Adults only', p: [
+      'Everyone applies for membership and confirms they are 18 or older, and a person reviews ' +
+      'every application before an account exists. If we learn that a member is under 18, we remove ' +
+      'the account.',
+    ]},
+    { h: 'Prevention', p: [
+      'Text that includes sexual content involving minors is blocked automatically when it is ' +
+      'written. Our team reviews applications, reported content, and reported members by hand.',
+    ]},
+    { h: 'Reporting', p: [
+      'Members can report any profile, photo, post, comment, or conversation from within the app, ' +
+      'and can block anyone at any time. Anyone, member or not, can report a concern to our child ' +
+      'safety contact below.',
+      'If a child is in immediate danger, call 911 first. You can also report child sexual ' +
+      'exploitation directly to the National Center for Missing & Exploited Children at ' +
+      'report.cybertip.org or 1-800-843-5678.',
+    ]},
+    { h: 'How we respond', p: [
+      'Child safety reports come first, and we review them within 24 hours. When we find or learn ' +
+      'of child sexual abuse material or exploitation, we remove the content, permanently remove the ' +
+      'accounts involved, preserve the information the law requires, and report it to the National ' +
+      'Center for Missing & Exploited Children (CyberTipline) and to law enforcement as the law ' +
+      'requires. We cooperate with law enforcement investigations.',
+    ]},
+    { h: 'Child safety contact', p: [
+      `${ENTITY}'s designated child safety contact can be reached at ${CHILD_SAFETY_CONTACT}. This ` +
+      'contact receives reports from members, the public, and app stores, and can speak to how we ' +
+      'review and act on them.',
+    ]},
+  ],
+};
+
+/** Google Play asks for a page that explains how to delete an account, reachable without signing in. */
+export const ACCOUNT_DELETION: LegalPage = {
+  key: 'delete-account',
+  title: `Delete your ${NAME} account`,
+  effectiveDate: LEGAL_EFFECTIVE_DATE,
+  intro:
+    `You can delete your ${NAME} account and the data that comes with it at any time. ${NAME} is ` +
+    `operated by ${ENTITY}.`,
+  sections: [
+    { h: 'In the app', p: [
+      'Open Me, tap the gear for Settings, choose Data & Account, then Delete my account and ' +
+      'confirm.',
+    ]},
+    { h: 'On the website', p: [
+      'Sign in, open Settings, choose Data & Account, then Delete my account and confirm.',
+    ]},
+    { h: 'If you cannot sign in', p: [
+      `Email ${CONTACT} from the address on your account with the subject "Delete my account." We ` +
+      'confirm by email and complete the deletion within 30 days.',
+    ]},
+    { h: 'What is deleted', p: [
+      'Your profile, photos, preferences, posts and comments, introduction requests, conversations, ' +
+      'and your login are permanently deleted, and other members can no longer see you. We keep only ' +
+      'what the law requires, such as records needed to handle a safety report.',
+    ]},
+  ],
+};
+
+/** The support page both stores ask for, with published contact details. */
+export const SUPPORT: LegalPage = {
+  key: 'support',
+  title: 'Support',
+  effectiveDate: LEGAL_EFFECTIVE_DATE,
+  intro: `Questions about ${NAME}, your application, or your account? We are here to help.`,
+  sections: [
+    { h: 'Contact us', p: [
+      `Email ${CONTACT} and include the email address on your account or application. We aim to ` +
+      'reply within two business days.',
+    ]},
+    { h: 'Safety', p: [
+      'To report a member, post, comment, or conversation, use Report in the app; we review every ' +
+      'report within 24 hours. You can block anyone from their profile or a conversation. If you are ' +
+      'in danger, call 911.',
+      `For anything involving a minor, see our Child Safety Standards or write to ${CHILD_SAFETY_CONTACT}.`,
+    ]},
+    { h: 'Your account and data', p: [
+      'You can delete your account at any time from Settings > Data & Account in the app or on our ' +
+      `website. For a copy of your data or any privacy question, write to ${CONTACT}.`,
+    ]},
+    { h: 'Who we are', p: [
+      `${NAME} is operated by ${ENTITY} and is available to members in ${BRAND.market}.`,
     ]},
   ],
 };
 
 export const DOCUMENTS: Record<'privacy' | 'terms', LegalDocument> = { privacy: PRIVACY, terms: TERMS };
+
+/** Every public page, by URL slug. */
+export const LEGAL_PAGES: Record<LegalPageKey, LegalPage> = {
+  privacy: PRIVACY,
+  terms: TERMS,
+  'child-safety': CHILD_SAFETY,
+  'delete-account': ACCOUNT_DELETION,
+  support: SUPPORT,
+};

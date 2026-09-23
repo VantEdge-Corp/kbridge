@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BRAND, VERIFICATION_DIMENSIONS, VERIFICATION_LABEL } from '@peaches/core';
+import { LegalLinks } from '../components/LegalLinks';
 import { useAuth } from '../auth/AuthProvider';
 import { homeFor } from '../auth/guards';
 import { LinkButton } from '../components/Button';
@@ -118,18 +119,11 @@ export function Landing() {
         </section>
       </main>
 
-      <footer className="py-8 px-5 md:px-10 flex items-center justify-between border-t border-border text-caption text-text-muted">
+      <footer className="py-8 px-5 md:px-10 flex flex-wrap items-center justify-between gap-4 border-t border-border text-caption text-text-muted">
         <span>
-          &copy; {new Date().getFullYear()} {BRAND.name} · {BRAND.market}
+          &copy; {new Date().getFullYear()} {BRAND.company} · {BRAND.name}, {BRAND.market}
         </span>
-        <nav className="flex gap-5">
-          <Link to="/privacy" className="hover:text-text motion">
-            Privacy
-          </Link>
-          <Link to="/terms" className="hover:text-text motion">
-            Terms
-          </Link>
-        </nav>
+        <LegalLinks />
       </footer>
     </div>
   );

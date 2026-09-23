@@ -50,7 +50,7 @@ export default function Login() {
           ) : null}
           <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" textContentType="emailAddress" />
           <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry textContentType="password" onSubmitEditing={submit} returnKeyType="go" />
-          <ErrorText message={error} />
+          <ErrorText message={error} flush />
           <Button title="Sign in" onPress={submit} loading={busy} fullWidth />
           <View style={styles.links}>
             <Button title="Apply for membership" variant="ghost" size="small" onPress={() => router.push('/(auth)/apply')} />

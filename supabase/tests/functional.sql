@@ -1,7 +1,7 @@
 -- ============================================================================
 -- supabase/tests/functional.sql
 -- Functional checks for the Peaches model (migration 013), run against a
--- local Supabase stack with migrations 001-015 applied:
+-- local Supabase stack with migrations 001-016 applied:
 --
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/functional.sql
 --
@@ -39,6 +39,23 @@ language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', p_user, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', p_user::text, true);
+end $$;
+
+-- Runs p_sql and passes only if it fails with a message like p_message. Rules
+-- refuse with the same error code as a failed check, so the message decides.
+create or replace function pg_temp.check_refused(p_name text, p_sql text, p_message text) returns void
+language plpgsql as $$
+begin
+  begin
+    execute p_sql;
+  exception when others then
+    if sqlerrm like p_message then
+      raise notice 'ok: %', p_name;
+      return;
+    end if;
+    raise exception 'FAILED: % (refused with: %)', p_name, sqlerrm;
+  end;
+  raise exception 'FAILED: % (it was allowed)', p_name;
 end $$;
 
 select pg_temp.mk_member('t_alice@peaches.test', 'Alice', 29, 'midtown-atlanta') as alice \gset
@@ -185,6 +202,89 @@ select pg_temp.check('a block hides the blocker''s posts from the blocked member
   (select count(*) from public.posts where author_id = :'ben'::uuid) = 0);
 select pg_temp.check('a block removes both members from each other''s pools',
   not exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'ben'::uuid));
+
+-- 016: demo members live apart from real ones.
+reset role;
+select pg_temp.mk_member('t_dana@peaches.test', 'Dana', 30, 'midtown-atlanta') as dana \gset
+select pg_temp.mk_member('t_eli@peaches.test', 'Eli', 32, 'midtown-atlanta') as eli \gset
+update public.profiles set is_demo = true where id in (:'dana', :'eli');
+insert into public.posts (author_id, body) values (:'dana', 'Brunch at Ponce City Market this Sunday?');
+-- The seed runs as the database owner with no signed-in member; the guard still compares both sides.
+select set_config('request.jwt.claims', '', true), set_config('request.jwt.claim.sub', '', true);
+select pg_temp.check_refused('the seed cannot connect a real member to a demo member',
+  format('insert into public.introduction_requests (requester_id, recipient_id, note) values (%L, %L, %L)',
+         :'dev', :'dana', 'Hi Dana, brunch sounds lovely.'),
+  'This member isn''t available%');
+
+set local role authenticated;
+select pg_temp.act_as(:'alice');
+select pg_temp.check('real members never see demo members',
+  not exists (select 1 from public.public_profiles where id in (:'dana', :'eli'))
+  and not exists (select 1 from public.get_discovery_candidates(500) where profile_id in (:'dana'::uuid, :'eli'::uuid))
+  and not exists (select 1 from public.posts where author_id = :'dana'::uuid));
+select pg_temp.check_refused('a real member cannot write to a demo member',
+  format('insert into public.introduction_requests (requester_id, recipient_id, note) values (%L, %L, %L)',
+         :'alice', :'dana', 'Hello Dana, brunch sounds great.'),
+  'This member isn''t available%');
+
+select pg_temp.act_as(:'dana');
+select pg_temp.check('demo members see only demo members',
+  exists (select 1 from public.public_profiles where id = :'eli'::uuid)
+  and not exists (select 1 from public.public_profiles where id in (:'alice', :'ben'))
+  and exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'eli'::uuid)
+  and not exists (select 1 from public.get_discovery_candidates(500) where profile_id = :'alice'::uuid)
+  and not exists (select 1 from public.posts where author_id = :'alice'::uuid));
+insert into public.introduction_requests (requester_id, recipient_id, note)
+values (:'dana', :'eli', 'Hi Eli, want to try the new ramen place on Buford Highway?');
+select pg_temp.check('demo members can write to each other',
+  exists (select 1 from public.introduction_requests where requester_id = :'dana'::uuid and recipient_id = :'eli'::uuid));
+
+-- 016: objectionable text. Alice and Ben have an open conversation from above.
+select pg_temp.act_as(:'alice');
+select pg_temp.check_refused('telling someone to kill themselves is refused even in private messages',
+  format('insert into public.messages (match_id, sender_id, body) select id, %L, %L from public.matches where %L in (user_a, user_b) limit 1',
+         :'alice', 'honestly just kill yourself', :'alice'),
+  'That includes language we don''t allow%');
+insert into public.messages (match_id, sender_id, body)
+select id, :'alice', 'That hike was fucking steep, worth it though.' from public.matches where :'alice' in (user_a, user_b) limit 1;
+select pg_temp.check('strong profanity is allowed in a private conversation',
+  exists (select 1 from public.messages where sender_id = :'alice'::uuid and body like 'That hike%'));
+select pg_temp.check_refused('strong profanity is refused in a post',
+  format('insert into public.posts (author_id, body) values (%L, %L)', :'alice', 'What the fuck is this traffic'),
+  'That includes language we don''t allow%');
+select pg_temp.check_refused('an explicit term is refused in a comment',
+  format('insert into public.post_comments (post_id, author_id, body) select id, %L, %L from public.posts where author_id = %L limit 1',
+         :'alice', 'send nudes', :'ben'),
+  'That includes language we don''t allow%');
+select pg_temp.check_refused('stretched spellings are refused in an introduction note',
+  format('insert into public.introduction_requests (requester_id, recipient_id, note) values (%L, %L, %L)',
+         :'alice', :'cara', 'Hi Cara, fuuuuck it, let''s get coffee'),
+  'That includes language we don''t allow%');
+insert into public.posts (author_id, body)
+values (:'alice', 'Class reunion cocktails: magna cum laude grads from Scunthorpe, a pedometer, and Dickens.');
+select pg_temp.check('words that merely contain a listed word are allowed',
+  exists (select 1 from public.posts where author_id = :'alice'::uuid and body like 'Class reunion%'));
+select pg_temp.check_refused('a bio edit with a listed word is refused',
+  format('update public.profiles set bio = %L where id = %L', 'Looking for a fuck buddy', :'alice'),
+  'That includes language we don''t allow%');
+
+-- Text saved before a word was listed never blocks other edits or activity pings.
+reset role;
+set local session_replication_role = replica;
+update public.profiles set bio = 'Old bio: this traffic is shit and fucking slow' where id = :'alice';
+set local session_replication_role = origin;
+set local role authenticated;
+select pg_temp.act_as(:'alice');
+select public.touch_last_active();
+update public.profiles set interests = '{Hiking,Coffee}' where id = :'alice';
+select pg_temp.check('unchanged text does not block other edits',
+  (select interests = '{Hiking,Coffee}' from public.profiles where id = :'alice'));
+
+reset role;
+select pg_temp.check('normalization lowercases, collapses spaces, and maps look-alikes',
+  public.objectionable_term('Kill   YOURSELF', false) is not null
+  and public.objectionable_term('k1ll y0urs3lf', false) is not null
+  and public.objectionable_term('A pedometer and a bitchin'' playlist', false) is null);
 
 reset role;
 rollback;

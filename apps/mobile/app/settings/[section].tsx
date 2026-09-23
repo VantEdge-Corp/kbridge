@@ -93,7 +93,7 @@ function Account() {
       <View style={styles.fields}>
         <Field label="New password" value={password} onChangeText={setPassword} secureTextEntry textContentType="newPassword" />
         <Field label="Confirm new password" value={confirm} onChangeText={setConfirm} secureTextEntry textContentType="newPassword" />
-        <ErrorText message={error} />
+        <ErrorText message={error} flush />
         <Button title="Update password" variant="secondary" onPress={change} loading={busy} disabled={!password} />
       </View>
     </View>
@@ -163,6 +163,7 @@ function Privacy() {
       <Group>
         <SettingsRow label="Privacy Policy" onPress={() => Linking.openURL(LEGAL_URLS.privacy)} />
         <SettingsRow label="Terms of Service" onPress={() => Linking.openURL(LEGAL_URLS.terms)} />
+        <SettingsRow label="Child Safety Standards" onPress={() => Linking.openURL(LEGAL_URLS.childSafety)} />
       </Group>
       <ErrorText message={error} />
     </View>
@@ -278,7 +279,7 @@ function Safety() {
     'Keep conversations in the app until you feel comfortable.',
     'Never send money or share financial details with someone you have not met.',
     'Trust your judgment. You can block anyone from their profile or a conversation.',
-    'Report anything that feels off from a profile, a post, or a conversation. Our team reviews every report.',
+    'Report anything that feels off from a profile, a post, or a conversation. Our team reviews every report within 24 hours.',
   ];
   return (
     <View>
@@ -290,9 +291,20 @@ function Safety() {
           </View>
         ))}
       </Group>
+      <SectionHeader title="Get help" />
+      <Group>
+        <SettingsRow label="Contact support" description={BRAND.supportEmail} onPress={() => emailUs(BRAND.supportEmail)} />
+        <SettingsRow label="Report a child safety concern" description={BRAND.childSafetyEmail} onPress={() => emailUs(BRAND.childSafetyEmail)} />
+        <SettingsRow label="Child Safety Standards" onPress={() => Linking.openURL(LEGAL_URLS.childSafety)} />
+      </Group>
       <Text style={[text.caption, styles.note, { paddingTop: spacing.md }]}>If you are in immediate danger, contact local emergency services.</Text>
     </View>
   );
+}
+
+/** Opens a new email, or shows the address when no mail app is set up to take it. */
+function emailUs(address: string) {
+  Linking.openURL(`mailto:${address}`).catch(() => Alert.alert('Email us', `Write to ${address}.`));
 }
 
 function DataAndAccount() {

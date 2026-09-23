@@ -88,13 +88,14 @@ time.
    block, report, delete the account.
 
 Both stores need a demo account for review. Reviewers cannot pass the
-committee gate, so run `supabase/seed_demo.sql` and give them
-`review@peaches.app` / `review123`. Keep those fictional members out of real
-members' discovery before launch; nothing separates them today. Both stores
-also reject placeholders: `assets/icon.png` and the `assets/android-icon-*.png`
-layers are still Expo's template, and the legal documents still contain
-`[LEGAL ENTITY NAME]`, `[privacy@your-domain.com]`, `[MAILING ADDRESS]`,
-`[STATE]`, and `[REVIEW WITH COUNSEL]`.
+committee gate, so run migration `016` and `supabase/seed_demo.sql` on the live
+project and give them `review@peaches.app` / `review123`. The demo members are
+flagged `is_demo`: real members never see them, and the review account sees
+only them.
+
+The public pages the stores ask for are on the website (use the deployed
+domain): `/support`, `/privacy`, `/terms`, `/child-safety`, and
+`/delete-account`.
 
 ### App Store
 
@@ -111,11 +112,14 @@ App Store Connect checklist:
   introductions instead of likes, one metro area.
 - Guideline 1.2 (user-generated content) asks for a filter for objectionable
   posts and messages, reporting with action within 24 hours, blocking, and
-  published contact information. Reporting, blocking, and the admin Reports
-  tab exist; there is no automatic filter yet.
+  published contact information. Migration `016` filters text; reporting,
+  blocking, the admin Reports tab, and contact details (Me > Settings > Safety,
+  `/support`) cover the rest. Review reports within 24 hours, as the Terms
+  promise.
 - App Privacy labels: contact info (email), photos, coarse location (area),
   user content. They must match the Privacy Policy.
-- Support URL and Privacy Policy URL (`https://<your-domain>/privacy`).
+- Support URL `https://<your-domain>/support` and Privacy Policy URL
+  `https://<your-domain>/privacy`.
 
 ### Google Play
 
@@ -140,13 +144,11 @@ Play Console checklist (App content):
 - Data safety: email, photos, coarse location (area), messages, and other user
   content; encrypted in transit; users can delete their account. It must match
   the Privacy Policy.
-- Account deletion URL: Play wants a web page that loads for anyone, names the
-  app, and shows how to request deletion. `/settings/data-account` requires
-  signing in, so publish a short public page that explains the in-app path
-  (Me > Settings > Data & Account) and the web path, with a support email.
-- Child safety standards (required for dating apps): a public page that
-  explicitly prohibits child sexual abuse and exploitation, points to in-app
-  reporting, commits to removing and reporting abuse material (to NCMEC in the
-  US), and names a child-safety contact. The Terms only ban "sexually
-  exploitative content" in general today.
+- Account deletion URL: `https://<your-domain>/delete-account`. It loads
+  without signing in, names the app, and shows the in-app path, the web path,
+  and an email fallback.
+- Child safety standards (required for dating apps):
+  `https://<your-domain>/child-safety`. For the designated point of contact,
+  enter yourself; the published contact address is
+  `vantedge67+childsafety@gmail.com`, which lands in the support inbox.
 - App access: the demo account above.

@@ -110,7 +110,7 @@ export default function Signup() {
                 .
               </Text>
             </Checkbox>
-            <ErrorText message={error} />
+            <ErrorText message={error} flush />
             <Button title="Create account" onPress={submit} loading={busy} disabled={!canSubmit} fullWidth />
           </ScrollView>
         )}

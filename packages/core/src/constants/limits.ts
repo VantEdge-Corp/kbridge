@@ -21,15 +21,19 @@ export const LIMITS = {
 
 /** Legal document versions written into consent records. Bump when the documents change. */
 export const LEGAL_VERSIONS = Object.freeze({
-  terms: '2026-09-10.1',
-  privacy: '2026-09-10.1',
+  terms: '2026-09-23.1',
+  privacy: '2026-09-23.1',
 });
-export const LEGAL_EFFECTIVE_DATE = 'September 10, 2026';
+export const LEGAL_EFFECTIVE_DATE = 'September 23, 2026';
 
 export const BRAND = Object.freeze({
   name: 'Peaches',
   wordmark: 'PEACHES',
   tagline: 'People worth meeting.',
   market: 'Metro Atlanta',
-  supportEmail: 'hello@peaches.app',
+  /** The company that operates Peaches, as named in the legal documents. */
+  company: 'HyberTec LLC',
+  supportEmail: 'vantedge67@gmail.com',
+  /** Plus-addressed, so it lands in the support inbox and can be filtered and flagged there. */
+  childSafetyEmail: 'vantedge67+childsafety@gmail.com',
 });

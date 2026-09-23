@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import { longDate, type Education, type Employment, type PublicProfile } from '@peaches/core';
+import { BRAND, longDate, type Education, type Employment, type PublicProfile } from '@peaches/core';
 import { api, errorMessage } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { useAuth, useMember } from '../auth/AuthProvider';
@@ -120,11 +120,19 @@ function Privacy() {
               Read the{' '}
               <Link to="/privacy" className="text-text underline underline-offset-4 decoration-1">
                 Privacy Policy
-              </Link>{' '}
-              and{' '}
+              </Link>
+              ,{' '}
               <Link to="/terms" className="text-text underline underline-offset-4 decoration-1">
                 Terms of Service
               </Link>
+              , and{' '}
+              <Link to="/child-safety" className="text-text underline underline-offset-4 decoration-1">
+                Child Safety Standards
+              </Link>
+              . Questions go to{' '}
+              <a href={`mailto:${BRAND.supportEmail}`} className="text-text underline underline-offset-4 decoration-1">
+                {BRAND.supportEmail}
+              </a>
               .
             </p>
           </div>

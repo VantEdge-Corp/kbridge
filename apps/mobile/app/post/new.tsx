@@ -66,7 +66,7 @@ export default function NewPost() {
           ) : (
             <Button title="Add a photo" icon="image" variant="secondary" size="small" onPress={choosePhoto} style={{ alignSelf: 'flex-start' }} />
           )}
-          <ErrorText message={error} />
+          <ErrorText message={error} flush />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
