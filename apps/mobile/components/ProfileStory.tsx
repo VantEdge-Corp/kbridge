@@ -6,6 +6,7 @@ import { radius, spacing } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { GROUP_INSET, Group } from './Group';
 import { HeaderIconButton } from './Header';
+import { Icon } from './Icon';
 import { DetailRow, ProfilePhoto, ProfileSection, PullQuote, VitalsStrip } from './ProfileBlocks';
 import { ChipRow, TagChip } from './TagChip';
 import { VerificationBadge } from './VerificationBadge';
@@ -132,6 +133,14 @@ export function ProfileStory({ profile, width, posts = [], afterIdentity, leadWi
     blocks.push(block);
   }
   while (nextPhoto < photos.length) blocks.push(photoBlock(nextPhoto++));
+  if (!own) {
+    blocks.push(
+      <View key="privacy" style={styles.privacy} accessible accessibilityLabel="Seen only by members">
+        <Icon name="lock" size={12} color={colors.mutedForeground} />
+        <Text style={text.eyebrow}>Seen only by members</Text>
+      </View>,
+    );
+  }
 
   return <>{blocks}</>;
 }
@@ -144,4 +153,5 @@ const makeStyles = ({ colors }: Theme) =>
     name: { flexShrink: 1 },
     verificationCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, padding: spacing.lg, gap: 10 },
     postRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 4 },
+    privacy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: spacing.sm, paddingBottom: spacing.md },
   });

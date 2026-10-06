@@ -13,7 +13,7 @@ import { PersonAvatar } from '@/components/PersonAvatar';
 import { RowGroup } from '@/components/SettingsRow';
 import { VerificationStatusList } from '@/components/VerificationStatusList';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
@@ -58,7 +58,7 @@ function Account() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Account</CardTitle>
+          <p className="kicker text-muted-foreground">Account</p>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-[120px_1fr] gap-y-3 text-sm">
@@ -73,7 +73,7 @@ function Account() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Change password</CardTitle>
+          <p className="kicker text-muted-foreground">Change password</p>
           <CardDescription>At least 6 characters.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -155,7 +155,7 @@ function Privacy() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>What others see</CardTitle>
+          <p className="kicker text-muted-foreground">What others see</p>
           <CardDescription>Changes apply to your profile right away.</CardDescription>
         </CardHeader>
         <CardContent className={cn('gap-5', busy && 'pointer-events-none opacity-60')}>
@@ -315,7 +315,7 @@ function DataAccount() {
   return (
     <Card className="ring-destructive/30">
       <CardHeader>
-        <CardTitle>Delete account</CardTitle>
+        <p className="kicker text-destructive">Delete account</p>
         <CardDescription>Your application, profile, photos, posts, requests, and messages are deleted with your account. This cannot be undone.</CardDescription>
       </CardHeader>
       {error ? (

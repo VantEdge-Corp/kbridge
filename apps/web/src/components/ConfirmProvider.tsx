@@ -50,7 +50,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       <AlertDialog open={open} onOpenChange={(next) => (next ? undefined : settle(false))}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{options.title}</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-[1.75rem] leading-tight font-normal">{options.title}</AlertDialogTitle>
             {options.description ? <AlertDialogDescription>{options.description}</AlertDialogDescription> : null}
           </AlertDialogHeader>
           <AlertDialogFooter>

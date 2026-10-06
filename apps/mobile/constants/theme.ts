@@ -2,12 +2,15 @@ import { Platform, StyleSheet } from 'react-native';
 import { avatar, card, iconSizes, radius, spacing, strokeWidth, touch, typography, type ColorTokens } from '@peaches/core';
 
 /**
- * Georgia is the brand mark only: the PEACHES wordmark. Every piece of UI
- * text is the platform sans (fontFamily undefined lets iOS and Android use
- * their system font), as shadcn/ui's type is on the web.
+ * Instrument Serif, regular and italic (loaded in app/_layout.tsx before the
+ * splash screen hides), is the display face: the wordmark, screen titles,
+ * names, headlines, and bios. Everything else is the platform sans
+ * (fontFamily undefined), as Geist is on the web. The serif has no bold, so
+ * a display style never sets fontWeight.
  */
 export const fonts = {
-  display: Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' }) as string,
+  display: 'InstrumentSerif_400Regular',
+  displayItalic: 'InstrumentSerif_400Regular_Italic',
   sans: undefined as string | undefined,
   mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }) as string,
 };
@@ -46,33 +49,38 @@ export function alpha(hex: string, opacity: number): string {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-const tight = (size: number) => size * typography.tightTracking;
+/** A small-caps label, as the web's `kicker` utility: section labels and labels inside cards. */
+const kicker = { fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 1.8, textTransform: 'uppercase' } as const;
 
 /** The text styles for one palette. Components read them as `text` from `useTheme()`. */
 export function makeText(colors: Palette) {
   return StyleSheet.create({
     wordmark: {
       fontFamily: fonts.display,
-      fontSize: 20,
+      fontSize: 22,
       letterSpacing: typography.wordmarkTracking,
       color: colors.foreground,
     },
+    /** The welcome headline. Pair with `displayItalic` for its emphasized word. */
+    display: { fontFamily: fonts.display, fontSize: 52, lineHeight: 58, letterSpacing: -0.8, color: colors.foreground },
+    displayItalic: { fontFamily: fonts.displayItalic },
     /** Screen titles and the name on a profile. */
-    title: { fontSize: 28, lineHeight: 34, fontWeight: '600', letterSpacing: tight(28), color: colors.foreground },
-    /** Sheet titles, empty-state titles. */
-    heading: { fontSize: 20, lineHeight: 28, fontWeight: '600', letterSpacing: tight(20), color: colors.foreground },
-    /** Section headings above a group of rows. */
-    section: { fontSize: 16, lineHeight: 22, fontWeight: '600', letterSpacing: tight(16), color: colors.foreground },
-    /** Names on cards. */
-    name: { fontSize: 16, lineHeight: 22, fontWeight: '600', color: colors.foreground },
-    subheading: { fontSize: 18, lineHeight: 26, fontWeight: '600', color: colors.foreground },
+    title: { fontFamily: fonts.display, fontSize: 34, lineHeight: 42, letterSpacing: -0.2, color: colors.foreground },
+    /** Sheet titles, empty-state titles, the name on Me. */
+    heading: { fontFamily: fonts.display, fontSize: 27, lineHeight: 34, color: colors.foreground },
+    /** Names on cards and in headers. */
+    name: { fontFamily: fonts.display, fontSize: 21, lineHeight: 27, color: colors.foreground },
+    /** A member's bio, read like a pull-quote. */
+    quote: { fontFamily: fonts.display, fontSize: 22, lineHeight: 30, color: colors.foreground },
+    /** Section labels above a group of rows. */
+    section: { ...kicker, color: colors.mutedForeground },
+    /** Small label inside a card ("About Priya", "Your introduction"). */
+    eyebrow: { ...kicker, color: colors.mutedForeground },
     body: { fontSize: 15, lineHeight: 22, color: colors.foreground },
     bodySecondary: { fontSize: 15, lineHeight: 22, color: colors.mutedForeground },
     bodySmall: { fontSize: 14, lineHeight: 20, color: colors.mutedForeground },
     caption: { fontSize: 12, lineHeight: 16, color: colors.mutedForeground },
     micro: { fontSize: 11, lineHeight: 14, color: colors.mutedForeground },
-    /** Small label inside a card ("About Priya", "Your introduction"). */
-    eyebrow: { fontSize: 13, lineHeight: 18, fontWeight: '500', color: colors.mutedForeground },
     /** Field labels, as shadcn's Label. */
     label: { fontSize: 14, lineHeight: 20, fontWeight: '500', color: colors.foreground },
   });

@@ -4,7 +4,7 @@ import { AREAS, BRAND, LEGAL_VERSIONS, LIMITS, isValidEmail, isValidLinkedin } f
 import { CheckboxField, SearchSelectField, TextareaField, TextField } from '@/components/form';
 import { Notice } from '@/components/Notice';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { api, errorMessage } from '@/lib/api';
@@ -68,7 +68,7 @@ function Section({ title, description, children }: { title: string; description?
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <p className="kicker text-muted-foreground">{title}</p>
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
       <CardContent className="gap-5">{children}</CardContent>
@@ -127,7 +127,7 @@ export function Apply() {
   );
 
   return (
-    <PublicFrame title="Apply for membership" lede="A few minutes. Every application is read by a person, and nothing here is shown publicly. You will get a link to check your status.">
+    <PublicFrame kicker="By application" title="Apply for membership" lede="A few minutes. Every application is read by a person, and nothing here is shown publicly. You will get a link to check your status.">
       <form onSubmit={(e) => void onSubmit(e)} noValidate className="grid gap-6" data-testid="apply-form">
         <div className="absolute top-auto left-[-9999px] h-px w-px overflow-hidden" aria-hidden="true">
           <label>

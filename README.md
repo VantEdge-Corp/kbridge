@@ -18,7 +18,7 @@ This repository holds the whole product on one Supabase project:
 | `apps/mobile` | iOS/Android app for members. Expo SDK 57, Expo Router, TypeScript. Runs in Expo Go. |
 | `packages/core` | `@peaches/core`: TypeScript models, taxonomies, Metro Atlanta areas, design tokens, the deterministic matching engine, the Supabase data layer, legal documents, and the fictional demo dataset. Both apps import it. |
 | `supabase/` | SQL migrations `001`-`016` and the two seed scripts. |
-| `docs/DESIGN.md` | The design system both apps follow: shadcn/ui with its Neutral palette, Lucide icons, light and dark themes. |
+| `docs/DESIGN.md` | The design system both apps follow: shadcn/ui with its Neutral palette, Instrument Serif for names and headlines, Lucide icons, light and dark themes. |
 
 ## Requirements
 

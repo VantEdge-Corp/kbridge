@@ -75,13 +75,14 @@ export const radius = {
 } as const;
 
 /**
- * The Tailwind type scale shadcn/ui is built on. Georgia is the brand mark
- * only (the PEACHES wordmark and the monogram); every piece of UI text is the
- * sans: Geist on the web, the platform font on phones.
+ * The Tailwind type scale shadcn/ui is built on. Instrument Serif (regular and
+ * italic) is the display face: the wordmark and monogram, page titles, names,
+ * headlines, and bios. Every other piece of UI text is the sans: Geist on the
+ * web, the platform font on phones.
  */
 export const typography = {
   families: {
-    display: 'Georgia',
+    display: 'Instrument Serif',
     sans: 'system',
   },
   sizes: {
@@ -104,7 +105,8 @@ export const typography = {
   },
   /** `tracking-tight`, in ems; multiply by the font size on phones. */
   tightTracking: -0.025,
-  wordmarkTracking: 4,
+  /** The PEACHES wordmark's letter spacing at its 22px phone size (0.2em). */
+  wordmarkTracking: 4.4,
   weights: {
     regular: '400',
     medium: '500',

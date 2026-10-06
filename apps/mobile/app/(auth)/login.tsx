@@ -42,7 +42,12 @@ export default function Login() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <Header back />
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <Text style={text.title}>Sign in</Text>
+          <View style={styles.titleBlock}>
+            <Text style={text.eyebrow}>Members only</Text>
+            <Text style={text.title} accessibilityRole="header">
+              Sign in
+            </Text>
+          </View>
           {confirm ? (
             <View style={styles.banner}>
               <Text style={text.bodySmall}>Account created. Confirm your email from the message we sent, then sign in.</Text>
@@ -64,6 +69,7 @@ export default function Login() {
 }
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
+  titleBlock: { gap: 6 },
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
   banner: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, padding: spacing.lg },
   links: { alignItems: 'center', gap: 4, marginTop: spacing.sm },

@@ -1,4 +1,6 @@
+import { InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic, useFonts } from '@expo-google-fonts/instrument-serif';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
@@ -13,7 +15,18 @@ import { api } from '@/lib/api';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 
+// The native splash stays up until the display serif is in, so no title ever
+// draws in a fallback face first.
+void SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({ InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic });
+  const ready = fontsLoaded || !!fontError;
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+  // A font that fails to load falls back to the system font rather than leaving the splash stuck.
+  if (!ready) return null;
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>

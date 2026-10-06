@@ -24,7 +24,7 @@ import {
 } from '@peaches/core';
 import { MultiSelectField, SearchSelectField, SelectField, type Option } from '@/components/form';
 import { PreferenceStrengthSelector } from '@/components/PreferenceStrengthSelector';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -115,7 +115,7 @@ function PreferenceCard({ title, description, children }: { title: string; descr
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <p className="kicker text-muted-foreground">{title}</p>
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
       <CardContent className="gap-0">{children}</CardContent>

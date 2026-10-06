@@ -2,9 +2,11 @@
 
 Peaches is a serious, verified social discovery and dating platform for Metro
 Atlanta. The interface is built on [shadcn/ui](https://ui.shadcn.com) with its
-**Neutral** palette: modern, quiet, and professional. At a glance it should read
-as a well-made membership product, not a stereotypical dating app. Once in use,
-its purpose of meeting people is clear.
+**Neutral** palette and set like a private members' club: refined, quiet, and
+discreet. A display serif carries names and headlines, small capitals label
+things, and there is room around everything. At a glance it should read as a
+well-made membership product, not a stereotypical dating app. Once in use, its
+purpose of meeting people is clear.
 
 Colors, radii, sizes, and type live in `packages/core/src/theme/tokens.ts`
 under shadcn's own token names; the web declares the same values as shadcn CSS
@@ -13,13 +15,13 @@ that exists there.
 
 ## Brand
 
-- Name: **Peaches**. Wordmark: `PEACHES` in Georgia regular, letter-spaced
-  (0.2em on the web, 4px on the phone), in `foreground`.
-- Monogram: a Georgia `P` in `#fafafa` on `#0a0a0a`, used for the favicon, the
-  app icon, and the splash (`scripts/generate-icons.mjs` renders them all).
-- Line: *People worth meeting.*
-- Georgia is the subtle nod to the Peach State and appears only in the wordmark
-  and the monogram. Everything else is set in the sans.
+- Name: **Peaches**. Wordmark: `PEACHES` in Instrument Serif, letter-spaced
+  (0.22em on the web, 0.2em on the phone), in `foreground`.
+- Monogram: an Instrument Serif `P` in `#fafafa` on `#0a0a0a`, used for the
+  favicon, the app icon, and the splash. `scripts/generate-icons.mjs` takes
+  the letter's outline from the font file and renders them all.
+- Line: *People worth meeting.* As a headline, its one word in italic
+  (`taglineParts()` in `@peaches/core`): People *worth* meeting.
 - Never: peach emoji, peach illustrations, pink, big hearts, flames, Cupid,
   romantic gradients, sexual imagery, "hot singles", "crush", "soulmate",
   "swipe right", or childish dating language.
@@ -72,17 +74,32 @@ shadcn's Neutral values, plus one Peaches token, `verified`.
 
 ## Type
 
-- Web: Geist (`@fontsource-variable/geist`). Phone: the platform's system font.
-- Phone scale: title 28/34 semibold, tracking -2.5%; heading 20/28 semibold;
-  section and name 16/22 semibold; body 15/22; small 14/20 in
-  `muted-foreground`; label 14/20 medium; caption 12/16 and micro 11/14 in
-  `muted-foreground`. The web uses Tailwind's scale in the same roles (page
-  titles `text-2xl` semibold and tight, section headers `text-base` semibold,
-  dense UI `text-sm`).
-- Labels, buttons, and headings are sentence case. The Settings list keeps its
-  product names (`Discovery Preferences`, `Blocked Users`, `Data & Account`),
-  and each settings page is titled with its row's label. No uppercase eyebrows;
-  a small label above a block is 13px medium `muted-foreground`.
+Three voices, each with one job:
+
+- **Display: Instrument Serif**, regular and italic (`@fontsource/instrument-serif`
+  on the web, `@expo-google-fonts/instrument-serif` on the phone, loaded before
+  the splash screen hides). The wordmark, page and screen titles, member
+  names, headlines, dialog and sheet titles, empty-state titles, and bios.
+  Always at regular weight: it has no bold. Italic marks at most one word or
+  phrase per headline (People *worth* meeting.).
+- **Kicker: small capitals** in the sans, medium weight, `muted-foreground`
+  (11px with 0.18em tracking on the web via the `kicker` utility, 12px with
+  1.8 tracking on the phone as `text.section` and `text.eyebrow`). Section
+  labels, labels inside cards (`About Priya`), the line above a title
+  (`Members only`), and quiet notes (`Seen only by members`).
+- **Text: the sans**. Geist on the web, the platform font on the phone.
+  Everything else: body copy, controls, rows, metadata.
+
+Sizes. Web: page titles 32px (40 from `md`), a profile's name 52 from `md`,
+landing headlines 56 to 104, dialog and empty-state titles 28, card names 22.
+Phone: display 52/58, title 34/42, heading 27/34, name 21/27, bio 22/30;
+body 15/22; small 14/20 and caption 12/16 in `muted-foreground`; label 14/20
+medium. Serif line heights stay at 1.2 or more, since the face is 1.3em tall.
+
+- Labels, buttons, and headings are sentence case (kickers are set in capitals
+  by style, not typed that way). The Settings list keeps its product names
+  (`Discovery Preferences`, `Blocked Users`, `Data & Account`), and each
+  settings page is titled with its row's label.
 
 ## Icons
 
@@ -138,7 +155,9 @@ DropdownMenu), `EmptyState` (Empty), `TagChip` (Badge), `CompletenessBar`
   a 3px `ring/50` halo; an error draws both in `destructive` (halo at 20%, 40%
   in dark). The halo is a ring around the input, never a fill. The label sits
   above in 14px medium; helper or error text below in 13px.
-- **Switch**: `primary` track when on, `input` when off.
+- **Switch**: `primary` track when on, `input` when off; the thumb is
+  `primary-foreground` when on. On iOS the thumb color goes on a frame after
+  mount, since iOS 26 ignores one set before the switch is on screen.
 - **Card and grouped list**: `card` background, 1px border (`ring-foreground/10`
   on the web, with `shadow-xs`), radius xl. Rows inside are separated by 1px
   `border` lines, inset from the leading icon or avatar on the phone; rows
@@ -151,23 +170,28 @@ DropdownMenu), `EmptyState` (Empty), `TagChip` (Badge), `CompletenessBar`
 - **Badge / TagChip**: `secondary` for interests and tags; on Explore,
   required filters are `default` (filled) and preferred ones `outline`.
 - **PersonCard**: a 3:4 photo, radius xl, with a hairline `foreground/10`
-  ring; below it the name and age (16 semibold) with the verification mark,
-  then one metadata line in 13px `muted-foreground`. It opens the profile.
-  No like buttons on cards.
+  ring; below it the name and age in the display serif with the verification
+  mark, then one metadata line in 13px `muted-foreground`. It opens the
+  profile; on the web the photo eases in by 3% over 700ms on hover. No like
+  buttons on cards.
 - **VerificationBadge**: Lucide `badge-check` in `verified`, 14 to 16px, with
   an optional label. Calm, like professional trust language.
 - **PreferenceStrengthSelector**: one small Tabs-style control per preference:
   `Required · Preferred · Any`.
 - **Sheet**: `popover` background, a 1px border, radius 2xl at the top, a
-  36x4 grabber at `muted-foreground` 35%. Web dialogs are shadcn Dialog and
-  AlertDialog; a destructive confirmation always uses AlertDialog (web) or a
-  native alert (phone).
+  36x4 grabber at `muted-foreground` 35%, the title in the display serif. Web
+  dialogs are shadcn Dialog and AlertDialog with serif titles; a destructive
+  confirmation always uses AlertDialog (web) or a native alert (phone).
 - **Empty state**: shadcn Empty. A 40px `muted` tile holding a `foreground`
-  icon, an 18/26 semibold title, one sentence in `muted-foreground`, at most
-  one outline action. Centered text never leaves one word alone on its last
-  line (`lineBreakStrategyIOS="push-out"` on the phone).
+  icon, a title in the display serif, one sentence in `muted-foreground`, at
+  most one outline action. Centered text never leaves one word alone on its
+  last line (`lineBreakStrategyIOS="push-out"` on the phone).
 - **MonogramPortrait**: a member without photos gets a `muted` frame with
-  their initial in the sans, in `muted-foreground`.
+  their initial in the italic display serif, in `muted-foreground`. Avatars
+  fall back to the upright serif initial. On iOS, italic initials carry
+  horizontal padding so their overhang is not clipped.
+- **Form cards**: a kicker inside the card names the group (`Basics`,
+  `Location`), above sentence-case field labels.
 - **Toast** (web): short confirmations such as `Link copied`. The phone
   confirms in place or with a native alert.
 
@@ -210,6 +234,18 @@ profile action. "Connections" not "matches". "Introduction request" not
 No exclamation marks in system copy. Never surface any internal score,
 demand, popularity, ranking, or "top" language.
 
+## Discretion
+
+The product is discreet, and the interface says so quietly and often:
+
+- Kickers name the circle (`Members only`), the landing has a privacy
+  section (members only, never your location, share what you choose, block
+  and report), and every other member's profile ends with a lock and
+  `Seen only by members` (under the Interested button on the web).
+- Nothing loud: no badges counting views, no "online now", no streaks, no
+  confetti. Motion is slow and small (fades, a 3% photo ease), never bouncy.
+- Copy promises only what the product does, in the same plain voice.
+
 ## Privacy rules visible in the UI
 
 - Location is shown only as the coarse area label (e.g. "Duluth area").
@@ -220,13 +256,20 @@ demand, popularity, ranking, or "top" language.
 
 ## Web layout
 
-- Pages open with a header: the title, an optional one-line description, and
-  at most one or two actions. The tab bar and sticky save bars are solid
-  `background`; only the public header may be translucent (`background` at
-  80% with a backdrop blur).
-- Landing: a sticky header with the wordmark, Sign in, Apply, and the theme
-  switch; a hero limited to 720px; the three admission steps as numbered
-  cards; the verification dimensions as cards; a quiet footer.
+- Pages open with a header: back, the serif title, and at most one or two
+  actions share one row centered on the title; an optional one-line
+  description sits under the title text. The tab bar and sticky save bars are
+  solid `background`; only the public header may be translucent (`background`
+  at 80% with a backdrop blur).
+- Landing, centered and unhurried: a sticky header with the wordmark, Sign
+  in, Apply, and the theme switch; a hero with a kicker between two hairlines,
+  the tagline as a serif headline with its italic word, one paragraph, Apply
+  and Sign in, and a line of three small-caps facts, all under a soft light
+  (`bg-spotlight`, eased over several stops so it shows no rim); then
+  Membership (the three steps as rows with serif roman numerals), Verification
+  (the four details under hairlines), Privacy (a `muted` band), a closing
+  invitation, and a quiet footer.
+- Sign-in and admission pages: a kicker, a serif title, a lede, then the form.
 - Inbox on desktop (>= 1024px): two panes. A 360px list on the left and the
   conversation on the right; `/inbox` shows a calm "Choose a conversation"
   placeholder there. Narrower screens open the chat full screen.
@@ -287,13 +330,13 @@ conflict with an earlier line, these win on the phone.
 - Photo cards are inset 16px, 4:5, radius xl, with the hairline image ring.
   The main photo is the first thing on the screen. A member without photos
   gets the monogram portrait in the same frame.
-- Identity block: name and age at 28/34 semibold with the verification mark
-  to the right, then one metadata line (`Product designer · Midtown Atlanta`)
-  in 15px `muted-foreground`. As the block scrolls under the header, the name
-  fades into the header (16 semibold, centered) over 24px of travel, and the
-  header's bottom border fades in with it.
-- Bio card: `card`, 1px `border`, radius xl, 20px padding, a small label
-  (`About Priya`) and the bio at reading size, 17/26.
+- Identity block: name and age in the display serif (34/42) with the
+  verification mark to the right, then one metadata line (`Product designer ·
+  Midtown Atlanta`) in 15px `muted-foreground`. As the block scrolls under
+  the header, the name fades into the header (serif 21, centered) over 24px
+  of travel, and the header's bottom border fades in with it.
+- Bio card: `card`, 1px `border`, radius xl, 20px padding, a kicker
+  (`About Priya`) and the bio in the display serif, 22/30, like a pull-quote.
 - Vitals strip: one horizontally scrolling `card`, radius xl. Items are an
   18px icon and a 15px value with 16px padding, separated by 1px vertical
   `border` lines. Contents, when present: height, area, relationship intent,
@@ -344,8 +387,8 @@ conflict with an earlier line, these win on the phone.
 ### Me
 
 - Me is a hub, not an editor. A centered 96px circular portrait with a small
-  `primary` edit disc at its corner (opens Photos); name and age at 20/28
-  semibold with the verification mark; one metadata line; then the
+  `primary` edit disc at its corner (opens Photos); name and age in the
+  display serif with the verification mark; one metadata line; then the
   completeness card and the grouped rows. Photos are managed on the Photos
   screen; the bio is edited in Edit profile and previewed with `View as
   others see you`.

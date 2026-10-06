@@ -30,6 +30,8 @@ export const BRAND = Object.freeze({
   name: 'Peaches',
   wordmark: 'PEACHES',
   tagline: 'People worth meeting.',
+  /** The tagline's word set in italic wherever the tagline is a headline. */
+  taglineEmphasis: 'worth',
   market: 'Metro Atlanta',
   /** The company that operates Peaches, as named in the legal documents. */
   company: 'HyberTec LLC',
@@ -37,3 +39,10 @@ export const BRAND = Object.freeze({
   /** Plus-addressed, so it lands in the support inbox and can be filtered and flagged there. */
   childSafetyEmail: 'vantedge67+childsafety@gmail.com',
 });
+
+/** The tagline around its italic word: `['People ', 'worth', ' meeting.']`. */
+export function taglineParts(): readonly [before: string, emphasis: string, after: string] {
+  const at = BRAND.tagline.indexOf(BRAND.taglineEmphasis);
+  if (at < 0) return [BRAND.tagline, '', ''];
+  return [BRAND.tagline.slice(0, at), BRAND.taglineEmphasis, BRAND.tagline.slice(at + BRAND.taglineEmphasis.length)];
+}

@@ -37,7 +37,7 @@ import { CheckboxField, MultiSelectField, SearchSelectField, SelectField, Switch
 import { LoadingBlock } from '@/components/Loading';
 import { LoadError, Notice } from '@/components/Notice';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
@@ -63,7 +63,7 @@ function FormCard({ title, description, children }: { title: string; description
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <p className="kicker text-muted-foreground">{title}</p>
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
       <CardContent className="gap-5">{children}</CardContent>

@@ -12,9 +12,9 @@ export function cardMetadata(profile: PublicProfile): string {
 }
 
 /**
- * 3:4 portrait, name and age, a verification seal, one metadata line. The
- * card opens the profile; its ⋯ button (and right-click or long-press) holds
- * the member actions. No like controls.
+ * 3:4 portrait, the name and age in the display serif, a verification seal,
+ * one metadata line. The card opens the profile; its ⋯ button (and
+ * right-click or long-press) holds the member actions. No like controls.
  */
 export function PersonCard({ profile, actions }: { profile: PublicProfile; actions: MenuAction[] }) {
   const verified = profile.publicVerificationBadges.length > 0;
@@ -32,10 +32,10 @@ export function PersonCard({ profile, actions }: { profile: PublicProfile; actio
           name={profile.firstName}
           src={profile.photos[0] ?? null}
           loading="lazy"
-          className="aspect-[3/4] rounded-xl [&_img]:transition-transform [&_img]:duration-300 group-hover/card:[&_img]:scale-[1.03]"
+          className="aspect-[3/4] rounded-xl [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover/card:[&_img]:scale-[1.03]"
         />
         <div className="mt-3 flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-base font-medium underline-offset-4 group-hover/card:underline">{name}</span>
+          <span className="truncate font-display text-[1.375rem] leading-tight font-normal decoration-foreground/30 decoration-1 underline-offset-4 group-hover/card:underline">{name}</span>
           {verified ? <VerificationBadge /> : null}
         </div>
         <p className="mt-0.5 truncate text-sm text-muted-foreground">{meta}</p>

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Checkbox } from '@/components/Checkbox';
 import { ErrorText } from '@/components/ErrorText';
@@ -92,7 +92,12 @@ export default function Signup() {
           </ScrollView>
         ) : (
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-            <Text style={text.title}>Welcome, {firstName}.</Text>
+            <View style={styles.titleBlock}>
+              <Text style={text.eyebrow}>Membership approved</Text>
+              <Text style={text.title} accessibilityRole="header">
+                Welcome, {firstName}.
+              </Text>
+            </View>
             <Text style={text.bodySmall}>Choose a password for the email on your application.</Text>
             <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoCorrect={false} helper="Changing it will fail unless that email has also been approved." />
             <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry textContentType="newPassword" helper={`At least ${MIN_PASSWORD} characters.`} />
@@ -120,6 +125,7 @@ export default function Signup() {
 }
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
+  titleBlock: { gap: 6 },
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
   link: { color: colors.foreground, fontWeight: '500', textDecorationLine: 'underline' },
 });

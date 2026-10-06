@@ -26,21 +26,21 @@ export function Status() {
 
   if (loading) {
     return (
-      <PublicFrame title="Application status">
+      <PublicFrame kicker="Your application" title="Application status">
         <LoadingBlock />
       </PublicFrame>
     );
   }
   if (error) {
     return (
-      <PublicFrame title="Application status">
+      <PublicFrame kicker="Your application" title="Application status">
         <Notice tone="danger">{error}</Notice>
       </PublicFrame>
     );
   }
   if (!data) {
     return (
-      <PublicFrame title="We couldn't find that application." lede="The link may be incomplete. If you have not applied yet, you can do that now.">
+      <PublicFrame kicker="Your application" title="We couldn't find that application." lede="The link may be incomplete. If you have not applied yet, you can do that now.">
         <Link to="/apply" className={buttonVariants({ variant: 'outline' })}>
           Submit an application
         </Link>
@@ -49,7 +49,7 @@ export function Status() {
   }
   const view = VIEW[data.status];
   return (
-    <PublicFrame title={view.title} lede={view.body}>
+    <PublicFrame kicker="Your application" title={view.title} lede={view.body}>
       <div className="grid gap-6" data-testid="status-page" data-status={data.status}>
         {justSubmitted ? <Notice title="Application received">Keep this link: it is the only way to check your status or create your account later.</Notice> : null}
         <Card>

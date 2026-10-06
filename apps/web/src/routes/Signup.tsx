@@ -55,14 +55,14 @@ export function Signup() {
 
   if (loading) {
     return (
-      <PublicFrame title="Create your account">
+      <PublicFrame kicker="Your membership" title="Create your account">
         <LoadingBlock />
       </PublicFrame>
     );
   }
   if (error || !data) {
     return (
-      <PublicFrame title="This link isn't ready." lede={error ?? 'This signup link is invalid or your application has not been admitted yet.'}>
+      <PublicFrame kicker="Your membership" title="This link isn't ready." lede={error ?? 'This signup link is invalid or your application has not been admitted yet.'}>
         <Link to={`/status/${token}`} className={buttonVariants({ variant: 'outline' })}>
           Check your status
         </Link>
@@ -77,7 +77,7 @@ export function Signup() {
   );
 
   return (
-    <PublicFrame title={`Welcome, ${data.firstName}.`} lede="Choose a password to create your account. Your email is the one you applied with.">
+    <PublicFrame kicker="Your membership" title={`Welcome, ${data.firstName}.`} lede="Choose a password to create your account. Your email is the one you applied with.">
       <Card>
         <CardContent>
           <form onSubmit={(e) => void onSubmit(e)} className="grid gap-5" noValidate>

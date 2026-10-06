@@ -19,9 +19,10 @@
     "db:test": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -q -f supabase/tests/functional.sql"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "opentype.js": "^2.0.0",
     "typescript": "^5.6.0",
-    "vitest": "^3.0.0",
-    "@playwright/test": "^1.63.0"
+    "vitest": "^3.0.0"
   },
   "engines": {
     "node": ">=22",

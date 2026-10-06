@@ -52,7 +52,7 @@ export function Me() {
         </Link>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="truncate text-xl font-semibold tracking-tight">{nameAge(profile.firstName, profile.age)}</h2>
+            <h2 className="truncate py-0.5 font-display text-[2rem] leading-tight font-normal">{nameAge(profile.firstName, profile.age)}</h2>
             {profile.publicVerificationBadges.length > 0 ? <VerificationBadge className="[&>svg]:size-5" /> : null}
           </div>
           {meta ? <p className="mt-0.5 truncate text-sm text-muted-foreground">{meta}</p> : null}

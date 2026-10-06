@@ -99,7 +99,7 @@ export function ChatPane({ matchId, showBack = false }: { matchId: string; showB
           <PersonAvatar name={counterpart.firstName} src={counterpart.photos[0] ?? null} className="size-9" />
           <span className="grid min-w-0 leading-tight">
             <span className="flex items-center gap-1.5">
-              <span className="truncate font-medium">{counterpart.firstName}</span>
+              <span className="truncate font-display text-xl leading-tight font-normal">{counterpart.firstName}</span>
               {counterpart.publicVerificationBadges.length > 0 ? <VerificationBadge /> : null}
             </span>
             <span className="truncate text-xs text-muted-foreground">{counterpart.displayArea}</span>
@@ -115,7 +115,7 @@ export function ChatPane({ matchId, showBack = false }: { matchId: string; showB
               {data.connection.introductionNote ? (
                 <MessageScrollerItem>
                   <div className="mx-auto mb-3 w-full max-w-md rounded-xl border bg-muted/40 px-4 py-3">
-                    <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <p className="kicker flex items-center gap-1.5 text-muted-foreground">
                       <LuMessageSquareQuote className="size-3.5" />
                       {data.connection.introducedBy === 'viewer' ? 'Your introduction' : `${counterpart.firstName}'s introduction`}
                     </p>

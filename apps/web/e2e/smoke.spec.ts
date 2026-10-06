@@ -6,7 +6,7 @@ test.describe('public', () => {
     await page.goto('/');
     await expect(page.getByText('PEACHES').first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'People worth meeting.' })).toBeVisible();
-    await expect(page.getByRole('main').getByRole('link', { name: 'Apply', exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('link', { name: 'Apply for membership' }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: 'Privacy' })).toBeVisible();
   });
 

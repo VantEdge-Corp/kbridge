@@ -60,7 +60,7 @@ export function ReportDialog({
     <Dialog open={open} onOpenChange={(next) => (next ? undefined : close())}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{postId ? 'Report this post' : `Report ${reportedName}`}</DialogTitle>
+          <DialogTitle className="font-display text-[1.75rem] leading-tight font-normal">{postId ? 'Report this post' : `Report ${reportedName}`}</DialogTitle>
           <DialogDescription>Reports are private. {reportedName} is never told who reported them.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-5">

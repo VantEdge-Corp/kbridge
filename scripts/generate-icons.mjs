@@ -2,15 +2,16 @@
 /**
  * Draws the Peaches "P" monogram assets in the shadcn/ui Neutral palette:
  * the app icon, splash mark, Android adaptive layers, and favicons. The
- * letter is Georgia, the one place the brand serif appears, so run this on a
- * machine that has Georgia installed (macOS and Windows do).
+ * letter is Instrument Serif, the display face, taken as an outline straight
+ * from the font file (opentype.js), so no installed font is involved and the
+ * SVG favicon needs no font at all.
  *
  *   node scripts/generate-icons.mjs
  *
- * Chromium (from @playwright/test) renders each asset on a canvas, so the
- * glyph is centered on its measured ink box rather than on font metrics.
+ * Chromium (from @playwright/test) rasterizes the PNGs on a canvas. Each glyph
+ * is centered on its own ink box rather than on font metrics.
  */
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,32 +19,54 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(path.join(root, 'package.json'));
 const { chromium } = require('@playwright/test');
+const opentype = require('opentype.js');
 
 /** `--background` and `--foreground` of the Neutral dark theme. */
 const INK = '#0a0a0a';
 const PAPER = '#fafafa';
 
+const fontDir = path.dirname(require.resolve('@expo-google-fonts/instrument-serif/package.json'));
+const fontBytes = readFileSync(path.join(fontDir, '400Regular', 'InstrumentSerif_400Regular.ttf'));
+const font = opentype.parse(fontBytes.buffer.slice(fontBytes.byteOffset, fontBytes.byteOffset + fontBytes.byteLength));
+
+/** Where to draw the letter so its ink box is `share` of `size` tall and centered in a `size` square. */
+function placement(size, share) {
+  const box = font.getPath('P', 0, 0, 1000).getBoundingBox();
+  const scale = (size * share) / (box.y2 - box.y1);
+  return {
+    x: (size - (box.x2 - box.x1) * scale) / 2 - box.x1 * scale,
+    y: (size - (box.y2 - box.y1) * scale) / 2 - box.y1 * scale,
+    fontSize: 1000 * scale,
+  };
+}
+
+/** The letter as SVG path data, already placed. */
+function letterPath(size, share) {
+  const { x, y, fontSize } = placement(size, share);
+  return font.getPath('P', x, y, fontSize).toPathData(2);
+}
+
 /**
- * size: square edge in px. glyph: cap height as a share of the edge.
+ * size: square edge in px. glyph: ink height as a share of the edge.
  * ground: 'square' fills, 'rounded' fills a rounded square (radius share), 'none' stays transparent.
  */
 const ASSETS = [
-  { file: 'apps/mobile/assets/icon.png', size: 1024, glyph: 0.46, ground: 'square', color: PAPER },
-  { file: 'apps/mobile/assets/splash-icon.png', size: 1024, glyph: 0.46, ground: 'rounded', radius: 0.215, color: PAPER },
-  { file: 'apps/mobile/assets/android-icon-foreground.png', size: 512, glyph: 0.3, ground: 'none', color: PAPER },
+  { file: 'apps/mobile/assets/icon.png', size: 1024, glyph: 0.5, ground: 'square', color: PAPER },
+  { file: 'apps/mobile/assets/splash-icon.png', size: 1024, glyph: 0.5, ground: 'rounded', radius: 0.215, color: PAPER },
+  { file: 'apps/mobile/assets/android-icon-foreground.png', size: 512, glyph: 0.33, ground: 'none', color: PAPER },
   { file: 'apps/mobile/assets/android-icon-background.png', size: 512, glyph: 0, ground: 'square', color: PAPER },
-  { file: 'apps/mobile/assets/android-icon-monochrome.png', size: 432, glyph: 0.3, ground: 'none', color: '#ffffff' },
-  { file: 'apps/mobile/assets/favicon.png', size: 48, glyph: 0.37, ground: 'rounded', radius: 0.1875, color: PAPER },
+  { file: 'apps/mobile/assets/android-icon-monochrome.png', size: 432, glyph: 0.33, ground: 'none', color: '#ffffff' },
+  { file: 'apps/mobile/assets/favicon.png', size: 48, glyph: 0.5, ground: 'rounded', radius: 0.1875, color: PAPER },
 ];
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setContent('<canvas id="c"></canvas>');
-await page.evaluate(() => document.fonts.load('100px Georgia'));
 
 for (const asset of ASSETS) {
+  const d = asset.glyph > 0 ? letterPath(asset.size, asset.glyph) : '';
   const dataUrl = await page.evaluate(
-    ({ asset, ink }) => {
+    ({ asset, ink, d }) => {
       const canvas = document.getElementById('c');
       canvas.width = asset.size;
       canvas.height = asset.size;
@@ -56,27 +79,21 @@ for (const asset of ASSETS) {
         ctx.roundRect(0, 0, asset.size, asset.size, asset.size * asset.radius);
         ctx.fill();
       }
-      if (asset.glyph > 0) {
-        // Size the font so the letter's ink height hits the target, then center the ink box.
-        ctx.font = '100px Georgia';
-        const probe = ctx.measureText('P');
-        const inkHeight = probe.actualBoundingBoxAscent + probe.actualBoundingBoxDescent;
-        const fontSize = (100 * asset.size * asset.glyph) / inkHeight;
-        ctx.font = `${fontSize}px Georgia`;
-        const m = ctx.measureText('P');
-        const width = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-        const height = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
-        const x = (asset.size - width) / 2 + m.actualBoundingBoxLeft;
-        const y = (asset.size - height) / 2 + m.actualBoundingBoxAscent;
+      if (d) {
         ctx.fillStyle = asset.color;
-        ctx.fillText('P', x, y);
+        ctx.fill(new Path2D(d));
       }
       return canvas.toDataURL('image/png');
     },
-    { asset, ink: INK },
+    { asset, ink: INK, d },
   );
   writeFileSync(path.join(root, asset.file), Buffer.from(dataUrl.split(',')[1], 'base64'));
   console.log(`wrote ${asset.file}`);
 }
 
 await browser.close();
+
+// The web favicon stays a vector: a rounded ink square and the letter as a path.
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="${INK}"/><path fill="${PAPER}" d="${letterPath(64, 0.5)}"/></svg>\n`;
+writeFileSync(path.join(root, 'apps/web/public/favicon.svg'), svg);
+console.log('wrote apps/web/public/favicon.svg');

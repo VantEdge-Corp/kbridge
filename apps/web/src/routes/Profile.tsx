@@ -1,4 +1,4 @@
-import { LuCheck, LuPencil, LuUserX } from 'react-icons/lu';
+import { LuCheck, LuLock, LuPencil, LuUserX } from 'react-icons/lu';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { VERIFICATION_LABEL, nameAge, profileDetails, profileMetaLine, profileVitals, timeAgo } from '@peaches/core';
 import { useMember } from '@/auth/AuthProvider';
@@ -59,10 +59,11 @@ export function Profile() {
         title={
           <span className="inline-flex items-center gap-2">
             {nameAge(profile.firstName, profile.age)}
-            {verified ? <VerificationBadge className="[&>svg]:size-5" /> : null}
+            {verified ? <VerificationBadge className="[&>svg]:size-5 md:[&>svg]:size-6" /> : null}
           </span>
         }
         description={profileMetaLine(profile)}
+        titleClassName="md:text-[3.25rem]"
         back={own ? '/me' : { history: '/home' }}
         actions={
           own ? (
@@ -90,14 +91,20 @@ export function Profile() {
               Interested
             </Button>
           )}
+          {!own ? (
+            <p className="kicker flex items-center justify-center gap-1.5 text-muted-foreground">
+              <LuLock className="size-3" />
+              Seen only by members
+            </p>
+          ) : null}
         </div>
 
         <div className="grid content-start gap-8">
           {profile.bio ? (
             <Card>
-              <CardContent className="gap-2">
-                <p className="text-sm font-medium text-muted-foreground">About {profile.firstName}</p>
-                <p className="text-lg leading-relaxed whitespace-pre-wrap text-pretty">{profile.bio}</p>
+              <CardContent className="gap-3">
+                <p className="kicker text-muted-foreground">About {profile.firstName}</p>
+                <p className="font-display text-[1.625rem] leading-snug whitespace-pre-wrap text-pretty">{profile.bio}</p>
               </CardContent>
             </Card>
           ) : null}

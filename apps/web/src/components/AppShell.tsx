@@ -310,10 +310,27 @@ function HistoryBackButton({ fallback }: { fallback: string }) {
  * actions. `back` is a path, or `{ history: fallback }` to return to wherever
  * the member came from.
  */
-export function PageHeader({ title, description, back, actions, className }: { title: ReactNode; description?: ReactNode; back?: string | { history: string }; actions?: ReactNode; className?: string }) {
+export function PageHeader({
+  title,
+  description,
+  back,
+  actions,
+  className,
+  titleClassName,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  back?: string | { history: string };
+  actions?: ReactNode;
+  className?: string;
+  /** Sizes the serif title up for an identity moment, such as a member's name on their profile. */
+  titleClassName?: string;
+}) {
+  // Back, title, and actions share one row centered on the title, whatever its size; the
+  // description sits under the title text, clear of the back button.
   return (
-    <header className={cn('mb-6 flex items-start justify-between gap-4 md:mb-8', className)}>
-      <div className="flex min-w-0 items-start gap-2">
+    <header className={cn('mb-6 md:mb-8', className)}>
+      <div className="flex min-w-0 items-center gap-2">
         {typeof back === 'string' ? (
           <Link to={back} aria-label="Back" className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), '-ml-2 shrink-0')}>
             <LuArrowLeft />
@@ -321,12 +338,10 @@ export function PageHeader({ title, description, back, actions, className }: { t
         ) : back ? (
           <HistoryBackButton fallback={back.history} />
         ) : null}
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
-          {description ? <p className="mt-1 text-sm text-muted-foreground text-pretty">{description}</p> : null}
-        </div>
+        <h1 className={cn('min-w-0 flex-1 truncate py-0.5 font-display text-[2rem] leading-tight font-normal md:text-[2.5rem]', titleClassName)}>{title}</h1>
+        {actions ? <div className="flex shrink-0 items-center gap-2 pl-2">{actions}</div> : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {description ? <p className={cn('mt-1 max-w-[62ch] text-sm text-muted-foreground text-pretty', back && 'pl-9')}>{description}</p> : null}
     </header>
   );
 }

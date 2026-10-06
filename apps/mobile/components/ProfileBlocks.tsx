@@ -21,14 +21,14 @@ export function ProfilePhoto({ uri, firstName, index, width }: { uri: string | n
   );
 }
 
-/** The bio in a card: a small label, then the text at reading size, as on the web. */
+/** The bio in a card: a small-caps label, then the text in the display serif, as on the web. */
 export function PullQuote({ eyebrow, children }: { eyebrow: string; children: string }) {
   const styles = useStyles(makeStyles);
   const { text } = useTheme();
   return (
     <View style={[styles.card, styles.block, styles.quote]}>
       <Text style={text.eyebrow}>{eyebrow}</Text>
-      <Text style={styles.quoteText}>{children}</Text>
+      <Text style={text.quote}>{children}</Text>
     </View>
   );
 }
@@ -105,7 +105,6 @@ const makeStyles = ({ colors }: Theme) =>
     },
     card: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl },
     quote: { padding: 20, gap: spacing.sm },
-    quoteText: { fontSize: 17, lineHeight: 26, color: colors.foreground },
     note: { padding: spacing.lg, gap: spacing.sm },
     vitalsRow: { alignItems: 'center' },
     vital: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, minHeight: 52 },
