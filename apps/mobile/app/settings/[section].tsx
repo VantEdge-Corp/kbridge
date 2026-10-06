@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BRAND, longDate, type PrivateUserData, type PublicProfile, type VerificationDimension } from '@peaches/core';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
+import { EmptyState } from '@/components/EmptyState';
 import { ErrorText } from '@/components/ErrorText';
 import { Field } from '@/components/Field';
 import { GROUP_INSET, Group } from '@/components/Group';
@@ -13,7 +14,9 @@ import { Loading } from '@/components/Loading';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SettingsRow } from '@/components/SettingsRow';
+import { Switch } from '@/components/Switch';
 import { VerificationList } from '@/components/VerificationList';
+import { SETTINGS_SECTIONS } from '@/constants/settings';
 import { radius, spacing } from '@/constants/theme';
 import { THEME_PREFERENCES, useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
@@ -21,30 +24,13 @@ import { useMember } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { LEGAL_URLS, supabase } from '@/lib/supabase';
 
-const TITLES: Record<string, string> = {
-  account: 'Account',
-  appearance: 'Appearance',
-  privacy: 'Privacy',
-  notifications: 'Notifications',
-  verification: 'Verification',
-  blocked: 'Blocked users',
-  safety: 'Safety',
-  data: 'Data & account',
-};
-
-/** Switch tints for the active palette. */
-function useSwitchColors() {
-  const { colors } = useTheme();
-  return { trackColor: { true: colors.ivory, false: colors.borderStrong }, thumbColor: colors.canvas };
-}
-
 export default function SettingsSection() {
   const styles = useStyles(makeStyles);
   const { section } = useLocalSearchParams<{ section: string }>();
   const key = section ?? 'account';
   return (
     <Screen edges={['top', 'bottom']}>
-      <Header back title={TITLES[key] ?? 'Settings'} />
+      <Header back title={SETTINGS_SECTIONS.find((s) => s.key === key)?.label ?? 'Settings'} />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {key === 'account' ? <Account /> : null}
         {key === 'appearance' ? <Appearance /> : null}
@@ -94,14 +80,13 @@ function Account() {
         <Field label="New password" value={password} onChangeText={setPassword} secureTextEntry textContentType="newPassword" />
         <Field label="Confirm new password" value={confirm} onChangeText={setConfirm} secureTextEntry textContentType="newPassword" />
         <ErrorText message={error} flush />
-        <Button title="Update password" variant="secondary" onPress={change} loading={busy} disabled={!password} />
+        <Button title="Update password" variant="outline" onPress={change} loading={busy} disabled={!password} />
       </View>
     </View>
   );
 }
 
 function Privacy() {
-  const switchColors = useSwitchColors();
   const styles = useStyles(makeStyles);
   const { text } = useTheme();
   const { userId, email, profile, refreshProfile } = useMember();
@@ -150,13 +135,13 @@ function Privacy() {
       </Text>
       <SectionHeader title="What others see" />
       <Group>
-        <SettingsRow label="Show education" chevron={false} right={<Switch value={priv?.education?.publicDisplayEnabled ?? true} onValueChange={setEducationDisplay} {...switchColors} />} />
-        <SettingsRow label="Show employer" chevron={false} right={<Switch value={priv?.employment?.publicEmployerDisplayEnabled ?? true} onValueChange={setEmployerDisplay} {...switchColors} />} />
+        <SettingsRow label="Show education" chevron={false} right={<Switch value={priv?.education?.publicDisplayEnabled ?? true} onValueChange={setEducationDisplay} />} />
+        <SettingsRow label="Show employer" chevron={false} right={<Switch value={priv?.employment?.publicEmployerDisplayEnabled ?? true} onValueChange={setEmployerDisplay} />} />
         <SettingsRow
           label="Race / ethnicity: prefer not to say"
           description="Hides the field and keeps it out of matching entirely."
           chevron={false}
-          right={<Switch value={profile?.raceEthnicityDisclosure === 'prefer_not_to_say'} onValueChange={setPreferNotToSay} {...switchColors} />}
+          right={<Switch value={profile?.raceEthnicityDisclosure === 'prefer_not_to_say'} onValueChange={setPreferNotToSay} />}
         />
       </Group>
       <SectionHeader title="Documents" />
@@ -184,7 +169,7 @@ function Appearance() {
             description={option.description}
             chevron={false}
             onPress={() => setPreference(option.value)}
-            right={option.value === preference ? <Icon name="check" size={18} color={colors.ivory} /> : <View style={styles.checkSpace} />}
+            right={option.value === preference ? <Icon name="check" size={18} color={colors.foreground} /> : <View style={styles.checkSpace} />}
           />
         ))}
       </Group>
@@ -257,14 +242,16 @@ function Blocked() {
       },
     ]);
   if (!people) return <Loading />;
-  if (people.length === 0) return <Text style={[text.bodySecondary, styles.note]}>You have not blocked anyone.</Text>;
+  if (people.length === 0) {
+    return <EmptyState icon="user-x" title="You haven't blocked anyone." body="Blocked members can't see you or contact you, and you won't see them." />;
+  }
   return (
     <Group inset={spacing.lg + 36 + spacing.md} style={styles.firstGroup}>
       {people.map((p) => (
         <View key={p.id} style={styles.blockedRow}>
           <Avatar uri={p.photos[0] ?? null} firstName={p.firstName} size={36} />
           <Text style={[text.body, { flex: 1 }]}>{p.firstName}</Text>
-          <Button title="Unblock" size="small" variant="secondary" onPress={() => unblock(p)} />
+          <Button title="Unblock" size="sm" variant="outline" onPress={() => unblock(p)} />
         </View>
       ))}
     </Group>
@@ -286,8 +273,8 @@ function Safety() {
       <Group inset={GROUP_INSET.icon} style={styles.firstGroup}>
         {tips.map((t) => (
           <View key={t} style={styles.tip}>
-            <Icon name="shield" size={18} color={colors.textSecondary} />
-            <Text style={[text.body, { flex: 1, color: colors.textSecondary }]}>{t}</Text>
+            <Icon name="shield" size={18} color={colors.mutedForeground} />
+            <Text style={[text.body, { flex: 1, color: colors.mutedForeground }]}>{t}</Text>
           </View>
         ))}
       </Group>
@@ -340,13 +327,13 @@ function DataAndAccount() {
         everything you have shared with {BRAND.name}.
       </Text>
       {!armed ? (
-        <Button title="Delete my account" variant="danger" onPress={() => setArmed(true)} />
+        <Button title="Delete my account" variant="destructive" onPress={() => setArmed(true)} />
       ) : (
         <View style={styles.dangerBox}>
           <Text style={text.body}>Are you sure? This removes your account permanently.</Text>
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <Button title="Yes, delete" variant="danger" size="small" onPress={remove} loading={busy} />
-            <Button title="Keep my account" variant="ghost" size="small" onPress={() => setArmed(false)} />
+            <Button title="Yes, delete" variant="destructive" size="sm" onPress={remove} loading={busy} />
+            <Button title="Keep my account" variant="ghost" size="sm" onPress={() => setArmed(false)} />
           </View>
         </View>
       )}
@@ -362,5 +349,5 @@ const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   firstGroup: { marginTop: spacing.sm },
   blockedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: 56 },
   tip: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  dangerBox: { padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.danger, gap: spacing.md },
+  dangerBox: { padding: spacing.lg, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.destructive, gap: spacing.md },
 });

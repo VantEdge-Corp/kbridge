@@ -12,14 +12,14 @@ const LINKS: ReadonlyArray<{ key: LegalPageKey; label: string }> = [
 /** The public policy and help pages, for page footers. The app stores link to several of them. Phones get a tidy 3-column grid. */
 export function LegalLinks({ current }: { current?: LegalPageKey }) {
   return (
-    <nav aria-label="Policies and help" className="grid grid-cols-3 gap-x-5 gap-y-2 sm:flex sm:flex-wrap">
+    <nav aria-label="Policies and help" className="grid grid-cols-3 gap-x-5 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-5">
       {LINKS.map((link) =>
         link.key === current ? (
-          <span key={link.key} aria-current="page" className="text-text">
+          <span key={link.key} aria-current="page" className="font-medium text-foreground">
             {link.label}
           </span>
         ) : (
-          <Link key={link.key} to={`/${link.key}`} className="hover:text-text motion">
+          <Link key={link.key} to={`/${link.key}`} className="transition-colors hover:text-foreground">
             {link.label}
           </Link>
         ),

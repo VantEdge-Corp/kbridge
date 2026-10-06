@@ -1,12 +1,22 @@
 import type { ReactNode } from 'react';
+import type { IconType } from 'react-icons';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { cn } from '@/lib/utils';
 
-/** Centered, calm: one sentence, optional detail, optional single secondary action. */
-export function EmptyState({ title, body, action }: { title: string; body?: ReactNode; action?: ReactNode }) {
+/** Centered and calm: an optional icon, one sentence, optional detail, at most one action. */
+export function EmptyState({ icon: Icon, title, body, action, className }: { icon?: IconType; title: string; body?: ReactNode; action?: ReactNode; className?: string }) {
   return (
-    <div className="px-5 py-12 text-center">
-      <p className="text-body text-text-secondary">{title}</p>
-      {body ? <p className="mt-1.5 text-body-sm text-text-muted max-w-sm mx-auto">{body}</p> : null}
-      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
-    </div>
+    <Empty className={cn('py-16', className)}>
+      <EmptyHeader>
+        {Icon ? (
+          <EmptyMedia variant="icon">
+            <Icon />
+          </EmptyMedia>
+        ) : null}
+        <EmptyTitle>{title}</EmptyTitle>
+        {body ? <EmptyDescription>{body}</EmptyDescription> : null}
+      </EmptyHeader>
+      {action ? <EmptyContent>{action}</EmptyContent> : null}
+    </Empty>
   );
 }

@@ -3,6 +3,7 @@ export * from './constants';
 export * from './theme';
 export * from './matching';
 export * from './format';
+export * from './profileFacts';
 export * from './legal/documents';
 export * from './api';
 export * from './mock';

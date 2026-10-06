@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { errorMessage } from '../lib/api';
-import { supabase } from '../lib/supabase';
-import { Button } from '../components/Button';
-import { Input, Notice } from '../components/Field';
-import { Group, GroupSection } from '../components/Group';
-import { usePageTitle } from '../hooks/usePageTitle';
-import { PublicFrame } from './PublicFrame';
+import { TextField } from '@/components/form';
+import { Notice } from '@/components/Notice';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { errorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+import { PublicFrame } from '@/routes/PublicFrame';
 
 export function Login() {
   usePageTitle('Sign in');
@@ -34,23 +36,24 @@ export function Login() {
 
   return (
     <PublicFrame title="Sign in" lede="Members sign in with the email they applied with.">
-      <Group>
-        <GroupSection>
-          <form onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate data-testid="login-form">
+      <Card>
+        <CardContent>
+          <form onSubmit={(e) => void onSubmit(e)} className="grid gap-5" noValidate data-testid="login-form">
             {params.get('confirm') === '1' ? <Notice>Account created. Confirm it from the email we sent you, then sign in.</Notice> : null}
-            <Input label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <Input label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <TextField label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             {error ? <Notice tone="danger">{error}</Notice> : null}
-            <Button type="submit" disabled={busy || !email || !password} className="w-full">
-              {busy ? 'Signing in' : 'Sign in'}
+            <Button type="submit" size="lg" disabled={busy || !email || !password} className="w-full">
+              {busy ? <Spinner data-icon="inline-start" /> : null}
+              Sign in
             </Button>
           </form>
-        </GroupSection>
-      </Group>
-      <div className="mt-8 space-y-2 text-body-sm text-text-muted">
+        </CardContent>
+      </Card>
+      <div className="mt-8 grid gap-2 text-sm text-muted-foreground">
         <p>
           Not a member yet?{' '}
-          <Link to="/apply" className="text-text underline underline-offset-2">
+          <Link to="/apply" className="font-medium text-foreground underline underline-offset-4">
             Apply
           </Link>
         </p>

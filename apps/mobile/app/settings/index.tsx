@@ -5,21 +5,10 @@ import { GROUP_INSET, Group } from '@/components/Group';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
 import { SettingsRow } from '@/components/SettingsRow';
+import { SETTINGS_SECTIONS } from '@/constants/settings';
 import { spacing } from '@/constants/theme';
 import { THEME_PREFERENCES, useTheme } from '@/lib/theme';
 import { useMember } from '@/lib/auth';
-
-export const SECTIONS = [
-  { key: 'account', label: 'Account', icon: 'user' },
-  { key: 'appearance', label: 'Appearance', icon: 'sun' },
-  { key: 'privacy', label: 'Privacy', icon: 'eye-off' },
-  { key: 'discovery', label: 'Discovery Preferences', icon: 'sliders' },
-  { key: 'notifications', label: 'Notifications', icon: 'bell' },
-  { key: 'verification', label: 'Verification', icon: 'check-circle' },
-  { key: 'blocked', label: 'Blocked Users', icon: 'users' },
-  { key: 'safety', label: 'Safety', icon: 'shield' },
-  { key: 'data', label: 'Data & Account', icon: 'lock' },
-] as const;
 
 export default function Settings() {
   const { text, preference } = useTheme();
@@ -36,7 +25,7 @@ export default function Settings() {
       <Header back title="Settings" />
       <ScrollView contentContainerStyle={styles.body}>
         <Group inset={GROUP_INSET.icon}>
-          {SECTIONS.map((s) => (
+          {SETTINGS_SECTIONS.map((s) => (
             <SettingsRow
               key={s.key}
               label={s.label}
@@ -47,7 +36,7 @@ export default function Settings() {
           ))}
         </Group>
         <Group inset={GROUP_INSET.icon} style={styles.logout}>
-          <SettingsRow label="Logout" icon="log-out" onPress={logout} chevron={false} destructive />
+          <SettingsRow label="Log out" icon="log-out" onPress={logout} chevron={false} destructive />
         </Group>
         <Text style={[text.micro, styles.foot]}>
           {BRAND.name} · {BRAND.market}

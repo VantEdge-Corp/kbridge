@@ -1,26 +1,31 @@
 import { useCallback, useEffect, useState } from 'react';
+import { LuNewspaper, LuPlus } from 'react-icons/lu';
+import { Link } from 'react-router-dom';
 import type { Post } from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Button, LinkButton } from '../components/Button';
-import { EmptyState } from '../components/EmptyState';
-import { Notice } from '../components/Field';
-import { Icon } from '../components/icons';
-import { IntroductionNoteDialog } from '../components/IntroductionNoteDialog';
-import { LoadingBlock } from '../components/Loading';
-import { PostCard } from '../components/PostCard';
-import { ReportDialog } from '../components/ReportDialog';
-import { useAsync } from '../hooks/useAsync';
-import { usePageTitle } from '../hooks/usePageTitle';
+import { useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import { useConfirm } from '@/components/ConfirmProvider';
+import { EmptyState } from '@/components/EmptyState';
+import { IntroductionNoteDialog } from '@/components/IntroductionNoteDialog';
+import { RowsSkeleton } from '@/components/Loading';
+import { LoadError } from '@/components/Notice';
+import { PostCard } from '@/components/PostCard';
+import { ReportDialog } from '@/components/ReportDialog';
+import { buttonVariants } from '@/components/ui/button';
+import { toast } from '@/components/ui/toast';
+import { useAsync } from '@/hooks/useAsync';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { usePersonActions } from '@/hooks/usePersonActions';
+import { api, errorMessage } from '@/lib/api';
 
 export function Feed() {
   usePageTitle('Feed');
   const { user } = useMember();
+  const confirm = useConfirm();
   const { data, loading, error, reload, setData } = useAsync(() => api.posts.listFeed(user.id), [user.id]);
   const [request, setRequest] = useState<Post | null>(null);
   const [report, setReport] = useState<Post | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const { blockMember } = usePersonActions({ onBlocked: (id) => setData((list) => (list ? list.filter((p) => p.author.id !== id) : list)) });
 
   useEffect(() => {
     let timer: number | undefined;
@@ -41,7 +46,7 @@ export function Feed() {
       try {
         await api.posts.setSaved(user.id, post.id, next);
       } catch (e) {
-        setActionError(errorMessage(e));
+        toast.add({ title: 'Could not save', description: errorMessage(e), type: 'error' });
         setData((list) => (list ? list.map((p) => (p.id === post.id ? { ...p, savedByViewer: !next } : p)) : list));
       }
     },
@@ -50,48 +55,58 @@ export function Feed() {
 
   const remove = useCallback(
     async (post: Post) => {
-      if (!window.confirm('Delete this post?')) return;
+      const ok = await confirm({ title: 'Delete this post?', description: 'It disappears from the feed and its comments go with it. This cannot be undone.', confirmLabel: 'Delete', destructive: true });
+      if (!ok) return;
       try {
         await api.posts.remove({ id: post.id, photoUrl: post.photoUrl });
         setData((list) => (list ? list.filter((p) => p.id !== post.id) : list));
+        toast.add({ title: 'Post deleted', type: 'success' });
       } catch (e) {
-        setActionError(errorMessage(e));
+        toast.add({ title: 'Could not delete', description: errorMessage(e), type: 'error' });
       }
     },
-    [setData],
+    [confirm, setData],
   );
 
   return (
-    <div className="max-w-[720px]">
+    <div className="mx-auto max-w-[680px]">
       <PageHeader
         title="Feed"
+        description="Plans, questions, and things noticed around town."
         actions={
-          <LinkButton to="/post/new" size="sm">
-            <Icon name="plus" size={16} />
+          <Link to="/post/new" className={buttonVariants()}>
+            <LuPlus data-icon="inline-start" />
             Post
-          </LinkButton>
+          </Link>
         }
       />
-      {actionError ? (
-        <div className="mb-4">
-          <Notice tone="danger">{actionError}</Notice>
-        </div>
-      ) : null}
       {loading ? (
-        <LoadingBlock />
+        <RowsSkeleton rows={3} />
       ) : error ? (
-        <div className="space-y-3">
-          <Notice tone="danger">{error}</Notice>
-          <Button variant="secondary" onClick={reload}>
-            Try again
-          </Button>
-        </div>
+        <LoadError message={error} onRetry={reload} />
       ) : !data || data.length === 0 ? (
-        <EmptyState title="Nothing posted yet." body="Share a plan, a question, or something you noticed around town." action={<LinkButton to="/post/new" variant="secondary">Write the first post</LinkButton>} />
+        <EmptyState
+          icon={LuNewspaper}
+          title="Nothing posted yet."
+          body="Share a plan, a question, or something you noticed around town."
+          action={
+            <Link to="/post/new" className={buttonVariants({ variant: 'outline' })}>
+              Write the first post
+            </Link>
+          }
+        />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4">
           {data.map((post) => (
-            <PostCard key={post.id} post={post} onToggleSave={(p) => void toggleSave(p)} onRequestConversation={setRequest} onReport={setReport} onDelete={(p) => void remove(p)} />
+            <PostCard
+              key={post.id}
+              post={post}
+              onToggleSave={(p) => void toggleSave(p)}
+              onRequestConversation={setRequest}
+              onReport={setReport}
+              onBlockAuthor={(p) => void blockMember(p.author)}
+              onDelete={(p) => void remove(p)}
+            />
           ))}
         </div>
       )}

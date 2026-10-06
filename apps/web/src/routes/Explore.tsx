@@ -1,19 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LuSearchX, LuSlidersHorizontal } from 'react-icons/lu';
 import { rankForYou, type Preferences } from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Button } from '../components/Button';
-import { Dialog } from '../components/Dialog';
-import { EmptyState } from '../components/EmptyState';
-import { Notice } from '../components/Field';
-import { Icon } from '../components/icons';
-import { LoadingBlock } from '../components/Loading';
-import { PersonGrid } from '../components/PersonCard';
-import { PreferencesEditor, type LocationSettings } from '../components/PreferencesEditor';
-import { useAsync } from '../hooks/useAsync';
-import { useIsDesktop } from '../hooks/useMediaQuery';
-import { usePageTitle } from '../hooks/usePageTitle';
+import { useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import { EmptyState } from '@/components/EmptyState';
+import { LoadingBlock, PersonGridSkeleton } from '@/components/Loading';
+import { LoadError, Notice } from '@/components/Notice';
+import { PersonGrid } from '@/components/PersonCard';
+import { PreferencesEditor, type LocationSettings } from '@/components/PreferencesEditor';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/ui/toast';
+import { useAsync } from '@/hooks/useAsync';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { api, errorMessage } from '@/lib/api';
 
 export function Explore() {
   usePageTitle('Explore');
@@ -60,6 +62,7 @@ export function Explore() {
       if (locationChanged) await api.profiles.updatePrivate(user.id, { areaId: location.areaId, maxDistanceMiles: location.maxDistanceMiles });
       setSavedAt(Date.now());
       setPanelOpen(false);
+      toast.add({ title: 'Preferences saved', description: 'Home and Explore now use them.', type: 'success' });
       reload();
     } catch (e) {
       setSaveError(errorMessage(e));
@@ -75,72 +78,64 @@ export function Explore() {
     <div>
       <PageHeader
         title="Explore"
+        description={
+          <span data-testid="explore-count" className="tabular-nums">
+            {countLabel}
+          </span>
+        }
         actions={
-          <>
-            <span className="text-body-sm text-text-muted" data-testid="explore-count">
-              {countLabel}
-            </span>
-            {isDesktop ? (
-              <Button size="sm" onClick={() => void save()} disabled={!dirty || saving}>
-                {saving ? 'Saving' : savedAt && !dirty ? 'Saved' : 'Save preferences'}
-              </Button>
-            ) : (
-              <Button size="sm" variant="secondary" onClick={() => setPanelOpen(true)}>
-                <Icon name="sliders" size={16} />
-                Filters
-              </Button>
-            )}
-          </>
+          isDesktop ? (
+            <Button onClick={() => void save()} disabled={!dirty || saving}>
+              {saving ? <Spinner data-icon="inline-start" /> : null}
+              {savedAt && !dirty ? 'Saved' : 'Save preferences'}
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => setPanelOpen(true)}>
+              <LuSlidersHorizontal data-icon="inline-start" />
+              Filters
+            </Button>
+          )
         }
       />
-      {saveError ? (
-        <div className="mb-4">
-          <Notice tone="danger">{saveError}</Notice>
-        </div>
-      ) : null}
-      <div className="md:grid md:grid-cols-[340px_1fr] md:gap-8 lg:gap-10">
+      {saveError ? <Notice tone="danger" className="mb-6">{saveError}</Notice> : null}
+      <div className="md:grid md:grid-cols-[320px_1fr] md:gap-8 lg:grid-cols-[360px_1fr] lg:gap-10">
         {isDesktop ? (
-          <aside className="md:sticky md:top-8 md:self-start md:max-h-[calc(100dvh-64px)] md:overflow-y-auto md:pr-1 md:-mr-1" aria-label="Filters">
+          <aside className="md:sticky md:top-6 md:-mr-2 md:max-h-[calc(100dvh-48px)] md:self-start md:overflow-y-auto md:pr-2 md:pb-6" aria-label="Filters">
             {loading || !editor ? <LoadingBlock /> : editor}
           </aside>
         ) : null}
         <section aria-label="Results">
           {loading ? (
-            <LoadingBlock />
+            <PersonGridSkeleton count={6} />
           ) : error ? (
-            <div className="space-y-3">
-              <Notice tone="danger">{error}</Notice>
-              <Button variant="secondary" onClick={reload}>
-                Try again
-              </Button>
-            </div>
+            <LoadError message={error} onRetry={reload} />
           ) : results.length === 0 ? (
-            <EmptyState title="No one matches every requirement." body="Change a Required preference to Preferred to see more people. Preferred choices still rank matches first." />
+            <EmptyState icon={LuSearchX} title="No one matches every requirement." body="Change a Required preference to Preferred to see more people. Preferred choices still rank matches first." />
           ) : (
             <PersonGrid profiles={results.map((c) => c.profile)} />
           )}
         </section>
       </div>
       {!isDesktop ? (
-        <Dialog
-          open={panelOpen}
-          onClose={() => setPanelOpen(false)}
-          title="Filters"
-          wide
-          footer={
-            <>
-              <span className="mr-auto self-center text-body-sm text-text-muted">{countLabel}</span>
-              <Button variant="ghost" onClick={() => setPanelOpen(false)}>
+        <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
+          <SheetContent side="bottom" className="max-h-[92dvh] gap-0 rounded-t-xl">
+            <SheetHeader className="border-b">
+              <SheetTitle>Filters</SheetTitle>
+              <SheetDescription>Required excludes anyone who doesn&apos;t match. Preferred ranks matches first.</SheetDescription>
+            </SheetHeader>
+            <div className="overflow-y-auto p-4">{editor ?? <LoadingBlock />}</div>
+            <SheetFooter className="flex-row items-center border-t">
+              <span className="mr-auto text-sm text-muted-foreground tabular-nums">{countLabel}</span>
+              <Button variant="outline" onClick={() => setPanelOpen(false)}>
                 Close
               </Button>
               <Button onClick={() => void save()} disabled={!dirty || saving}>
-                {saving ? 'Saving' : 'Save'}
+                {saving ? <Spinner data-icon="inline-start" /> : null}
+                Save
               </Button>
-            </>
-          }
-        >
-          {editor ?? <LoadingBlock />}
-        </Dialog>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
       ) : null}
     </div>
   );

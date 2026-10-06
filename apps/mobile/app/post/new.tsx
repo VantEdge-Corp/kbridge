@@ -52,7 +52,7 @@ export default function NewPost() {
   return (
     <Screen edges={['top', 'bottom']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Header title="New post" back right={<Button title="Post" size="small" onPress={submit} loading={busy} disabled={!body.trim()} />} />
+        <Header title="New post" close right={<Button title="Post" size="sm" onPress={submit} loading={busy} disabled={!body.trim()} />} />
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <Text style={text.caption}>Members see your first name, area, and verification. Plans, questions, and observations do well here.</Text>
           <Field multiline autoFocus value={body} onChangeText={setBody} placeholder="What's on your mind?" maxLength={LIMITS.postBodyMax} helper={`${body.length}/${LIMITS.postBodyMax}`} style={{ minHeight: 160 }} />
@@ -60,11 +60,11 @@ export default function NewPost() {
             <View>
               <Image source={{ uri: photo.previewUri }} style={styles.preview} contentFit="cover" />
               <Pressable accessibilityRole="button" accessibilityLabel="Remove photo" onPress={() => setPhoto(null)} style={styles.remove}>
-                <Icon name="x" size={14} color={colors.onIvory} />
+                <Icon name="x" size={14} color={colors.primaryForeground} />
               </Pressable>
             </View>
           ) : (
-            <Button title="Add a photo" icon="image" variant="secondary" size="small" onPress={choosePhoto} style={{ alignSelf: 'flex-start' }} />
+            <Button title="Add a photo" icon="image-plus" variant="outline" size="sm" onPress={choosePhoto} style={{ alignSelf: 'flex-start' }} />
           )}
           <ErrorText message={error} flush />
         </ScrollView>
@@ -85,6 +85,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl, gap: spacing.lg },
-  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.lg, backgroundColor: colors.surfaceElevated, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing },
-  remove: { position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
+  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.lg, backgroundColor: colors.muted, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing },
+  remove: { position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
 });

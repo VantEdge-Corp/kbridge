@@ -13,10 +13,12 @@ interface Props {
   ListHeaderComponent?: React.ReactElement | null;
   /** Called with the ids that actually came into view, for exposure balancing. */
   onViewed?: (ids: string[]) => void;
+  /** Long-press on a card: the member menu. */
+  onPersonLongPress?: (person: PublicProfile) => void;
 }
 
 /** Two-column, vertically scrolling grid of PersonCard. Card width is computed from the window. */
-export function PeopleGrid({ people, refreshing, onRefresh, ListEmptyComponent, ListHeaderComponent, onViewed }: Props) {
+export function PeopleGrid({ people, refreshing, onRefresh, ListEmptyComponent, ListHeaderComponent, onViewed, onPersonLongPress }: Props) {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const cardWidth = cardWidthFor(width);
@@ -31,7 +33,10 @@ export function PeopleGrid({ people, refreshing, onRefresh, ListEmptyComponent, 
     },
   }).current;
 
-  const renderItem = useCallback(({ item }: { item: PublicProfile }) => <PersonCard profile={item} width={cardWidth} />, [cardWidth]);
+  const renderItem = useCallback(
+    ({ item }: { item: PublicProfile }) => <PersonCard profile={item} width={cardWidth} onLongPress={onPersonLongPress ? () => onPersonLongPress(item) : undefined} />,
+    [cardWidth, onPersonLongPress],
+  );
 
   return (
     <FlatList
@@ -43,7 +48,7 @@ export function PeopleGrid({ people, refreshing, onRefresh, ListEmptyComponent, 
       contentContainerStyle={[styles.content, people.length === 0 && styles.contentEmpty]}
       ListEmptyComponent={ListEmptyComponent}
       ListHeaderComponent={ListHeaderComponent}
-      refreshControl={onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.textSecondary} /> : undefined}
+      refreshControl={onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.mutedForeground} /> : undefined}
       viewabilityConfig={viewability.viewabilityConfig}
       onViewableItemsChanged={viewability.onViewableItemsChanged}
       showsVerticalScrollIndicator={false}

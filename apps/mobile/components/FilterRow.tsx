@@ -25,7 +25,7 @@ export function FilterRow({ label, summary, onPress, strength, onStrengthChange,
         <Text style={[text.body, styles.label]} numberOfLines={1}>
           {label}
         </Text>
-        {strength && onStrengthChange ? <PreferenceStrengthSelector value={strength} onChange={onStrengthChange} /> : null}
+        {strength && onStrengthChange ? <PreferenceStrengthSelector value={strength} onChange={onStrengthChange} label={label} /> : null}
       </View>
       {control ? (
         <View style={styles.control}>{control}</View>
@@ -37,10 +37,10 @@ export function FilterRow({ label, summary, onPress, strength, onStrengthChange,
           disabled={!onPress}
           style={({ pressed }) => [styles.bottom, pressed && { opacity: 0.7 }]}
         >
-          <Text style={[text.bodySmall, styles.summary, summary === 'Any' && { color: colors.textMuted }]} numberOfLines={1}>
+          <Text style={[text.bodySmall, styles.summary, summary !== 'Any' && { color: colors.foreground }]} numberOfLines={1}>
             {summary}
           </Text>
-          {onPress ? <Icon name="chevron-right" size={16} color={colors.textFaint} /> : null}
+          {onPress ? <Icon name="chevron-right" size={16} color={colors.mutedForeground} /> : null}
         </Pressable>
       )}
     </View>
@@ -50,7 +50,7 @@ export function FilterRow({ label, summary, onPress, strength, onStrengthChange,
 const styles = StyleSheet.create({
   row: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
-  label: { flexShrink: 1 },
+  label: { flexShrink: 1, fontWeight: '500' },
   bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 32, gap: spacing.sm },
   summary: { flex: 1 },
   control: { paddingTop: 8, paddingBottom: 4 },

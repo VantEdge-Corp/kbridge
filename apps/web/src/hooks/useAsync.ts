@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { errorMessage } from '../lib/api';
+import { errorMessage } from '@/lib/api';
 
 interface AsyncState<T> {
   data: T | null;

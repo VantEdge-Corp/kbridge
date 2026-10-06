@@ -15,7 +15,7 @@ interface Props {
   description?: string;
 }
 
-/** A row for grouped lists. No borders of its own; the Group draws the separators. */
+/** A row for grouped lists, as shadcn's Item: icon, label, optional description and value, chevron. The Group draws the separators. */
 export function SettingsRow({ label, value, onPress, icon, destructive, chevron = true, right, description }: Props) {
   const { colors, text } = useTheme();
   return (
@@ -23,12 +23,12 @@ export function SettingsRow({ label, value, onPress, icon, destructive, chevron 
       accessibilityRole={onPress ? 'button' : undefined}
       onPress={onPress}
       disabled={!onPress}
-      style={({ pressed }) => [styles.row, pressed && onPress && { backgroundColor: colors.surfaceHover }]}
+      style={({ pressed }) => [styles.row, pressed && onPress && { backgroundColor: colors.accent }]}
     >
-      {icon ? <Icon name={icon} size={18} color={destructive ? colors.danger : colors.textSecondary} /> : null}
+      {icon ? <Icon name={icon} size={20} color={destructive ? colors.destructive : colors.mutedForeground} /> : null}
       <View style={styles.textWrap}>
-        <Text style={[text.body, destructive && { color: colors.danger }]}>{label}</Text>
-        {description ? <Text style={[text.caption, { marginTop: 2 }]}>{description}</Text> : null}
+        <Text style={[text.body, styles.label, destructive && { color: colors.destructive }]}>{label}</Text>
+        {description ? <Text style={[text.caption, styles.description]}>{description}</Text> : null}
       </View>
       {value ? (
         <Text style={[text.bodySmall, styles.value]} numberOfLines={1}>
@@ -36,13 +36,15 @@ export function SettingsRow({ label, value, onPress, icon, destructive, chevron 
         </Text>
       ) : null}
       {right}
-      {onPress && chevron && !right ? <Icon name="chevron-right" size={16} color={colors.textFaint} /> : null}
+      {onPress && chevron && !right ? <Icon name="chevron-right" size={16} color={colors.mutedForeground} /> : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { minHeight: 56, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  row: { minHeight: 52, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   textWrap: { flex: 1 },
+  label: { fontWeight: '500' },
+  description: { marginTop: 2, fontSize: 13, lineHeight: 18 },
   value: { maxWidth: '45%', textAlign: 'right' },
 });

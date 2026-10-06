@@ -1,16 +1,17 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { radius, spacing, touch } from '@/constants/theme';
+import { alpha, radius, touch } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { Icon, type IconName } from './Icon';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive';
+export type ButtonSize = 'default' | 'sm' | 'lg';
 
 interface Props {
   title: string;
   onPress?: () => void;
-  variant?: Variant;
-  size?: 'default' | 'small';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
   icon?: IconName;
@@ -20,55 +21,73 @@ interface Props {
 }
 
 /**
- * 44px, radius md, 15px medium. Primary is ivory (one per screen); secondary
- * is a 1px outline; ghost is text only; danger is a muted outline. Pressed
- * state is 0.8 opacity.
+ * shadcn/ui's Button at touch size: 44 tall (36 small, 48 large), radius md,
+ * 15px medium. `default` is the one primary action on a screen; `outline`
+ * and `secondary` sit beside it; `ghost` is text only; `destructive` is a
+ * soft red. Pressed dims, disabled fades to half.
  */
-export function Button({ title, onPress, variant = 'primary', size = 'default', disabled, loading, icon, fullWidth, style, accessibilityLabel }: Props) {
-  const styles = useStyles(makeStyles);
+export function Button({ title, onPress, variant = 'default', size = 'default', disabled, loading, icon, fullWidth, style, accessibilityLabel }: Props) {
+  const { base, sizes, variants } = useStyles(makeStyles);
   const { colors } = useTheme();
   const inactive = disabled || loading;
-  const color = variant === 'primary' ? colors.onIvory : variant === 'danger' ? colors.danger : variant === 'ghost' ? colors.text : colors.ivory;
+  const color = {
+    default: colors.primaryForeground,
+    outline: colors.foreground,
+    secondary: colors.secondaryForeground,
+    ghost: colors.foreground,
+    destructive: colors.destructive,
+  }[variant];
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
-      accessibilityState={{ disabled: inactive }}
+      accessibilityState={{ disabled: inactive, busy: loading }}
       onPress={inactive ? undefined : onPress}
       style={({ pressed }) => [
-        styles.base,
-        size === 'small' ? styles.small : styles.regular,
-        styles[variant],
-        fullWidth && styles.full,
-        pressed && !inactive && styles.pressed,
-        inactive && styles.disabled,
+        base.button,
+        sizes[size],
+        variants[variant],
+        fullWidth && base.full,
+        pressed && !inactive && (variant === 'ghost' || variant === 'outline' ? base.pressedFill : base.pressed),
+        inactive && base.disabled,
         style,
       ]}
     >
       {loading ? (
         <ActivityIndicator color={color} />
       ) : (
-        <View style={styles.content}>
-          {icon ? <Icon name={icon} size={size === 'small' ? 16 : 18} color={color} /> : null}
-          <Text style={[styles.label, size === 'small' && styles.labelSmall, { color }]}>{title}</Text>
+        <View style={base.content}>
+          {icon ? <Icon name={icon} size={size === 'sm' ? 16 : 18} color={color} /> : null}
+          <Text style={[base.label, size === 'sm' && base.labelSmall, { color }]} numberOfLines={1}>
+            {title}
+          </Text>
         </View>
       )}
     </Pressable>
   );
 }
 
-const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  base: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
-  regular: { minHeight: touch.minTarget },
-  small: { minHeight: 36, paddingHorizontal: 14, borderRadius: radius.sm + 2 },
-  primary: { backgroundColor: colors.ivory },
-  secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
-  ghost: { backgroundColor: 'transparent', paddingHorizontal: spacing.md },
-  danger: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
-  full: { alignSelf: 'stretch' },
-  pressed: { opacity: 0.8 },
-  disabled: { opacity: 0.45 },
-  content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  label: { fontSize: 15, fontWeight: '500' },
-  labelSmall: { fontSize: 13 },
+const makeStyles = ({ colors, isDark }: Theme) => ({
+  base: StyleSheet.create({
+    button: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' },
+    full: { alignSelf: 'stretch' },
+    pressed: { opacity: 0.85 },
+    pressedFill: { backgroundColor: colors.accent },
+    disabled: { opacity: 0.5 },
+    content: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    label: { fontSize: 15, fontWeight: '500' },
+    labelSmall: { fontSize: 14 },
+  }),
+  sizes: StyleSheet.create({
+    default: { minHeight: touch.minTarget, paddingHorizontal: 16 },
+    sm: { minHeight: 36, paddingHorizontal: 12 },
+    lg: { minHeight: 48, paddingHorizontal: 20 },
+  }),
+  variants: StyleSheet.create({
+    default: { backgroundColor: colors.primary },
+    outline: { backgroundColor: isDark ? colors.inputBackground : colors.background, borderColor: isDark ? colors.input : colors.border },
+    secondary: { backgroundColor: colors.secondary },
+    ghost: { backgroundColor: 'transparent' },
+    destructive: { backgroundColor: alpha(colors.destructive, isDark ? 0.2 : 0.1) },
+  }),
 });

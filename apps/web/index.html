@@ -3,11 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0b0b0c" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="Peaches. People worth meeting. A verified social discovery platform for Metro Atlanta." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Peaches</title>
+    <script>
+      // Apply the saved theme before the first paint so a page never flashes the other one. Mirrors src/lib/theme.tsx.
+      (function () {
+        var saved = null;
+        try {
+          saved = localStorage.getItem('peaches.theme');
+        } catch (e) {}
+        var dark = saved === 'dark' || (saved !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0a0a0a' : '#ffffff');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

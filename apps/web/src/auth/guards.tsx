@@ -2,10 +2,11 @@ import { Navigate, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { ApiError, isSchemaOutOfDate } from '@peaches/core';
-import { useAuth } from './AuthProvider';
-import { FullScreenLoading } from '../components/Loading';
-import { Button } from '../components/Button';
-import { Wordmark } from '../components/Wordmark';
+import { useAuth } from '@/auth/AuthProvider';
+import { FullScreenLoading } from '@/components/Loading';
+import { Wordmark } from '@/components/Wordmark';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 /**
  * Shown when the signed-in user has no loadable profile. Distinguishes a query
@@ -27,33 +28,34 @@ function AccountNotReady() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
       <Wordmark />
       {profileError ? (
         <>
-          <p className="max-w-md text-text-secondary">
+          <p className="max-w-md text-muted-foreground">
             {schemaProblem
               ? 'This Supabase project is missing the latest migration, so Peaches cannot read member profiles yet.'
               : 'Peaches could not load your account.'}
           </p>
-          <pre className="max-w-md whitespace-pre-wrap rounded-md border border-border bg-surface px-4 py-3 text-left text-body-sm text-text-muted">
+          <pre className="max-w-md rounded-lg border bg-muted/50 px-4 py-3 text-left font-mono text-xs whitespace-pre-wrap text-muted-foreground">
             {profileError}
           </pre>
           {schemaProblem ? (
-            <p className="max-w-md text-body-sm text-text-muted">
+            <p className="max-w-md text-sm text-muted-foreground">
               Run <code>supabase/migrations/013_peaches.sql</code> in the SQL editor of the project this app points at, then try again.
             </p>
           ) : null}
         </>
       ) : (
-        <p className="max-w-sm text-text-secondary">
+        <p className="max-w-sm text-muted-foreground">
           Your account exists but your member profile isn&apos;t ready yet. If you just created your account, give it a
           moment and try again. Otherwise contact us and we&apos;ll sort it out.
         </p>
       )}
       <div className="flex gap-3">
-        <Button variant="secondary" onClick={() => void retry()} disabled={retrying}>
-          {retrying ? 'Checking…' : 'Try again'}
+        <Button variant="outline" onClick={() => void retry()} disabled={retrying}>
+          {retrying ? <Spinner data-icon="inline-start" /> : null}
+          Try again
         </Button>
         <Button variant="ghost" onClick={() => void signOut()}>
           Sign out

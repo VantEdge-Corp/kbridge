@@ -3,10 +3,10 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { radius, spacing } from '@/constants/theme';
 import { useStyles, type Theme } from '@/lib/theme';
 
-/** Separator insets measured from the container edge: text rows, rows with an 18px icon, rows with a 40px avatar. */
+/** Separator insets measured from the container edge: text rows, rows with a 20px icon, rows with a 40px avatar. */
 export const GROUP_INSET = {
   text: spacing.lg,
-  icon: spacing.lg + 18 + spacing.md,
+  icon: spacing.lg + 20 + spacing.md,
   avatar: spacing.lg + 40 + spacing.md,
 } as const;
 
@@ -20,9 +20,9 @@ interface Props {
 }
 
 /**
- * Grouped list container: one `surface` panel with a 1px border and radius lg.
- * Rows inside carry no borders of their own; thin separators are inset from
- * the leading avatar or icon.
+ * A grouped list in a shadcn Card: `card` ground, a 1px `border`, radius xl.
+ * Rows carry no borders of their own; hairline separators are inset from the
+ * leading icon or avatar, as on iOS.
  */
 export function Group({ children, inset = GROUP_INSET.text, flush, style }: Props) {
   const styles = useStyles(makeStyles);
@@ -39,14 +39,15 @@ export function Group({ children, inset = GROUP_INSET.text, flush, style }: Prop
   );
 }
 
-const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  group: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-  },
-  margins: { marginHorizontal: spacing.lg },
-  separator: { height: 1, backgroundColor: colors.border },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    group: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.xl,
+      overflow: 'hidden',
+    },
+    margins: { marginHorizontal: spacing.lg },
+    separator: { height: 1, backgroundColor: colors.border },
+  });

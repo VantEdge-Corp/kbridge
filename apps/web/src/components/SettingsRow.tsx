@@ -1,32 +1,54 @@
 import type { ReactNode } from 'react';
+import type { IconType } from 'react-icons';
+import { LuChevronRight } from 'react-icons/lu';
 import { Link } from 'react-router-dom';
-import { ROW_HAIRLINE, rowInset } from './Group';
-import { Icon, type IconName } from './icons';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { cn } from '@/lib/utils';
 
-/** A row inside a Group: icon, label, optional description, trailing chevron. Hairline inset under the text. */
-export function SettingsRow({ to, onClick, icon, label, description, danger = false, trailing }: { to?: string; onClick?: () => void; icon: IconName; label: string; description?: ReactNode; danger?: boolean; trailing?: ReactNode }) {
-  const inner = (
+/** A row in a settings list: icon, label, optional description, trailing chevron. */
+export function SettingsRow({
+  to,
+  onClick,
+  icon: Icon,
+  label,
+  description,
+  destructive = false,
+  trailing,
+}: {
+  to?: string;
+  onClick?: () => void;
+  icon: IconType;
+  label: string;
+  description?: ReactNode;
+  destructive?: boolean;
+  trailing?: ReactNode;
+}) {
+  const body = (
     <>
-      <Icon name={icon} size={20} className={`shrink-0 ${danger ? 'text-danger' : 'text-text-muted'}`} />
-      <span className="flex-1 min-w-0">
-        <span className={`block text-body ${danger ? 'text-danger' : 'text-text'}`}>{label}</span>
-        {description ? <span className="block text-body-sm text-text-muted truncate">{description}</span> : null}
-      </span>
-      {trailing ?? <Icon name="chevronRight" size={18} className="text-text-faint shrink-0" />}
+      <ItemMedia variant="icon" className={cn('text-muted-foreground', destructive && 'text-destructive')}>
+        <Icon />
+      </ItemMedia>
+      <ItemContent className="min-w-0">
+        <ItemTitle className={cn(destructive && 'text-destructive')}>{label}</ItemTitle>
+        {description ? <ItemDescription className="line-clamp-1">{description}</ItemDescription> : null}
+      </ItemContent>
+      <ItemActions>{trailing ?? <LuChevronRight className="size-4 text-muted-foreground" />}</ItemActions>
     </>
   );
-  const cls = 'w-full flex items-center gap-3 min-h-14 px-4 py-2 text-left motion hover:bg-surface-hover focus-ring';
-  return (
-    <div className={ROW_HAIRLINE} style={rowInset(48)}>
-      {to ? (
-        <Link to={to} className={cls}>
-          {inner}
-        </Link>
-      ) : (
-        <button type="button" onClick={onClick} className={cls}>
-          {inner}
-        </button>
-      )}
-    </div>
+  const className = 'rounded-none px-4 py-3 hover:bg-muted';
+  return to ? (
+    <Item render={<Link to={to} />} className={className}>
+      {body}
+    </Item>
+  ) : (
+    <Item render={<button type="button" onClick={onClick} />} className={cn(className, 'cursor-pointer text-left')}>
+      {body}
+    </Item>
   );
+}
+
+/** A bordered list of rows separated by hairlines. */
+export function RowGroup({ children, className }: { children: ReactNode; className?: string }) {
+  // Rows are shadcn Items, which carry a transparent 1px border; color its bottom edge to draw the hairline.
+  return <div className={cn('overflow-hidden rounded-xl border bg-card shadow-xs *:not-last:border-b *:not-last:border-b-border', className)}>{children}</div>;
 }

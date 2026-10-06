@@ -88,7 +88,7 @@ export function DiscoverCard({ profile, onPass, onInterested, onOpenProfile, onM
 
 const makeStyles = ({ colors }: Theme) =>
   StyleSheet.create({
-    card: { flex: 1, backgroundColor: colors.canvas },
+    card: { flex: 1, backgroundColor: colors.background },
     content: { paddingTop: spacing.sm, paddingBottom: 96, gap: spacing.lg },
     label: {
       position: 'absolute',
@@ -96,9 +96,9 @@ const makeStyles = ({ colors }: Theme) =>
       paddingHorizontal: 14,
       paddingVertical: 8,
       borderRadius: radius.pill,
-      backgroundColor: colors.ivory,
+      backgroundColor: colors.primary,
     },
     labelLeft: { left: spacing.lg },
     labelRight: { right: spacing.lg },
-    labelText: { fontSize: 13, fontWeight: '600', color: colors.onIvory },
+    labelText: { fontSize: 13, fontWeight: '600', color: colors.primaryForeground },
   });

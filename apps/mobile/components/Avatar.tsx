@@ -1,19 +1,28 @@
 import { Image } from 'expo-image';
-import { StyleSheet, View } from 'react-native';
-import { MonogramPortrait } from './MonogramPortrait';
+import { StyleSheet, Text, View } from 'react-native';
+import { initials } from '@peaches/core';
 import { useStyles, type Theme } from '@/lib/theme';
 
-/** Always circular. Inbox rows 40, feed 36, small 28. */
+/** shadcn/ui's Avatar: a circle with the photo, or the first initial on `muted`, and a hairline ring. Inbox 40, feed 32, small 24. */
 export function Avatar({ uri, firstName, size }: { uri: string | null | undefined; firstName: string; size: number }) {
   const styles = useStyles(makeStyles);
-  if (!uri) return <MonogramPortrait firstName={firstName} width={size} height={size} radius={size / 2} />;
   return (
-    <View style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} contentFit="cover" transition={120} accessibilityLabel={`${firstName}'s photo`} />
+    <View style={[styles.circle, { width: size, height: size, borderRadius: size / 2 }]}>
+      {uri ? (
+        <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={120} accessibilityLabel={`${firstName}'s photo`} />
+      ) : (
+        <Text style={[styles.initial, { fontSize: Math.round(size * 0.4) }]} accessibilityLabel={`${firstName}'s initial`}>
+          {initials(firstName) || '·'}
+        </Text>
+      )}
+      <View pointerEvents="none" style={[styles.ring, { borderRadius: size / 2 }]} />
     </View>
   );
 }
 
-const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  ring: { overflow: 'hidden', backgroundColor: colors.surfaceElevated },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    circle: { overflow: 'hidden', backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
+    initial: { color: colors.mutedForeground, fontWeight: '500' },
+    ring: { ...StyleSheet.absoluteFill, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing },
+  });

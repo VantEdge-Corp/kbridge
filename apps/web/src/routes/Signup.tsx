@@ -1,14 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { api, errorMessage } from '../lib/api';
-import { supabase } from '../lib/supabase';
-import { Button, LinkButton } from '../components/Button';
-import { Checkbox, Input, Notice } from '../components/Field';
-import { Group, GroupSection } from '../components/Group';
-import { LoadingBlock } from '../components/Loading';
-import { usePageTitle } from '../hooks/usePageTitle';
-import { useAsync } from '../hooks/useAsync';
-import { PublicFrame } from './PublicFrame';
+import { CheckboxField, TextField } from '@/components/form';
+import { LoadingBlock } from '@/components/Loading';
+import { Notice } from '@/components/Notice';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
+import { useAsync } from '@/hooks/useAsync';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { api, errorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+import { PublicFrame } from '@/routes/PublicFrame';
 
 const MIN_PASSWORD = 6;
 
@@ -61,46 +63,45 @@ export function Signup() {
   if (error || !data) {
     return (
       <PublicFrame title="This link isn't ready." lede={error ?? 'This signup link is invalid or your application has not been admitted yet.'}>
-        <LinkButton to={`/status/${token}`} variant="secondary">
+        <Link to={`/status/${token}`} className={buttonVariants({ variant: 'outline' })}>
           Check your status
-        </LinkButton>
+        </Link>
       </PublicFrame>
     );
   }
 
+  const legalLink = (to: string, label: string) => (
+    <Link to={to} target="_blank" className="font-medium text-foreground underline underline-offset-4">
+      {label}
+    </Link>
+  );
+
   return (
     <PublicFrame title={`Welcome, ${data.firstName}.`} lede="Choose a password to create your account. Your email is the one you applied with.">
-      <Group>
-        <GroupSection>
-      <form onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
-        <Input label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} help="Must match your admitted application." />
-        <Input label="Password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <Input label="Confirm password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-        <Checkbox
-          label={
-            <>
-              I agree to the{' '}
-              <Link to="/terms" target="_blank" className="text-text underline underline-offset-2">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" target="_blank" className="text-text underline underline-offset-2">
-                Privacy Policy
-              </Link>
-              .
-            </>
-          }
-          checked={agree}
-          onChange={(e) => setAgree(e.target.checked)}
-        />
-        {submitError ? <Notice tone="danger">{submitError}</Notice> : null}
-        <Button type="submit" disabled={busy || problems.length > 0} className="w-full">
-          {busy ? 'Creating account' : 'Create account'}
-        </Button>
-        {problems.length > 0 && (password || confirm) ? <p className="text-body-sm text-text-muted">{problems[0]}</p> : null}
-      </form>
-        </GroupSection>
-      </Group>
+      <Card>
+        <CardContent>
+          <form onSubmit={(e) => void onSubmit(e)} className="grid gap-5" noValidate>
+            <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} description="Must match your admitted application." />
+            <TextField label="Password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <TextField label="Confirm password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            <CheckboxField
+              label={
+                <span>
+                  I agree to the {legalLink('/terms', 'Terms of Service')} and {legalLink('/privacy', 'Privacy Policy')}.
+                </span>
+              }
+              checked={agree}
+              onCheckedChange={setAgree}
+            />
+            {submitError ? <Notice tone="danger">{submitError}</Notice> : null}
+            <Button type="submit" size="lg" disabled={busy || problems.length > 0} className="w-full">
+              {busy ? <Spinner data-icon="inline-start" /> : null}
+              Create account
+            </Button>
+            {problems.length > 0 && (password || confirm) ? <p className="text-sm text-muted-foreground">{problems[0]}</p> : null}
+          </form>
+        </CardContent>
+      </Card>
     </PublicFrame>
   );
 }

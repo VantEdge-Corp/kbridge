@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { errorMessage, type OwnProfile } from '@peaches/core';
-import { supabase } from '../lib/supabase';
-import { api } from '../lib/api';
+import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 const ADMIN_AS_MEMBER_KEY = 'peaches:adminAsMember';
 

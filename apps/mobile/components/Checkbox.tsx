@@ -12,6 +12,7 @@ interface Props {
   accessibilityLabel: string;
 }
 
+/** shadcn/ui's Checkbox: an `input` bordered square that fills with `primary` and a check when on. */
 export function Checkbox({ checked, onChange, children, accessibilityLabel }: Props) {
   const styles = useStyles(makeStyles);
   const { colors } = useTheme();
@@ -25,17 +26,18 @@ export function Checkbox({ checked, onChange, children, accessibilityLabel }: Pr
         hitSlop={10}
         style={styles.target}
       >
-        <View style={[styles.box, checked && styles.checked]}>{checked ? <Icon name="check" size={14} color={colors.onIvory} /> : null}</View>
+        <View style={[styles.box, checked && styles.checked]}>{checked ? <Icon name="check" size={14} color={colors.primaryForeground} /> : null}</View>
       </Pressable>
       <View style={styles.label}>{children}</View>
     </View>
   );
 }
 
-const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  target: { width: touch.minTarget - 12, height: touch.minTarget - 12, alignItems: 'center', justifyContent: 'center', marginTop: -6 },
-  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  checked: { backgroundColor: colors.ivory, borderColor: colors.ivory },
-  label: { flex: 1 },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    target: { width: touch.minTarget - 12, height: touch.minTarget - 12, alignItems: 'center', justifyContent: 'center', marginTop: -6, marginLeft: -6 },
+    box: { width: 20, height: 20, borderRadius: 5, borderWidth: 1, borderColor: colors.ring, backgroundColor: colors.inputBackground, alignItems: 'center', justifyContent: 'center' },
+    checked: { backgroundColor: colors.primary, borderColor: colors.primary },
+    label: { flex: 1 },
+  });

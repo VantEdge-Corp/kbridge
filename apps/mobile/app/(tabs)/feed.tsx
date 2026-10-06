@@ -119,13 +119,13 @@ export default function Feed() {
 
   return (
     <Screen>
-      <Header title="Feed" right={<Button title="Post" size="small" icon="edit-2" onPress={() => router.push('/post/new')} />} />
+      <Header title="Feed" right={<Button title="Post" size="sm" icon="square-pen" onPress={() => router.push('/post/new')} />} />
       {posts === null && !error ? (
         <Loading />
       ) : error && !posts ? (
         <View style={styles.errorWrap}>
           <ErrorText message={error} />
-          <Button title="Try again" variant="secondary" size="small" onPress={() => load()} />
+          <Button title="Try again" variant="outline" size="sm" onPress={() => load()} />
         </View>
       ) : (
         <FlatList
@@ -141,7 +141,7 @@ export default function Feed() {
               onMore={() => setMore(item)}
             />
           )}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load('refresh')} tintColor={colors.textSecondary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load('refresh')} tintColor={colors.mutedForeground} />}
           contentContainerStyle={(posts?.length ?? 0) === 0 ? styles.emptyContent : styles.content}
           ItemSeparatorComponent={() => <View style={styles.gap} />}
           ListEmptyComponent={<EmptyState title="Nothing here yet." body="Share a plan, a question, or something you noticed around the city." actionTitle="Write a post" onAction={() => router.push('/post/new')} />}
@@ -160,12 +160,19 @@ export default function Feed() {
         onClose={() => setMore(null)}
         actions={
           more?.own
-            ? [{ label: 'Delete post', destructive: true, onPress: () => deletePost(more) }]
+            ? [
+                { label: 'Open post', icon: 'message-circle', onPress: () => router.push({ pathname: '/post/[id]', params: { id: more.id } }) },
+                { label: more.savedByViewer ? 'Remove from saved' : 'Save post', icon: more.savedByViewer ? 'bookmark-check' : 'bookmark', onPress: () => toggleSave(more) },
+                { label: 'Delete post', icon: 'trash-2', destructive: true, onPress: () => deletePost(more) },
+              ]
             : more
               ? [
-                  { label: `View ${more.author.firstName}'s profile`, onPress: () => router.push({ pathname: '/profile/[id]', params: { id: more.author.id } }) },
-                  { label: 'Report post', destructive: true, onPress: () => setReport(more) },
-                  { label: `Block ${more.author.firstName}`, destructive: true, onPress: () => blockAuthor(more) },
+                  { label: 'Open post', icon: 'message-circle', onPress: () => router.push({ pathname: '/post/[id]', params: { id: more.id } }) },
+                  { label: `View ${more.author.firstName}'s profile`, icon: 'user', onPress: () => router.push({ pathname: '/profile/[id]', params: { id: more.author.id } }) },
+                  { label: more.savedByViewer ? 'Remove from saved' : 'Save post', icon: more.savedByViewer ? 'bookmark-check' : 'bookmark', onPress: () => toggleSave(more) },
+                  { label: 'Request conversation', icon: 'message-square-text', onPress: () => setRequest(more) },
+                  { label: 'Report post', icon: 'flag', destructive: true, onPress: () => setReport(more) },
+                  { label: `Block ${more.author.firstName}`, icon: 'ban', destructive: true, onPress: () => blockAuthor(more) },
                 ]
               : []
         }

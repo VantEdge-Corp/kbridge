@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AREAS,
@@ -31,16 +31,19 @@ import {
   type SmokingHabit,
   type StudentStatus,
 } from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { useAuth, useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Button } from '../components/Button';
-import { Checkbox, Input, Label, Notice, Select, TextArea, Toggle } from '../components/Field';
-import { LoadingBlock } from '../components/Loading';
-import { MultiSelect } from '../components/MultiSelect';
-import { Group, GroupSection } from '../components/Group';
-import { useAsync } from '../hooks/useAsync';
-import { usePageTitle } from '../hooks/usePageTitle';
+import { useAuth, useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import { CheckboxField, MultiSelectField, SearchSelectField, SelectField, SwitchField, TextareaField, TextField } from '@/components/form';
+import { LoadingBlock } from '@/components/Loading';
+import { LoadError, Notice } from '@/components/Notice';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/ui/toast';
+import { useAsync } from '@/hooks/useAsync';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { api, errorMessage } from '@/lib/api';
 
 const FEET = ['4', '5', '6', '7'].map((f) => ({ value: f, label: `${f} ft` }));
 const INCHES = Array.from({ length: 12 }, (_, i) => ({ value: String(i), label: `${i} in` }));
@@ -56,12 +59,24 @@ function feetInches(cm: number | null): { feet: string; inches: string } {
   return { feet: String(Math.min(7, Math.max(4, Math.floor(total / 12)))), inches: String(total % 12) };
 }
 
+function FormCard({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        {description ? <CardDescription>{description}</CardDescription> : null}
+      </CardHeader>
+      <CardContent className="gap-5">{children}</CardContent>
+    </Card>
+  );
+}
+
 export function MeEdit() {
   usePageTitle('Edit profile');
   const { user, email, profile } = useMember();
   const { refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const { data: priv, loading, error } = useAsync(() => api.profiles.getPrivate(user.id, email), [user.id]);
+  const { data: priv, loading, error, reload } = useAsync(() => api.profiles.getPrivate(user.id, email), [user.id]);
 
   const [firstName, setFirstName] = useState(profile.firstName);
   const [age, setAge] = useState(profile.age ? String(profile.age) : '');
@@ -130,6 +145,7 @@ export function MeEdit() {
         employment,
       });
       await refreshProfile();
+      toast.add({ title: 'Profile saved', type: 'success' });
       navigate('/me');
     } catch (err) {
       setSaveError(errorMessage(err));
@@ -139,117 +155,95 @@ export function MeEdit() {
   };
 
   if (loading) return <LoadingBlock />;
-  if (error) return <Notice tone="danger">{error}</Notice>;
+  if (error) return <LoadError message={error} onRetry={reload} />;
 
   return (
-    <div className="max-w-[720px]">
-      <PageHeader title="Edit profile" back="/me" />
-      <form onSubmit={(e) => void onSubmit(e)} className="space-y-5" noValidate>
-        <Group>
-          <GroupSection eyebrow="Basics">
-          <div className="space-y-4">
-          <div className="grid grid-cols-[1fr_120px] gap-3">
-            <Input label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-            <Input label="Age" inputMode="numeric" value={age} onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, ''))} />
+    <div className="mx-auto max-w-[720px]">
+      <PageHeader title="Edit profile" description="What other members see, and the private details that shape who you meet." back="/me" />
+      <form onSubmit={(e) => void onSubmit(e)} className="grid gap-6" noValidate>
+        <FormCard title="Basics">
+          <div className="grid grid-cols-[1fr_112px] gap-3">
+            <TextField label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+            <TextField label="Age" inputMode="numeric" value={age} onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, ''))} />
           </div>
-          <div>
-            <Label>Height</Label>
-            <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-center">
-              <Select aria-label="Feet" options={FEET} value={height.feet} disabled={!hasHeight} onChange={(e) => setHeight((h) => ({ ...h, feet: e.target.value }))} />
-              <Select aria-label="Inches" options={INCHES} value={height.inches} disabled={!hasHeight} onChange={(e) => setHeight((h) => ({ ...h, inches: e.target.value }))} />
-              <Checkbox label="Show" checked={hasHeight} onChange={(e) => setHasHeight(e.target.checked)} className="min-h-0 py-0" />
+          <div className="grid gap-3">
+            <SwitchField label="Show my height" checked={hasHeight} onCheckedChange={setHasHeight} />
+            <div className="grid grid-cols-2 gap-3">
+              <SelectField aria-label="Feet" options={FEET} value={height.feet} disabled={!hasHeight} onValueChange={(v) => setHeight((h) => ({ ...h, feet: v || h.feet }))} />
+              <SelectField aria-label="Inches" options={INCHES} value={height.inches} disabled={!hasHeight} onValueChange={(v) => setHeight((h) => ({ ...h, inches: v || h.inches }))} />
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Select label="Your area" help="Private. Others see only the area name." options={AREA_OPTIONS} placeholder="Choose your area" value={areaId} onChange={(e) => setAreaId(e.target.value)} />
-            <Select label="Maximum distance" help="A hard boundary for discovery." options={DISTANCE_OPTIONS} value={maxDistance} onChange={(e) => setMaxDistance(e.target.value)} />
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <SearchSelectField label="Your area" description="Private. Others see only the area name." options={AREA_OPTIONS} placeholder="Choose your area" value={areaId} onValueChange={setAreaId} />
+            <SelectField label="Maximum distance" description="A hard boundary for discovery." options={DISTANCE_OPTIONS} value={maxDistance} onValueChange={(v) => setMaxDistance(v || maxDistance)} />
           </div>
-          <TextArea label="Bio" hint={`${bio.length}/${LIMITS.bioMax}`} maxLength={LIMITS.bioMax} rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
-          </div>
-          </GroupSection>
-        </Group>
+          <TextareaField label="Bio" hint={`${bio.length}/${LIMITS.bioMax}`} maxLength={LIMITS.bioMax} rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
+        </FormCard>
 
-        <Group>
-          <GroupSection eyebrow="Work">
-          <div className="space-y-4">
-          <Input label="Occupation" value={employment.occupation} onChange={(e) => setEmployment((v) => ({ ...v, occupation: e.target.value }))} />
-          <Input label="Employer" value={employment.employer} onChange={(e) => setEmployment((v) => ({ ...v, employer: e.target.value }))} />
-          <Toggle label="Show employer on my profile" description="Occupation is always shown" checked={employment.publicEmployerDisplayEnabled} onChange={(v) => setEmployment((s) => ({ ...s, publicEmployerDisplayEnabled: v }))} />
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Select label="Employment status" options={EMPLOYMENT_STATUS_OPTIONS} value={employment.employmentStatus} onChange={(e) => setEmployment((v) => ({ ...v, employmentStatus: e.target.value as EmploymentStatus }))} />
-            <Select label="Field" options={INDUSTRY_OPTIONS} placeholder="Choose a field" value={industry} onChange={(e) => setIndustry(e.target.value)} />
+        <FormCard title="Work">
+          <TextField label="Occupation" value={employment.occupation} onChange={(e) => setEmployment((v) => ({ ...v, occupation: e.target.value }))} />
+          <TextField label="Employer" value={employment.employer} onChange={(e) => setEmployment((v) => ({ ...v, employer: e.target.value }))} />
+          <SwitchField label="Show employer on my profile" description="Occupation is always shown" checked={employment.publicEmployerDisplayEnabled} onCheckedChange={(v) => setEmployment((s) => ({ ...s, publicEmployerDisplayEnabled: v }))} />
+          <Separator />
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <SelectField label="Employment status" options={EMPLOYMENT_STATUS_OPTIONS} value={employment.employmentStatus} onValueChange={(v) => setEmployment((s) => ({ ...s, employmentStatus: (v || s.employmentStatus) as EmploymentStatus }))} />
+            <SelectField label="Field" options={INDUSTRY_OPTIONS} placeholder="Choose a field" value={industry} onValueChange={setIndustry} />
           </div>
-          <Select label="Standing" options={STUDENT_STATUS_OPTIONS} placeholder="Student or professional" value={studentStatus} onChange={(e) => setStudentStatus(e.target.value)} />
-          </div>
-          </GroupSection>
-        </Group>
+          <SelectField label="Standing" options={STUDENT_STATUS_OPTIONS} placeholder="Student or professional" value={studentStatus} onValueChange={setStudentStatus} />
+        </FormCard>
 
-        <Group>
-          <GroupSection eyebrow="Education">
-          <div className="space-y-4">
-          <Input label="School" value={education.school} onChange={(e) => setEducation((v) => ({ ...v, school: e.target.value }))} />
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Select label="Degree level" options={DEGREE_LEVEL_OPTIONS} value={education.degreeLevel} onChange={(e) => setEducation((v) => ({ ...v, degreeLevel: e.target.value as DegreeLevel }))} />
-            <Input label="Field of study" value={education.fieldOfStudy} onChange={(e) => setEducation((v) => ({ ...v, fieldOfStudy: e.target.value }))} />
+        <FormCard title="Education">
+          <TextField label="School" value={education.school} onChange={(e) => setEducation((v) => ({ ...v, school: e.target.value }))} />
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <SelectField label="Degree level" options={DEGREE_LEVEL_OPTIONS} value={education.degreeLevel} onValueChange={(v) => setEducation((s) => ({ ...s, degreeLevel: (v || s.degreeLevel) as DegreeLevel }))} />
+            <TextField label="Field of study" value={education.fieldOfStudy} onChange={(e) => setEducation((v) => ({ ...v, fieldOfStudy: e.target.value }))} />
           </div>
-          <div className="grid sm:grid-cols-2 gap-3 items-end">
-            <Select label="Graduation year" options={YEARS} placeholder="Year" value={education.graduationYear ? String(education.graduationYear) : ''} onChange={(e) => setEducation((v) => ({ ...v, graduationYear: e.target.value ? Number(e.target.value) : null }))} />
-            <Checkbox label="Currently enrolled" checked={education.currentlyEnrolled} onChange={(e) => setEducation((v) => ({ ...v, currentlyEnrolled: e.target.checked }))} />
+          <div className="grid gap-5 sm:grid-cols-2 sm:items-end sm:gap-3">
+            <SelectField label="Graduation year" options={YEARS} placeholder="Year" value={education.graduationYear ? String(education.graduationYear) : ''} onValueChange={(v) => setEducation((s) => ({ ...s, graduationYear: v ? Number(v) : null }))} />
+            <CheckboxField label="Currently enrolled" checked={education.currentlyEnrolled} onCheckedChange={(v) => setEducation((s) => ({ ...s, currentlyEnrolled: v }))} className="sm:h-9 sm:items-center" />
           </div>
-          <Toggle label="Show education on my profile" checked={education.publicDisplayEnabled} onChange={(v) => setEducation((s) => ({ ...s, publicDisplayEnabled: v }))} />
-          </div>
-          </GroupSection>
-        </Group>
+          <SwitchField label="Show education on my profile" checked={education.publicDisplayEnabled} onCheckedChange={(v) => setEducation((s) => ({ ...s, publicDisplayEnabled: v }))} />
+        </FormCard>
 
-        <Group>
-          <GroupSection eyebrow="Background">
-          <div className="space-y-4">
-          <div>
-            <Label>Nationality</Label>
-            <MultiSelect label="Nationality" options={COUNTRY_OPTIONS} values={nationalities} onChange={setNationalities} searchable placeholder="Add one or more" />
+        <FormCard title="Background" description="Optional. Nothing here is required, and you can keep race or ethnicity private.">
+          <MultiSelectField label="Nationality" options={COUNTRY_OPTIONS} values={nationalities} onValuesChange={setNationalities} placeholder="Add one or more" />
+          <div className="grid gap-3">
+            <MultiSelectField
+              label="Race / ethnicity"
+              optional
+              options={RACE_ETHNICITY_OPTIONS}
+              values={preferNotToSay ? [] : raceEthnicities}
+              onValuesChange={setRaceEthnicities}
+              placeholder={preferNotToSay ? 'Prefer not to say' : 'Add one or more'}
+              disabled={preferNotToSay}
+            />
+            <SwitchField label="Prefer not to say" description="Hides this field and keeps it out of matching entirely" checked={preferNotToSay} onCheckedChange={setPreferNotToSay} />
           </div>
-          <div>
-            <Label optional>Race / ethnicity</Label>
-            <MultiSelect label="Race / ethnicity" options={RACE_ETHNICITY_OPTIONS} values={preferNotToSay ? [] : raceEthnicities} onChange={setRaceEthnicities} placeholder={preferNotToSay ? 'Prefer not to say' : 'Add one or more'} />
-            <Toggle label="Prefer not to say" description="Hides this field and keeps it out of matching entirely" checked={preferNotToSay} onChange={setPreferNotToSay} />
-          </div>
-          <div>
-            <Label>Languages</Label>
-            <MultiSelect label="Languages" options={LANGUAGE_OPTIONS} values={languages} onChange={setLanguages} searchable placeholder="Add one or more" />
-          </div>
-          </div>
-          </GroupSection>
-        </Group>
+          <MultiSelectField label="Languages" options={LANGUAGE_OPTIONS} values={languages} onValuesChange={setLanguages} placeholder="Add one or more" />
+        </FormCard>
 
-        <Group>
-          <GroupSection eyebrow="Intent & lifestyle">
-          <div className="space-y-4">
-          <Select label="Relationship intent" options={RELATIONSHIP_INTENT_OPTIONS} placeholder="Choose" value={intent} onChange={(e) => setIntent(e.target.value)} />
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Select label="Drinking" options={DRINKING_OPTIONS} placeholder="Not set" value={drinking} onChange={(e) => setDrinking(e.target.value)} />
-            <Select label="Smoking" options={SMOKING_OPTIONS} placeholder="Not set" value={smoking} onChange={(e) => setSmoking(e.target.value)} />
-            <Select label="Exercise" options={EXERCISE_OPTIONS} placeholder="Not set" value={exercise} onChange={(e) => setExercise(e.target.value)} />
-            <Select label="Children" options={CHILDREN_OPTIONS} placeholder="Not set" value={children} onChange={(e) => setChildren(e.target.value)} />
+        <FormCard title="Intent and lifestyle">
+          <SelectField label="Relationship intent" options={RELATIONSHIP_INTENT_OPTIONS} placeholder="Choose" value={intent} onValueChange={setIntent} />
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <SelectField label="Drinking" options={DRINKING_OPTIONS} placeholder="Not set" value={drinking} onValueChange={setDrinking} />
+            <SelectField label="Smoking" options={SMOKING_OPTIONS} placeholder="Not set" value={smoking} onValueChange={setSmoking} />
+            <SelectField label="Exercise" options={EXERCISE_OPTIONS} placeholder="Not set" value={exercise} onValueChange={setExercise} />
+            <SelectField label="Children" options={CHILDREN_OPTIONS} placeholder="Not set" value={children} onValueChange={setChildren} />
           </div>
-          </div>
-          </GroupSection>
-        </Group>
+        </FormCard>
 
-        <Group>
-          <GroupSection eyebrow="Interests">
-          <div className="space-y-4">
-          <MultiSelect label="Interests" options={INTEREST_OPTIONS} values={interests} onChange={setInterests} searchable max={LIMITS.interestsMax} placeholder={`Up to ${LIMITS.interestsMax}`} />
-          </div>
-          </GroupSection>
-        </Group>
+        <FormCard title="Interests" description={`Up to ${LIMITS.interestsMax}. They show on your profile and help people start a conversation.`}>
+          <MultiSelectField aria-label="Interests" options={INTEREST_OPTIONS} values={interests} onValuesChange={setInterests} max={LIMITS.interestsMax} placeholder={`Up to ${LIMITS.interestsMax}`} />
+        </FormCard>
 
         {saveError ? <Notice tone="danger">{saveError}</Notice> : null}
-        <div className="flex justify-end gap-3 pb-6">
-          <Button variant="ghost" onClick={() => navigate('/me')} disabled={busy}>
+        <div className="sticky bottom-16 z-10 -mx-4 flex justify-end gap-2 border-t bg-background px-4 py-3 md:bottom-0 md:mx-0 md:rounded-xl md:border md:px-4">
+          <Button type="button" variant="ghost" onClick={() => navigate('/me')} disabled={busy}>
             Cancel
           </Button>
           <Button type="submit" disabled={busy || !firstName.trim()}>
-            {busy ? 'Saving' : 'Save changes'}
+            {busy ? <Spinner data-icon="inline-start" /> : null}
+            Save changes
           </Button>
         </div>
       </form>

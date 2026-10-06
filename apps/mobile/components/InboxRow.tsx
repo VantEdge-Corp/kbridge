@@ -13,6 +13,8 @@ interface Props {
   unread?: number;
   onPress: () => void;
   onAvatarPress: () => void;
+  /** Long-press: the member menu, as right-click on the web. */
+  onLongPress?: () => void;
   /** Extra content under the row (an expanded note, action buttons). */
   children?: React.ReactNode;
   emphasize?: boolean;
@@ -20,8 +22,8 @@ interface Props {
   avatarSize?: number;
 }
 
-/** Compact row with a circular avatar for grouped lists. Tapping the avatar or name opens the profile; the row body opens the item. */
-export function InboxRow({ profile, subtitle, time, unread, onPress, onAvatarPress, children, emphasize, avatarSize = avatar.inbox }: Props) {
+/** A row in a grouped list, as shadcn's Item: avatar, name, one preview line, time, unread count. The avatar opens the profile; the row opens the item. */
+export function InboxRow({ profile, subtitle, time, unread, onPress, onAvatarPress, onLongPress, children, emphasize, avatarSize = avatar.inbox }: Props) {
   const styles = useStyles(makeStyles);
   const { colors, text } = useTheme();
   return (
@@ -30,19 +32,24 @@ export function InboxRow({ profile, subtitle, time, unread, onPress, onAvatarPre
         <Pressable onPress={onAvatarPress} accessibilityRole="button" accessibilityLabel={`Open ${profile.firstName}'s profile`} hitSlop={6}>
           <Avatar uri={profile.photos[0] ?? null} firstName={profile.firstName} size={avatarSize} />
         </Pressable>
-        <Pressable onPress={onPress} accessibilityRole="button" style={[styles.body, { minHeight: avatarSize }]}>
+        <Pressable
+          onPress={onPress}
+          onLongPress={onLongPress}
+          delayLongPress={350}
+          accessibilityRole="button"
+          accessibilityHint={onLongPress ? 'Long press for more options' : undefined}
+          style={({ pressed }) => [styles.body, { minHeight: avatarSize }, pressed && styles.pressed]}
+        >
           <View style={styles.titleRow}>
-            <Pressable onPress={onAvatarPress} hitSlop={4} style={styles.nameWrap}>
-              <Text style={[text.body, styles.name, emphasize && styles.nameStrong]} numberOfLines={1}>
-                {profile.firstName}
-              </Text>
-            </Pressable>
-            {profile.publicVerificationBadges.length > 0 ? <VerificationBadge size={13} /> : null}
+            <Text style={[text.body, styles.name, (emphasize || !!unread) && styles.nameStrong]} numberOfLines={1}>
+              {profile.firstName}
+            </Text>
+            {profile.publicVerificationBadges.length > 0 ? <VerificationBadge size={14} /> : null}
             <View style={{ flex: 1 }} />
-            {time ? <Text style={text.micro}>{time}</Text> : null}
+            {time ? <Text style={text.caption}>{time}</Text> : null}
           </View>
           <View style={styles.subRow}>
-            <Text style={[text.bodySmall, styles.subtitle, emphasize && { color: colors.text }]} numberOfLines={1}>
+            <Text style={[text.bodySmall, styles.subtitle, (emphasize || !!unread) && { color: colors.foreground }]} numberOfLines={1}>
               {subtitle}
             </Text>
             {unread ? (
@@ -58,16 +65,17 @@ export function InboxRow({ profile, subtitle, time, unread, onPress, onAvatarPre
   );
 }
 
-const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  wrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  body: { flex: 1, justifyContent: 'center', gap: 2 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  nameWrap: { flexShrink: 1 },
-  name: { fontWeight: '500' },
-  nameStrong: { color: colors.ivory },
-  subRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  subtitle: { flex: 1 },
-  pill: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  pillText: { fontSize: 11, fontWeight: '600', color: colors.onIvory },
-});
+const makeStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    wrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+    row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    body: { flex: 1, justifyContent: 'center', gap: 2 },
+    pressed: { opacity: 0.7 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    name: { fontWeight: '500', flexShrink: 1 },
+    nameStrong: { fontWeight: '600' },
+    subRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    subtitle: { flex: 1 },
+    pill: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+    pillText: { fontSize: 11, fontWeight: '600', color: colors.primaryForeground },
+  });

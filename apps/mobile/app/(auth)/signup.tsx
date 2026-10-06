@@ -88,7 +88,7 @@ export default function Signup() {
         ) : invalid ? (
           <ScrollView contentContainerStyle={styles.body}>
             <Text style={text.bodySecondary}>This signup link is invalid or your application is not yet approved.</Text>
-            <Button title="Check application status" variant="secondary" onPress={() => router.replace('/(auth)/status')} fullWidth />
+            <Button title="Check application status" variant="outline" onPress={() => router.replace('/(auth)/status')} fullWidth />
           </ScrollView>
         ) : (
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -121,5 +121,5 @@ export default function Signup() {
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
-  link: { color: colors.ivory, textDecorationLine: 'underline' },
+  link: { color: colors.foreground, fontWeight: '500', textDecorationLine: 'underline' },
 });

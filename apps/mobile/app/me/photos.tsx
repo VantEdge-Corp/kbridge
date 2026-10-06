@@ -86,7 +86,7 @@ export default function Photos() {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <Header back title="Photos" right={photos.length < LIMITS.photos ? <Button title="Add" size="small" icon="plus" onPress={add} loading={busy} /> : undefined} />
+      <Header back title="Photos" right={photos.length < LIMITS.photos ? <Button title="Add" size="sm" icon="plus" onPress={add} loading={busy} /> : undefined} />
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={text.caption}>
           Up to {LIMITS.photos} photos, shown in this order. The first is your main portrait. Tap a photo to reorder or remove it.
@@ -94,7 +94,7 @@ export default function Photos() {
         <View style={styles.grid}>
           {photos.map((p, i) => (
             <Pressable key={p.path} onPress={() => actions(p.path, i)} accessibilityRole="button" accessibilityLabel={`Photo ${i + 1} options`} style={{ width: tile }}>
-              <Image source={{ uri: p.url }} style={{ width: tile, height: Math.round(tile / 0.75), borderRadius: radius.md, backgroundColor: colors.surfaceElevated, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing }} contentFit="cover" />
+              <Image source={{ uri: p.url }} style={{ width: tile, height: Math.round(tile / 0.75), borderRadius: radius.xl, backgroundColor: colors.muted, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing }} contentFit="cover" />
               {i === 0 ? (
                 <View style={styles.main}>
                   <Text style={styles.mainText}>Main</Text>
@@ -104,7 +104,7 @@ export default function Photos() {
           ))}
           {photos.length < LIMITS.photos ? (
             <Pressable onPress={add} accessibilityRole="button" accessibilityLabel="Add photo" style={[styles.add, { width: tile, height: Math.round(tile / 0.75) }]}>
-              <Icon name="plus" size={18} color={colors.textSecondary} />
+              <Icon name="plus" size={18} color={colors.mutedForeground} />
             </Pressable>
           ) : null}
         </View>
@@ -116,7 +116,7 @@ export default function Photos() {
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xxl, gap: spacing.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
-  main: { position: 'absolute', left: 6, bottom: 6, backgroundColor: colors.overlay, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.sm },
-  mainText: { fontSize: 10, color: colors.ivory, fontWeight: '500' },
-  add: { borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
+  main: { position: 'absolute', left: 6, top: 6, backgroundColor: colors.primary, paddingHorizontal: 8, height: 20, justifyContent: 'center', borderRadius: radius.pill },
+  mainText: { fontSize: 11, color: colors.primaryForeground, fontWeight: '600' },
+  add: { borderRadius: radius.xl, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.ring, alignItems: 'center', justifyContent: 'center', gap: 6 },
 });

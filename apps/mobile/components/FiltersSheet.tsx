@@ -70,7 +70,7 @@ export function FiltersSheet({ visible, onClose, viewer, areaId, onApplied }: Pr
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView edges={['top', 'bottom']} style={styles.modal}>
-        <Header title="Filters" right={<Button title="Apply" size="small" onPress={apply} loading={saving} disabled={!draft} />} back onBack={onClose} />
+        <Header title="Filters" right={<Button title="Apply" size="sm" onPress={apply} loading={saving} disabled={!draft} />} close onBack={onClose} />
         {draft ? (
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             <PreferenceEditor
@@ -92,6 +92,6 @@ export function FiltersSheet({ visible, onClose, viewer, areaId, onApplied }: Pr
 }
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  modal: { flex: 1, backgroundColor: colors.canvas },
+  modal: { flex: 1, backgroundColor: colors.background },
   body: { paddingBottom: spacing.xxxl },
 });

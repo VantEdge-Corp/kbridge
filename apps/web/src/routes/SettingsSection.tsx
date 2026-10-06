@@ -1,69 +1,132 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { LuMonitor, LuMoon, LuSun, LuUserX } from 'react-icons/lu';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { BRAND, longDate, type Education, type Employment, type PublicProfile } from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { supabase } from '../lib/supabase';
-import { useAuth, useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Button } from '../components/Button';
-import { Input, Notice, Toggle } from '../components/Field';
-import { Group, GroupSection, ROW_HAIRLINE, rowInset } from '../components/Group';
-import { LoadingBlock } from '../components/Loading';
-import { Avatar } from '../components/MonogramPortrait';
-import { VerificationStatusList } from '../components/VerificationStatusList';
-import { useAsync } from '../hooks/useAsync';
-import { usePageTitle } from '../hooks/usePageTitle';
-import { SETTINGS_SECTIONS, type SettingsSlug } from './Settings';
+import { useAuth, useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import { useConfirm } from '@/components/ConfirmProvider';
+import { EmptyState } from '@/components/EmptyState';
+import { SwitchField, TextField } from '@/components/form';
+import { LoadingBlock } from '@/components/Loading';
+import { LoadError, Notice } from '@/components/Notice';
+import { PersonAvatar } from '@/components/PersonAvatar';
+import { RowGroup } from '@/components/SettingsRow';
+import { VerificationStatusList } from '@/components/VerificationStatusList';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/ui/toast';
+import { useAsync } from '@/hooks/useAsync';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { api, errorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+import { THEME_PREFERENCES, useTheme, type ThemePreference } from '@/lib/theme';
+import { cn } from '@/lib/utils';
+import { SETTINGS_SECTIONS } from '@/routes/Settings';
+
+const LINK = 'font-medium text-foreground underline underline-offset-4';
 
 function Account() {
   const { user, profile, email } = useMember();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ tone: 'neutral' | 'danger'; text: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const change = async (e: FormEvent) => {
     e.preventDefault();
     if (password.length < 6 || password !== confirm) {
-      setMessage({ tone: 'danger', text: 'Passwords must match and be at least 6 characters.' });
+      setError('Passwords must match and be at least 6 characters.');
       return;
     }
     setBusy(true);
-    setMessage(null);
+    setError(null);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
       setPassword('');
       setConfirm('');
-      setMessage({ tone: 'neutral', text: 'Password updated.' });
+      toast.add({ title: 'Password updated', type: 'success' });
     } catch (err) {
-      setMessage({ tone: 'danger', text: errorMessage(err) });
+      setError(errorMessage(err));
     } finally {
       setBusy(false);
     }
   };
   return (
-    <Group>
-      <GroupSection eyebrow="Account">
-        <dl className="grid grid-cols-[140px_1fr] gap-y-2.5 text-body-sm">
-          <dt className="text-text-muted">Email</dt>
-          <dd className="text-text">{email}</dd>
-          <dt className="text-text-muted">Member since</dt>
-          <dd className="text-text">{longDate(profile.createdAt)}</dd>
-          <dt className="text-text-muted">Member id</dt>
-          <dd className="text-text-secondary text-caption break-all">{user.id}</dd>
-        </dl>
-      </GroupSection>
-      <GroupSection eyebrow="Change password">
-        <form onSubmit={(e) => void change(e)} className="space-y-4 max-w-sm">
-          <Input label="New password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <Input label="Confirm password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-          {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
-          <Button type="submit" variant="secondary" disabled={busy || !password}>
-            {busy ? 'Updating' : 'Update password'}
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Account</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-[120px_1fr] gap-y-3 text-sm">
+            <dt className="text-muted-foreground">Email</dt>
+            <dd className="break-all">{email}</dd>
+            <dt className="text-muted-foreground">Member since</dt>
+            <dd>{longDate(profile.createdAt)}</dd>
+            <dt className="text-muted-foreground">Member id</dt>
+            <dd className="font-mono text-xs break-all text-muted-foreground">{user.id}</dd>
+          </dl>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Change password</CardTitle>
+          <CardDescription>At least 6 characters.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form id="change-password" onSubmit={(e) => void change(e)} className="grid max-w-sm gap-5">
+            <TextField label="New password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <TextField label="Confirm password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            {error ? <Notice tone="danger">{error}</Notice> : null}
+          </form>
+        </CardContent>
+        <CardFooter className="border-t">
+          <Button type="submit" form="change-password" variant="outline" disabled={busy || !password}>
+            {busy ? <Spinner data-icon="inline-start" /> : null}
+            Update password
           </Button>
-        </form>
-      </GroupSection>
-    </Group>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
+const APPEARANCE_ICON: Record<ThemePreference, typeof LuSun> = { system: LuMonitor, light: LuSun, dark: LuMoon };
+
+/** System, Light, or Dark, stored in this browser. */
+function Appearance() {
+  const { preference, setPreference } = useTheme();
+  return (
+    <div role="radiogroup" aria-label="Appearance" className="grid gap-3 sm:grid-cols-3">
+      {THEME_PREFERENCES.map((option) => {
+        const Icon = APPEARANCE_ICON[option.value];
+        const checked = preference === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={checked}
+            onClick={() => setPreference(option.value)}
+            className={cn(
+              'grid gap-3 rounded-xl border bg-card p-4 text-left shadow-xs outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50',
+              checked && 'border-primary ring-1 ring-primary',
+            )}
+          >
+            <span className={cn('flex size-9 items-center justify-center rounded-md', checked ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground')}>
+              <Icon className="size-4" />
+            </span>
+            <span className="grid gap-0.5">
+              <span className="text-sm font-medium">{option.label}</span>
+              <span className="text-sm text-muted-foreground">{option.description}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -72,86 +135,86 @@ function Privacy() {
   const { refreshProfile } = useAuth();
   const { data: priv, loading, error, reload } = useAsync(() => api.profiles.getPrivate(user.id, email), [user.id]);
   const [busy, setBusy] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true);
-    setActionError(null);
     try {
       await fn();
       await refreshProfile();
       reload();
     } catch (e) {
-      setActionError(errorMessage(e));
+      toast.add({ title: 'Could not save', description: errorMessage(e), type: 'error' });
     } finally {
       setBusy(false);
     }
   };
-  if (loading || !priv) return <LoadingBlock />;
-  if (error) return <Notice tone="danger">{error}</Notice>;
+  if (loading || (!priv && !error)) return <LoadingBlock />;
+  if (error || !priv) return <LoadError message={error ?? 'Could not load your settings.'} onRetry={reload} />;
   const education: Education = priv.education ?? { school: '', degreeLevel: 'other', fieldOfStudy: '', graduationYear: null, currentlyEnrolled: false, publicDisplayEnabled: true };
   const employment: Employment = priv.employment ?? { occupation: profile.occupation, employer: '', employmentStatus: 'other', publicEmployerDisplayEnabled: true };
-  const toggleRow = (node: ReactNode) => (
-    <div className={`${ROW_HAIRLINE} px-4`} style={rowInset(16)}>
-      {node}
-    </div>
-  );
   return (
-    <div className="space-y-4">
-      <Group>
-        <div className={busy ? 'opacity-60 pointer-events-none' : ''}>
-          {toggleRow(<Toggle label="Show education on my profile" description="School, degree, and field of study" checked={education.publicDisplayEnabled} onChange={(v) => void run(() => api.profiles.updatePrivate(user.id, { education: { ...education, publicDisplayEnabled: v } }))} />)}
-          {toggleRow(<Toggle label="Show employer on my profile" description="Your occupation is always shown" checked={employment.publicEmployerDisplayEnabled} onChange={(v) => void run(() => api.profiles.updatePrivate(user.id, { employment: { ...employment, publicEmployerDisplayEnabled: v } }))} />)}
-          {toggleRow(
-            <Toggle
-              label="Keep race / ethnicity private"
-              description="Prefer not to say: hidden and never used in matching"
-              checked={profile.raceEthnicityDisclosure === 'prefer_not_to_say'}
-              onChange={(v) => void run(() => api.profiles.updatePublic(user.id, { raceEthnicityDisclosure: v ? 'prefer_not_to_say' : profile.raceEthnicities.length ? 'disclosed' : 'not_provided' }))}
-            />,
-          )}
-        </div>
-      </Group>
-      {actionError ? <Notice tone="danger">{actionError}</Notice> : null}
-      <Group>
-        <GroupSection>
-          <div className="text-body-sm text-text-muted space-y-2">
-            <p>Your exact area is private. Other members see only a coarse label such as &ldquo;{profile.displayArea}.&rdquo;</p>
-            <p>
-              Read the{' '}
-              <Link to="/privacy" className="text-text underline underline-offset-4 decoration-1">
-                Privacy Policy
-              </Link>
-              ,{' '}
-              <Link to="/terms" className="text-text underline underline-offset-4 decoration-1">
-                Terms of Service
-              </Link>
-              , and{' '}
-              <Link to="/child-safety" className="text-text underline underline-offset-4 decoration-1">
-                Child Safety Standards
-              </Link>
-              . Questions go to{' '}
-              <a href={`mailto:${BRAND.supportEmail}`} className="text-text underline underline-offset-4 decoration-1">
-                {BRAND.supportEmail}
-              </a>
-              .
-            </p>
-          </div>
-        </GroupSection>
-      </Group>
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>What others see</CardTitle>
+          <CardDescription>Changes apply to your profile right away.</CardDescription>
+        </CardHeader>
+        <CardContent className={cn('gap-5', busy && 'pointer-events-none opacity-60')}>
+          <SwitchField
+            label="Show education on my profile"
+            description="School, degree, and field of study"
+            checked={education.publicDisplayEnabled}
+            onCheckedChange={(v) => void run(() => api.profiles.updatePrivate(user.id, { education: { ...education, publicDisplayEnabled: v } }))}
+          />
+          <Separator />
+          <SwitchField
+            label="Show employer on my profile"
+            description="Your occupation is always shown"
+            checked={employment.publicEmployerDisplayEnabled}
+            onCheckedChange={(v) => void run(() => api.profiles.updatePrivate(user.id, { employment: { ...employment, publicEmployerDisplayEnabled: v } }))}
+          />
+          <Separator />
+          <SwitchField
+            label="Keep race / ethnicity private"
+            description="Prefer not to say: hidden and never used in matching"
+            checked={profile.raceEthnicityDisclosure === 'prefer_not_to_say'}
+            onCheckedChange={(v) => void run(() => api.profiles.updatePublic(user.id, { raceEthnicityDisclosure: v ? 'prefer_not_to_say' : profile.raceEthnicities.length ? 'disclosed' : 'not_provided' }))}
+          />
+        </CardContent>
+      </Card>
+      <div className="grid gap-2 text-sm text-muted-foreground">
+        <p>Your exact area is private. Other members see only a coarse label such as &ldquo;{profile.displayArea}.&rdquo;</p>
+        <p>
+          Read the{' '}
+          <Link to="/privacy" className={LINK}>
+            Privacy Policy
+          </Link>
+          ,{' '}
+          <Link to="/terms" className={LINK}>
+            Terms of Service
+          </Link>
+          , and{' '}
+          <Link to="/child-safety" className={LINK}>
+            Child Safety Standards
+          </Link>
+          . Questions go to{' '}
+          <a href={`mailto:${BRAND.supportEmail}`} className={LINK}>
+            {BRAND.supportEmail}
+          </a>
+          .
+        </p>
+      </div>
     </div>
   );
 }
 
 function Notifications() {
   return (
-    <Group>
-      <GroupSection>
-        <div className="text-body-sm text-text-secondary space-y-3 max-w-prose">
-          <p>Push and email notifications aren&apos;t enabled yet. New introduction requests and messages appear in your Inbox, which updates live while the app is open.</p>
-          <p className="text-text-muted">When notifications arrive, you will choose here which ones you want.</p>
-        </div>
-      </GroupSection>
-    </Group>
+    <Card>
+      <CardContent className="gap-3 text-sm">
+        <p>Push and email notifications aren&apos;t enabled yet. New introduction requests and messages appear in your Inbox, which updates live while the app is open.</p>
+        <p className="text-muted-foreground">When notifications arrive, you will choose here which ones you want.</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -159,8 +222,8 @@ function Verification() {
   const { profile } = useMember();
   const { refreshProfile } = useAuth();
   return (
-    <div className="space-y-4">
-      <p className="text-body-sm text-text-muted max-w-prose">Each dimension is reviewed on its own by the committee. Only confirmed dimensions are shown to other members; pending and declined states stay private to you.</p>
+    <div className="grid gap-4">
+      <p className="text-sm text-muted-foreground">Each dimension is reviewed on its own by the committee. Only confirmed dimensions are shown to other members; pending and declined states stay private to you.</p>
       <VerificationStatusList verification={profile.verification} onChanged={() => void refreshProfile()} />
     </div>
   );
@@ -169,74 +232,75 @@ function Verification() {
 function BlockedUsers() {
   const { user } = useMember();
   const { data, loading, error, reload } = useAsync(() => api.safety.listBlocked(user.id), [user.id]);
-  const [actionError, setActionError] = useState<string | null>(null);
   const unblock = async (p: PublicProfile) => {
     try {
       await api.safety.unblock(user.id, p.id);
+      toast.add({ title: `${p.firstName} is unblocked`, type: 'success' });
       reload();
     } catch (e) {
-      setActionError(errorMessage(e));
+      toast.add({ title: 'Could not unblock', description: errorMessage(e), type: 'error' });
     }
   };
   if (loading) return <LoadingBlock />;
-  if (error) return <Notice tone="danger">{error}</Notice>;
+  if (error) return <LoadError message={error} onRetry={reload} />;
+  if (!data || data.length === 0) return <EmptyState icon={LuUserX} title="You haven't blocked anyone." body="Blocked members can't see you or contact you, and you won't see them." />;
   return (
-    <div className="space-y-4">
-      {actionError ? <Notice tone="danger">{actionError}</Notice> : null}
-      {!data || data.length === 0 ? (
-        <Group>
-          <GroupSection>
-            <p className="text-body-sm text-text-muted">You haven&apos;t blocked anyone.</p>
-          </GroupSection>
-        </Group>
-      ) : (
-        <Group>
-          <ul>
-            {data.map((p) => (
-              <li key={p.id} className={`${ROW_HAIRLINE} flex items-center gap-3 px-4 py-3`} style={rowInset(64)}>
-                <Avatar name={p.firstName} src={p.photos[0] ?? null} size={36} />
-                <span className="flex-1 text-body text-text">{p.firstName}</span>
-                <Button size="sm" variant="secondary" onClick={() => void unblock(p)}>
-                  Unblock
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </Group>
-      )}
-    </div>
+    <RowGroup>
+      {data.map((p) => (
+        <Item key={p.id} className="rounded-none px-4 py-3">
+          <ItemMedia>
+            <PersonAvatar name={p.firstName} src={p.photos[0] ?? null} className="size-9" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>{p.firstName}</ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <Button size="sm" variant="outline" onClick={() => void unblock(p)}>
+              Unblock
+            </Button>
+          </ItemActions>
+        </Item>
+      ))}
+    </RowGroup>
   );
 }
 
 function Safety() {
   return (
-    <Group>
-      <GroupSection>
-    <div className="text-body-sm text-text-secondary space-y-4 max-w-prose">
-      <ul className="list-disc pl-5 space-y-2">
-        <li>Meet in public for the first few times, and tell someone your plans.</li>
-        <li>Keep conversations in the app until you are comfortable.</li>
-        <li>Never send money or financial details to someone you have not met.</li>
-        <li>Trust your read on a person. You can end any conversation by blocking.</li>
-      </ul>
-      <p>
-        To report someone, open their profile or the conversation and choose <span className="text-text">Report</span> from the menu. Posts can be reported from the feed. Every report is reviewed by a person, and reporting is never visible to the other member.
-      </p>
-      <p className="text-text-muted">If you feel unsafe, contact local authorities first.</p>
-    </div>
-      </GroupSection>
-    </Group>
+    <Card>
+      <CardContent className="gap-4 text-sm">
+        <ul className="ml-5 grid list-disc gap-2 marker:text-muted-foreground">
+          <li>Meet in public for the first few times, and tell someone your plans.</li>
+          <li>Keep conversations in the app until you are comfortable.</li>
+          <li>Never send money or financial details to someone you have not met.</li>
+          <li>Trust your read on a person. You can end any conversation by blocking.</li>
+        </ul>
+        <Separator />
+        <p className="text-muted-foreground">
+          To report someone, open their profile or the conversation and choose <span className="font-medium text-foreground">Report</span> from the menu. Posts can be reported from the feed. Every report is reviewed by a person, and reporting is never visible to the other member.
+        </p>
+        <p className="text-muted-foreground">If you feel unsafe, contact local authorities first.</p>
+      </CardContent>
+    </Card>
   );
 }
 
 function DataAccount() {
   const { profile } = useMember();
   const { signOut } = useAuth();
+  const confirm = useConfirm();
   const navigate = useNavigate();
-  const [step, setStep] = useState<0 | 1>(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const remove = async () => {
+    const ok = await confirm({
+      title: 'Delete your account permanently?',
+      description: 'Your application, profile, photos, posts, requests, and messages are deleted with it. This cannot be undone.',
+      confirmLabel: 'Yes, delete everything',
+      cancelLabel: 'Keep my account',
+      destructive: true,
+    });
+    if (!ok) return;
     setBusy(true);
     setError(null);
     try {
@@ -249,31 +313,23 @@ function DataAccount() {
     }
   };
   return (
-    <Group>
-      <GroupSection eyebrow="Delete account">
-        <div className="space-y-5 max-w-prose">
-          <p className="text-body-sm text-text-secondary">Your application, profile, photos, posts, requests, and messages are deleted with your account. This cannot be undone.</p>
-          {step === 0 ? (
-            <Button variant="danger" onClick={() => setStep(1)}>
-              Delete my account
-            </Button>
-          ) : (
-            <div className="border border-border rounded-md p-4 space-y-4 bg-canvas">
-              <p className="text-body text-text">Delete your account permanently?</p>
-              {error ? <Notice tone="danger">{error}</Notice> : null}
-              <div className="flex gap-3">
-                <Button variant="ghost" onClick={() => setStep(0)} disabled={busy}>
-                  Keep my account
-                </Button>
-                <Button variant="danger" onClick={() => void remove()} disabled={busy}>
-                  {busy ? 'Deleting' : 'Yes, delete everything'}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </GroupSection>
-    </Group>
+    <Card className="ring-destructive/30">
+      <CardHeader>
+        <CardTitle>Delete account</CardTitle>
+        <CardDescription>Your application, profile, photos, posts, requests, and messages are deleted with your account. This cannot be undone.</CardDescription>
+      </CardHeader>
+      {error ? (
+        <CardContent>
+          <Notice tone="danger">{error}</Notice>
+        </CardContent>
+      ) : null}
+      <CardFooter className="border-t">
+        <Button variant="destructive" onClick={() => void remove()} disabled={busy}>
+          {busy ? <Spinner data-icon="inline-start" /> : null}
+          Delete my account
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -285,18 +341,18 @@ export function SettingsSection() {
     window.scrollTo(0, 0);
   }, [section]);
   if (!entry) return <Navigate to="/settings" replace />;
-  const slug = entry.slug as SettingsSlug;
+  if (entry.slug === 'discovery-preferences') return <Navigate to="/me/preferences" replace />;
   return (
-    <div className="max-w-[720px]">
+    <div className="mx-auto max-w-[720px]">
       <PageHeader title={entry.label} back="/settings" />
-      {slug === 'account' ? <Account /> : null}
-      {slug === 'privacy' ? <Privacy /> : null}
-      {slug === 'discovery-preferences' ? <Navigate to="/me/preferences" replace /> : null}
-      {slug === 'notifications' ? <Notifications /> : null}
-      {slug === 'verification' ? <Verification /> : null}
-      {slug === 'blocked-users' ? <BlockedUsers /> : null}
-      {slug === 'safety' ? <Safety /> : null}
-      {slug === 'data-account' ? <DataAccount /> : null}
+      {entry.slug === 'account' ? <Account /> : null}
+      {entry.slug === 'appearance' ? <Appearance /> : null}
+      {entry.slug === 'privacy' ? <Privacy /> : null}
+      {entry.slug === 'notifications' ? <Notifications /> : null}
+      {entry.slug === 'verification' ? <Verification /> : null}
+      {entry.slug === 'blocked-users' ? <BlockedUsers /> : null}
+      {entry.slug === 'safety' ? <Safety /> : null}
+      {entry.slug === 'data-account' ? <DataAccount /> : null}
     </div>
   );
 }

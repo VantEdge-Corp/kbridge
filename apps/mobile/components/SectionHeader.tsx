@@ -11,12 +11,14 @@ interface Props {
   first?: boolean;
 }
 
-/** Uppercase eyebrow for section headers only. 32px above (12px for the first), 12px below. */
+/** A section heading over a group of rows, as the web's Section. 28px above (12 for the first), 10 below. */
 export function SectionHeader({ title, right, style, first }: Props) {
   const { text } = useTheme();
   return (
     <View style={[styles.row, first && styles.first, style]}>
-      <Text style={text.eyebrow}>{title}</Text>
+      <Text style={text.section} accessibilityRole="header">
+        {title}
+      </Text>
       {right}
     </View>
   );
@@ -28,8 +30,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.md,
+    paddingTop: 28,
+    paddingBottom: 10,
   },
   first: { paddingTop: spacing.md },
 });

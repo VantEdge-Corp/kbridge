@@ -20,5 +20,5 @@ export function Screen({ children, edges = ['top'], style }: Props) {
 }
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.canvas },
+  root: { flex: 1, backgroundColor: colors.background },
 });

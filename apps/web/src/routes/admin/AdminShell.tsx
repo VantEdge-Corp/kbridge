@@ -1,60 +1,36 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/AuthProvider';
-import { Button } from '../../components/Button';
-import { Icon, type IconName } from '../../components/icons';
-import { Wordmark } from '../../components/Wordmark';
+import { Suspense } from 'react';
+import { LuClipboardList, LuFlag, LuUsers } from 'react-icons/lu';
+import { Outlet } from 'react-router-dom';
+import { AdminSidebar, initialSidebarOpen, type NavItem } from '@/components/AppShell';
+import { LoadingBlock } from '@/components/Loading';
+import { Wordmark } from '@/components/Wordmark';
+import { Badge } from '@/components/ui/badge';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
-const AREAS: ReadonlyArray<{ to: string; label: string; icon: IconName; end?: boolean }> = [
-  { to: '/admin', label: 'Applications', icon: 'clipboard', end: true },
-  { to: '/admin/members', label: 'Members', icon: 'users' },
-  { to: '/admin/reports', label: 'Reports', icon: 'flag' },
+const AREAS: ReadonlyArray<NavItem> = [
+  { to: '/admin', label: 'Applications', icon: LuClipboardList, end: true },
+  { to: '/admin/members', label: 'Members', icon: LuUsers },
+  { to: '/admin/reports', label: 'Reports', icon: LuFlag },
 ];
 
-/** Committee panel chrome: header with the member-view switch and a left sub-nav. */
+/** Committee panel chrome: the shared sidebar with the committee's areas; on phones it opens from the top bar. */
 export function AdminShell() {
-  const { signOut, setAdminAsMember } = useAuth();
-  const navigate = useNavigate();
   return (
-    <div className="min-h-dvh flex flex-col">
-      <header className="sticky top-0 z-30 h-16 px-4 md:px-8 flex items-center justify-between gap-3 border-b border-border/60 bg-canvas/80 backdrop-blur-md">
-        <div className="flex items-center gap-3 min-w-0">
-          <Wordmark size={16} />
-          <span className="hidden sm:inline text-micro uppercase tracking-[1.2px] text-text-muted">Committee</span>
+    <SidebarProvider defaultOpen={initialSidebarOpen()}>
+      <AdminSidebar items={AREAS} />
+      <SidebarInset className="min-w-0">
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md md:hidden">
+          <SidebarTrigger className="-ml-1" />
+          <Wordmark className="text-base" />
+          <Badge variant="secondary">Committee</Badge>
+        </header>
+        <div className="mx-auto w-full max-w-[1080px] px-4 py-6 md:px-8 md:py-10">
+          {/* Each area is its own chunk; keep the shell up while one loads. */}
+          <Suspense fallback={<LoadingBlock />}>
+            <Outlet />
+          </Suspense>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              setAdminAsMember(true);
-              navigate('/home');
-            }}
-          >
-            View as member
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => void signOut().then(() => navigate('/', { replace: true }))}>
-            Sign out
-          </Button>
-        </div>
-      </header>
-      <div className="flex-1 flex flex-col md:flex-row">
-        <nav aria-label="Committee" className="md:w-56 md:border-r border-b md:border-b-0 border-border px-2 py-2 md:py-4 flex md:flex-col gap-1">
-          {AREAS.map((a) => (
-            <NavLink
-              key={a.to}
-              to={a.to}
-              end={a.end}
-              className={({ isActive }) => `flex items-center gap-3 h-10 px-3 rounded-md text-body-sm motion focus-ring ${isActive ? 'bg-surface-elevated text-ivory' : 'text-text-muted hover:text-text-secondary hover:bg-surface-hover'}`}
-            >
-              <Icon name={a.icon} size={18} />
-              {a.label}
-            </NavLink>
-          ))}
-        </nav>
-        <main className="flex-1 min-w-0 px-4 md:px-8 py-6 md:py-8 max-w-[1080px]">
-          <Outlet />
-        </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

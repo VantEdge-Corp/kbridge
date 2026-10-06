@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
-import { radius, spacing } from '@/constants/theme';
+import { alpha, radius } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 
 interface Props extends TextInputProps {
@@ -11,9 +11,10 @@ interface Props extends TextInputProps {
 }
 
 /**
- * 48px input on `surface` with a 1px border and radius md. Sentence-case label
- * above, helper or error below. Focus adds a `borderStrong` border and a 2px
- * ivory ring at 8% through the outer wrapper.
+ * shadcn/ui's Input with its Field: a label, a 44px input on the input
+ * border (filled faintly in dark), then the helper or the error. Focus
+ * turns the border to `ring` inside a 3px `ring/50` halo, and an error
+ * draws the border and halo in `destructive`, as on the web.
  */
 export function Field({ label, error, helper, containerStyle, style, multiline, onFocus, onBlur, ...rest }: Props) {
   const styles = useStyles(makeStyles);
@@ -22,12 +23,13 @@ export function Field({ label, error, helper, containerStyle, style, multiline, 
   return (
     <View style={[styles.wrap, containerStyle]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.ring, focused && styles.ringFocused]}>
+      <View style={[styles.halo, error ? styles.haloError : focused && styles.haloFocused]}>
         <TextInput
           {...rest}
           multiline={multiline}
-          placeholderTextColor={colors.textMuted}
-          selectionColor={colors.ivory}
+          placeholderTextColor={colors.mutedForeground}
+          selectionColor={colors.primary}
+          cursorColor={colors.foreground}
           keyboardAppearance={isDark ? 'dark' : 'light'}
           accessibilityLabel={rest.accessibilityLabel ?? label}
           onFocus={(e) => {
@@ -46,26 +48,31 @@ export function Field({ label, error, helper, containerStyle, style, multiline, 
   );
 }
 
-const makeStyles = ({ colors, text }: Theme) => StyleSheet.create({
-  wrap: { gap: 6 },
-  label: { ...text.label },
-  ring: { borderRadius: radius.md + 2, padding: 2, margin: -2, backgroundColor: 'transparent' },
-  ringFocused: { backgroundColor: colors.focusRing },
-  input: {
-    minHeight: 48,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  multiline: { minHeight: 112, textAlignVertical: 'top' },
-  focused: { borderColor: colors.borderStrong },
-  errored: { borderColor: colors.danger },
-  error: { fontSize: 13, lineHeight: 18, color: colors.danger },
-  helper: { fontSize: 13, lineHeight: 18, color: colors.textMuted },
-});
+const HALO = 3;
+
+const makeStyles = ({ colors, text, isDark }: Theme) =>
+  StyleSheet.create({
+    wrap: { gap: 8 },
+    label: text.label,
+    // A ring around the input, never a fill: the input itself is transparent in light.
+    halo: { borderRadius: radius.md + HALO, borderWidth: HALO, borderColor: 'transparent', margin: -HALO },
+    haloFocused: { borderColor: colors.focusRing },
+    haloError: { borderColor: alpha(colors.destructive, isDark ? 0.4 : 0.2) },
+    input: {
+      minHeight: 44,
+      paddingHorizontal: 12,
+      paddingVertical: 11,
+      backgroundColor: colors.inputBackground,
+      borderWidth: 1,
+      borderColor: colors.input,
+      borderRadius: radius.md,
+      color: colors.foreground,
+      fontSize: 16,
+      lineHeight: 20,
+    },
+    multiline: { minHeight: 104, textAlignVertical: 'top' },
+    focused: { borderColor: colors.ring },
+    errored: { borderColor: colors.destructive },
+    error: { fontSize: 13, lineHeight: 18, color: colors.destructive },
+    helper: { fontSize: 13, lineHeight: 18, color: colors.mutedForeground },
+  });

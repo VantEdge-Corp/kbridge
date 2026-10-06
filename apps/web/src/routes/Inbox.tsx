@@ -1,24 +1,40 @@
 import { useEffect, useState } from 'react';
+import { LuBan, LuFlag, LuInbox, LuMessageCircle, LuMessagesSquare, LuUndo2, LuUser, LuUsers } from 'react-icons/lu';
 import { useNavigate, useParams } from 'react-router-dom';
-import { timeAgo, truncate, type IntroductionRequest } from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Button } from '../components/Button';
-import { EmptyState } from '../components/EmptyState';
-import { Notice } from '../components/Field';
-import { Group } from '../components/Group';
-import { Icon } from '../components/icons';
-import { InboxRow } from '../components/InboxRow';
-import { LoadingBlock } from '../components/Loading';
-import { SectionHeader } from '../components/SectionHeader';
-import { SegmentedTabs } from '../components/SegmentedTabs';
-import { useAsync } from '../hooks/useAsync';
-import { useIsWide } from '../hooks/useMediaQuery';
-import { usePageTitle } from '../hooks/usePageTitle';
-import { ChatPane } from './Chat';
+import { timeAgo, truncate, type Connection, type IntroductionRequest } from '@peaches/core';
+import { useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import type { MenuAction } from '@/components/ActionMenu';
+import { EmptyState } from '@/components/EmptyState';
+import { InboxRow } from '@/components/InboxRow';
+import { RowsSkeleton } from '@/components/Loading';
+import { LoadError } from '@/components/Notice';
+import { Section } from '@/components/Section';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/toast';
+import { useAsync } from '@/hooks/useAsync';
+import { useIsWide } from '@/hooks/useMediaQuery';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { usePersonActions } from '@/hooks/usePersonActions';
+import { api, errorMessage } from '@/lib/api';
+import { ChatPane } from '@/routes/Chat';
 
 type Tab = 'requests' | 'connections' | 'messages';
+
+function TabLabel({ label, count }: { label: string; count?: number }) {
+  return (
+    <>
+      {label}
+      {count ? (
+        <Badge variant="secondary" className="h-5 min-w-5 justify-center bg-foreground/10 px-1.5 text-foreground tabular-nums group-data-active/tabs-trigger:bg-primary group-data-active/tabs-trigger:text-primary-foreground">
+          {count}
+        </Badge>
+      ) : null}
+    </>
+  );
+}
 
 /** The three inbox sections as one list. Highlights `activeMatchId` in the two-pane layout. */
 export function InboxList({ activeMatchId }: { activeMatchId: string | null }) {
@@ -27,15 +43,11 @@ export function InboxList({ activeMatchId }: { activeMatchId: string | null }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>(activeMatchId ? 'messages' : 'requests');
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const { data, loading, error, reload } = useAsync(async () => {
-    const [incoming, outgoing, connections] = await Promise.all([
-      api.introductions.listIncoming(user.id),
-      api.introductions.listOutgoing(user.id),
-      api.connections.list(user.id),
-    ]);
+    const [incoming, outgoing, connections] = await Promise.all([api.introductions.listIncoming(user.id), api.introductions.listOutgoing(user.id), api.connections.list(user.id)]);
     return { incoming, outgoing, connections };
   }, [user.id]);
+  const person = usePersonActions({ onBlocked: reload });
 
   const matchKey = data?.connections.map((c) => c.matchId).join(',') ?? '';
   useEffect(() => {
@@ -47,12 +59,11 @@ export function InboxList({ activeMatchId }: { activeMatchId: string | null }) {
     };
   }, [user.id, matchKey, reload]);
 
-  const act = async (fn: () => Promise<unknown>) => {
-    setActionError(null);
+  const act = async (fn: () => Promise<unknown>, failure: string) => {
     try {
       await fn();
     } catch (e) {
-      setActionError(errorMessage(e));
+      toast.add({ title: failure, description: errorMessage(e), type: 'error' });
     }
   };
 
@@ -60,112 +71,126 @@ export function InboxList({ activeMatchId }: { activeMatchId: string | null }) {
     act(async () => {
       const matchId = await api.introductions.accept(r.id);
       navigate(`/chat/${matchId}`);
-    });
+    }, 'Could not accept');
 
   const fresh = data?.connections.filter((c) => !c.lastMessage) ?? [];
   const threads = data?.connections.filter((c) => !!c.lastMessage) ?? [];
   const unreadTotal = threads.reduce((n, c) => n + c.unreadCount, 0);
 
-  const segments = [
-    { key: 'requests' as const, label: 'Requests', count: data?.incoming.length },
-    { key: 'connections' as const, label: 'Connections', count: fresh.length },
-    { key: 'messages' as const, label: 'Messages', count: unreadTotal },
+  const connectionActions = (c: Connection): MenuAction[] => [
+    { label: 'Open conversation', icon: LuMessageCircle, onSelect: () => navigate(`/chat/${c.matchId}`) },
+    { label: 'View profile', icon: LuUser, onSelect: () => navigate(`/profile/${c.counterpart.id}`) },
+    { label: `Report ${c.counterpart.firstName}`, icon: LuFlag, onSelect: () => person.reportMember(c.counterpart), destructive: true, separated: true },
+    { label: `Block ${c.counterpart.firstName}`, icon: LuBan, onSelect: () => void person.blockMember(c.counterpart), destructive: true },
+  ];
+
+  const requestActions = (r: IntroductionRequest, incoming: boolean): MenuAction[] => [
+    { label: 'View profile', icon: LuUser, onSelect: () => navigate(`/profile/${r.counterpart.id}`) },
+    ...(incoming ? [] : [{ label: 'Withdraw request', icon: LuUndo2, onSelect: () => void act(async () => { await api.introductions.withdraw(r.id); reload(); }, 'Could not withdraw') }]),
+    { label: `Report ${r.counterpart.firstName}`, icon: LuFlag, onSelect: () => person.reportMember(r.counterpart), destructive: true, separated: true },
+    { label: `Block ${r.counterpart.firstName}`, icon: LuBan, onSelect: () => void person.blockMember(r.counterpart), destructive: true },
   ];
 
   return (
     <div>
       <PageHeader title="Inbox" />
-      <SegmentedTabs segments={segments} value={tab} onChange={setTab} className="mb-4" />
-      {actionError ? (
-        <div className="mb-3">
-          <Notice tone="danger">{actionError}</Notice>
-        </div>
-      ) : null}
+      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)} className="mb-4">
+        <TabsList className="w-full">
+          <TabsTrigger value="requests" className="group/tabs-trigger">
+            <TabLabel label="Requests" count={data?.incoming.length} />
+          </TabsTrigger>
+          <TabsTrigger value="connections" className="group/tabs-trigger">
+            <TabLabel label="Connections" count={fresh.length} />
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="group/tabs-trigger">
+            <TabLabel label="Messages" count={unreadTotal} />
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
       {loading ? (
-        <LoadingBlock />
+        <RowsSkeleton />
       ) : error ? (
-        <div className="space-y-3">
-          <Notice tone="danger">{error}</Notice>
-          <Button variant="secondary" onClick={reload}>
-            Try again
-          </Button>
-        </div>
+        <LoadError message={error} onRetry={reload} />
       ) : tab === 'requests' ? (
-        <div className="space-y-8">
-          <section>
-            {data && data.incoming.length === 0 ? (
-              <EmptyState title="No requests waiting." body="When someone asks to be introduced, their note appears here." />
-            ) : (
-              <Group>
-                {data?.incoming.map((r) => (
+        <div className="grid gap-8">
+          {data && data.incoming.length === 0 ? (
+            <EmptyState icon={LuInbox} title="No requests waiting." body="When someone asks to be introduced, their note appears here." className="py-12" />
+          ) : (
+            <div className="grid gap-1">
+              {data?.incoming.map((r) => (
+                <InboxRow
+                  key={r.id}
+                  testId="request-row"
+                  name={r.counterpart.firstName}
+                  photo={r.counterpart.photos[0] ?? null}
+                  verified={r.counterpart.publicVerificationBadges.length > 0}
+                  secondary={truncate(r.note, 80)}
+                  time={timeAgo(r.createdAt)}
+                  emphasize
+                  active={expanded === r.id}
+                  onClick={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
+                  actions={requestActions(r, true)}
+                >
+                  {expanded === r.id ? (
+                    <div className="grid gap-3">
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{r.note}</p>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => void accept(r)}>
+                          Accept
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => void act(async () => { await api.introductions.decline(r.id); reload(); }, 'Could not decline')}>
+                          Decline
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => navigate(`/profile/${r.counterpart.id}`)}>
+                          View profile
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+                </InboxRow>
+              ))}
+            </div>
+          )}
+          {data && data.outgoing.length > 0 ? (
+            <Section title="Sent by you">
+              <div className="grid gap-1">
+                {data.outgoing.map((r) => (
                   <InboxRow
                     key={r.id}
-                    testId="request-row"
-                    profileId={r.counterpart.id}
                     name={r.counterpart.firstName}
                     photo={r.counterpart.photos[0] ?? null}
                     verified={r.counterpart.publicVerificationBadges.length > 0}
-                    secondary={truncate(r.note, 80)}
+                    secondary="Waiting for a reply"
                     time={timeAgo(r.createdAt)}
+                    active={expanded === r.id}
                     onClick={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
+                    actions={requestActions(r, false)}
                   >
                     {expanded === r.id ? (
-                      <div className="space-y-3">
-                        <p className="text-body-sm text-text whitespace-pre-wrap">{r.note}</p>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => void accept(r)}>
-                            Accept
-                          </Button>
-                          <Button size="sm" variant="secondary" onClick={() => void act(async () => { await api.introductions.decline(r.id); reload(); })}>
-                            Decline
+                      <div className="grid gap-3">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">{r.note}</p>
+                        <div>
+                          <Button size="sm" variant="outline" onClick={() => void act(async () => { await api.introductions.withdraw(r.id); reload(); }, 'Could not withdraw')}>
+                            Withdraw
                           </Button>
                         </div>
                       </div>
                     ) : null}
                   </InboxRow>
                 ))}
-              </Group>
-            )}
-          </section>
-          {data && data.outgoing.length > 0 ? (
-            <section>
-              <SectionHeader title="Sent by you" />
-              <Group>
-                {data.outgoing.map((r) => (
-                  <InboxRow
-                    key={r.id}
-                    profileId={r.counterpart.id}
-                    name={r.counterpart.firstName}
-                    photo={r.counterpart.photos[0] ?? null}
-                    verified={r.counterpart.publicVerificationBadges.length > 0}
-                    secondary="Waiting for a reply"
-                    time={timeAgo(r.createdAt)}
-                    onClick={() => setExpanded((cur) => (cur === r.id ? null : r.id))}
-                  >
-                    {expanded === r.id ? (
-                      <div className="space-y-3">
-                        <p className="text-body-sm text-text-secondary whitespace-pre-wrap">{r.note}</p>
-                        <Button size="sm" variant="secondary" onClick={() => void act(async () => { await api.introductions.withdraw(r.id); reload(); })}>
-                          Withdraw
-                        </Button>
-                      </div>
-                    ) : null}
-                  </InboxRow>
-                ))}
-              </Group>
-            </section>
+              </div>
+            </Section>
           ) : null}
         </div>
       ) : tab === 'connections' ? (
         fresh.length === 0 ? (
-          <EmptyState title="No new connections." body="Accepted introductions that haven't started talking yet appear here." />
+          <EmptyState icon={LuUsers} title="No new connections." body="Accepted introductions that haven't started talking yet appear here." className="py-12" />
         ) : (
-          <Group>
+          <div className="grid gap-1">
             {fresh.map((c) => (
               <InboxRow
                 key={c.matchId}
                 testId="connection-row"
-                profileId={c.counterpart.id}
                 name={c.counterpart.firstName}
                 photo={c.counterpart.photos[0] ?? null}
                 verified={c.counterpart.publicVerificationBadges.length > 0}
@@ -173,19 +198,19 @@ export function InboxList({ activeMatchId }: { activeMatchId: string | null }) {
                 time={timeAgo(c.createdAt)}
                 active={c.matchId === activeMatchId}
                 to={`/chat/${c.matchId}`}
+                actions={connectionActions(c)}
               />
             ))}
-          </Group>
+          </div>
         )
       ) : threads.length === 0 ? (
-        <EmptyState title="No conversations yet." body="Once a connection starts talking, the thread lives here." />
+        <EmptyState icon={LuMessagesSquare} title="No conversations yet." body="Once a connection starts talking, the thread lives here." className="py-12" />
       ) : (
-        <Group>
+        <div className="grid gap-1">
           {threads.map((c) => (
             <InboxRow
               key={c.matchId}
               testId="thread-row"
-              profileId={c.counterpart.id}
               name={c.counterpart.firstName}
               photo={c.counterpart.photos[0] ?? null}
               verified={c.counterpart.publicVerificationBadges.length > 0}
@@ -194,22 +219,20 @@ export function InboxList({ activeMatchId }: { activeMatchId: string | null }) {
               unread={c.unreadCount}
               active={c.matchId === activeMatchId}
               to={`/chat/${c.matchId}`}
+              actions={connectionActions(c)}
             />
           ))}
-        </Group>
+        </div>
       )}
+      {person.dialogs}
     </div>
   );
 }
 
 function ChoosePlaceholder() {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-center px-6" data-testid="inbox-placeholder">
-      <span className="text-text-faint">
-        <Icon name="inbox" size={28} />
-      </span>
-      <p className="mt-4 text-body text-text-secondary">Choose a conversation.</p>
-      <p className="mt-1 text-body-sm text-text-muted max-w-xs">Requests, new connections, and messages are on the left.</p>
+    <div className="flex h-full items-center justify-center" data-testid="inbox-placeholder">
+      <EmptyState icon={LuMessagesSquare} title="Choose a conversation." body="Requests, new connections, and messages are on the left." />
     </div>
   );
 }
@@ -225,8 +248,8 @@ export function Inbox() {
 
   if (wide) {
     return (
-      <div className="h-full min-h-0 grid grid-cols-[360px_1fr]" data-testid="inbox-split">
-        <aside className="h-full min-h-0 overflow-y-auto border-r border-border pr-6 pt-8 pb-8">
+      <div className="grid h-full min-h-0 grid-cols-[360px_1fr]" data-testid="inbox-split">
+        <aside className="h-full min-h-0 overflow-y-auto border-r pt-10 pr-6 pb-8">
           <InboxList activeMatchId={matchId ?? null} />
         </aside>
         <section className="h-full min-h-0 min-w-0 pl-6">{matchId ? <ChatPane key={matchId} matchId={matchId} /> : <ChoosePlaceholder />}</section>
@@ -235,7 +258,7 @@ export function Inbox() {
   }
   if (matchId) return <ChatPane key={matchId} matchId={matchId} showBack />;
   return (
-    <div className="h-full min-h-0 overflow-y-auto pt-6 pb-6">
+    <div className="h-full min-h-0 overflow-y-auto pt-6 pb-6 md:pt-10">
       <InboxList activeMatchId={null} />
     </div>
   );

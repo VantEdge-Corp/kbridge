@@ -79,7 +79,7 @@ export default function Me() {
   return (
     <Screen>
       <Header title="Me" right={<HeaderIconButton name="settings" label="Settings" onPress={() => router.push('/settings')} />} />
-      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.textSecondary} />}>
+      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.mutedForeground} />}>
         <View style={styles.identity}>
           <Pressable
             accessibilityRole="button"
@@ -89,7 +89,7 @@ export default function Me() {
           >
             <Avatar uri={profile.photos[0] ?? null} firstName={profile.firstName} size={PORTRAIT} />
             <View style={styles.editDisc}>
-              <Icon name={profile.photos.length > 0 ? 'edit-2' : 'plus'} size={13} color={colors.onIvory} />
+              <Icon name={profile.photos.length > 0 ? 'pencil' : 'plus'} size={13} color={colors.primaryForeground} />
             </View>
           </Pressable>
           <View style={styles.nameRow}>
@@ -114,9 +114,9 @@ export default function Me() {
 
         <SectionHeader title="Profile" />
         <Group inset={GROUP_INSET.icon}>
-          <SettingsRow label="Edit profile" icon="edit-2" onPress={() => router.push('/me/edit')} />
-          <SettingsRow label="Photos" icon="image" value={`${profile.photos.length} of 6`} onPress={() => router.push('/me/photos')} />
-          <SettingsRow label="Discovery preferences" icon="sliders" onPress={() => router.push('/me/preferences')} />
+          <SettingsRow label="Edit profile" icon="pencil" onPress={() => router.push('/me/edit')} />
+          <SettingsRow label="Photos" icon="camera" value={`${profile.photos.length} of 6`} onPress={() => router.push('/me/photos')} />
+          <SettingsRow label="Discovery preferences" icon="sliders-horizontal" onPress={() => router.push('/me/preferences')} />
           <SettingsRow label="Saved posts" icon="bookmark" onPress={() => router.push('/me/saved')} />
           <SettingsRow label="View as others see you" icon="eye" onPress={() => router.push({ pathname: '/profile/[id]', params: { id: userId } })} />
         </Group>
@@ -140,9 +140,9 @@ const makeStyles = ({ colors }: Theme) => StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.ivory,
+    backgroundColor: colors.primary,
     borderWidth: 3,
-    borderColor: colors.canvas,
+    borderColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },

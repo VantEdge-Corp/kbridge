@@ -58,7 +58,12 @@ export function useCandidates() {
     void api.discovery.recordImpressions(fresh).catch(() => {});
   }, []);
 
+  /** Loads again without a spinner once the first load is in: for focus refreshes and "Try again". */
   const reload = useCallback(() => load('initial'), [load]);
+  /**
+   * Pull-to-refresh, with the list's spinner. Only a pull may start it: on iOS a spinner started
+   * from code (say on tab focus) can leave the list stuck below its header once it ends.
+   */
   const refresh = useCallback(() => load('refresh'), [load]);
   /** Ranking and eligibility run on the client, so new preferences apply without a refetch. */
   const adoptFilters = useCallback(

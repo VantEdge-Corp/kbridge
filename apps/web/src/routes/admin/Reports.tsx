@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { LuFlag } from 'react-icons/lu';
 import { longDate, type Report, type ReportStatus } from '@peaches/core';
-import { api, errorMessage } from '../../lib/api';
-import { Button } from '../../components/Button';
-import { EmptyState } from '../../components/EmptyState';
-import { Notice } from '../../components/Field';
-import { LoadingBlock } from '../../components/Loading';
-import { SegmentedTabs } from '../../components/SegmentedTabs';
-import { useAsync } from '../../hooks/useAsync';
-import { usePageTitle } from '../../hooks/usePageTitle';
+import { PageHeader } from '@/components/AppShell';
+import { EmptyState } from '@/components/EmptyState';
+import { RowsSkeleton } from '@/components/Loading';
+import { LoadError, Notice } from '@/components/Notice';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAsync } from '@/hooks/useAsync';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { api, errorMessage } from '@/lib/api';
 
 const TABS: ReadonlyArray<{ key: ReportStatus | 'all'; label: string }> = [
   { key: 'open', label: 'Open' },
@@ -16,6 +20,8 @@ const TABS: ReadonlyArray<{ key: ReportStatus | 'all'; label: string }> = [
   { key: 'dismissed', label: 'Dismissed' },
   { key: 'all', label: 'All' },
 ];
+
+const STATUS_LABEL: Record<ReportStatus, string> = { open: 'Open', reviewed: 'Reviewed', actioned: 'Actioned', dismissed: 'Dismissed' };
 
 function ReportCard({ report, onChanged }: { report: Report; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
@@ -33,30 +39,34 @@ function ReportCard({ report, onChanged }: { report: Report; onChanged: () => vo
     }
   };
   return (
-    <article className="border border-border rounded-lg bg-surface p-5">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-display text-name text-text">{report.reported.firstName}</span>
-        <span className="text-body-sm text-text-muted">reported by {report.reporter?.firstName ?? 'a former member'}</span>
-        <span className="ml-auto text-caption text-text-muted">{longDate(report.createdAt)}</span>
-      </div>
-      <p className="mt-2 text-body-sm text-text">{report.reason}</p>
-      {report.detail ? <p className="mt-1 text-body-sm text-text-secondary whitespace-pre-wrap">{report.detail}</p> : null}
-      <p className="mt-2 text-caption text-text-muted">
-        {report.matchId ? 'From a conversation' : report.postId ? 'About a post' : 'From a profile'} · Status: {report.status}
-      </p>
-      {error ? (
-        <div className="mt-3">
-          <Notice tone="danger">{error}</Notice>
-        </div>
-      ) : null}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {(['reviewed', 'actioned', 'dismissed'] as const).filter((s) => s !== report.status).map((s) => (
-          <Button key={s} size="sm" variant={s === 'actioned' ? 'primary' : 'secondary'} disabled={busy} onClick={() => void set(s)}>
-            Mark {s}
-          </Button>
-        ))}
-      </div>
-    </article>
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {report.reported.firstName}
+          <span className="text-sm font-normal text-muted-foreground">reported by {report.reporter?.firstName ?? 'a former member'}</span>
+          <Badge variant={report.status === 'open' ? 'default' : 'secondary'} className="ml-auto">
+            {STATUS_LABEL[report.status]}
+          </Badge>
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          {longDate(report.createdAt)} · {report.matchId ? 'From a conversation' : report.postId ? 'About a post' : 'From a profile'}
+        </p>
+      </CardHeader>
+      <CardContent className="gap-1">
+        <p className="text-sm font-medium">{report.reason}</p>
+        {report.detail ? <p className="text-sm whitespace-pre-wrap text-muted-foreground">{report.detail}</p> : null}
+        {error ? <Notice tone="danger" className="mt-3">{error}</Notice> : null}
+      </CardContent>
+      <CardFooter className="flex-wrap gap-2 border-t">
+        {(['reviewed', 'actioned', 'dismissed'] as const)
+          .filter((s) => s !== report.status)
+          .map((s) => (
+            <Button key={s} size="sm" variant={s === 'actioned' ? 'default' : 'outline'} disabled={busy} onClick={() => void set(s)}>
+              Mark {s}
+            </Button>
+          ))}
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -67,16 +77,24 @@ export function AdminReports() {
   const visible = data?.filter((r) => tab === 'all' || r.status === tab) ?? [];
   return (
     <div data-testid="admin-reports">
-      <h1 className="font-display text-title leading-[34px] text-text mb-6">Reports</h1>
-      <SegmentedTabs segments={TABS} value={tab} onChange={setTab} className="mb-4" />
+      <PageHeader title="Reports" description="The Terms promise every report is reviewed within 24 hours, child safety first." />
+      <Tabs value={tab} onValueChange={(value) => setTab(value as ReportStatus | 'all')} className="mb-6">
+        <TabsList className="max-w-full overflow-x-auto">
+          {TABS.map((t) => (
+            <TabsTrigger key={t.key} value={t.key}>
+              {t.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
       {loading ? (
-        <LoadingBlock />
+        <RowsSkeleton avatar={false} />
       ) : error ? (
-        <Notice tone="danger">{error}</Notice>
+        <LoadError message={error} onRetry={reload} />
       ) : visible.length === 0 ? (
-        <EmptyState title="No reports." body={tab === 'open' ? 'Nothing waiting for review.' : undefined} />
+        <EmptyState icon={LuFlag} title="No reports." body={tab === 'open' ? 'Nothing waiting for review.' : undefined} />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3">
           {visible.map((r) => (
             <ReportCard key={r.id} report={r} onChanged={reload} />
           ))}

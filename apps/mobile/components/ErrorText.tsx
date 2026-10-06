@@ -14,6 +14,6 @@ export function ErrorText({ message, flush = false }: { message: string | null |
 }
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  text: { color: colors.danger, fontSize: 13, lineHeight: 18, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
+  text: { color: colors.destructive, fontSize: 13, lineHeight: 18, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   flush: { paddingHorizontal: 0 },
 });

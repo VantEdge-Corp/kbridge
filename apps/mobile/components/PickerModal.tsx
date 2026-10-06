@@ -58,24 +58,25 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView edges={['top', 'bottom']} style={styles.root}>
+        {/* Choices apply as they are tapped, so a multi-select ends with Done: an X there would read as Cancel. */}
         <Header
           title={title}
+          close={!multi}
+          onBack={onClose}
           right={
             multi ? (
-              <Button title="Done" size="small" onPress={onClose} />
+              <Button title="Done" size="sm" onPress={onClose} />
             ) : clearable && selected.length > 0 ? (
               <Button
                 title="Clear"
-                size="small"
+                size="sm"
                 variant="ghost"
                 onPress={() => {
                   onChange([]);
                   onClose();
                 }}
               />
-            ) : (
-              <Button title="Close" size="small" variant="ghost" onPress={onClose} />
-            )
+            ) : undefined
           }
         />
         {searchable && options.length > 8 ? (
@@ -101,10 +102,10 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
                 accessibilityRole={multi ? 'checkbox' : 'radio'}
                 accessibilityState={{ checked: on }}
                 onPress={() => toggle(item.value)}
-                style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.surfaceHover }]}
+                style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.accent }]}
               >
-                <Text style={[text.body, on && { color: colors.ivory, fontWeight: '500' }]}>{item.label}</Text>
-                {on ? <Icon name="check" size={18} color={colors.ivory} /> : null}
+                <Text style={[text.body, on && { fontWeight: '600' }]}>{item.label}</Text>
+                {on ? <Icon name="check" size={18} color={colors.foreground} /> : null}
               </Pressable>
             );
           }}
@@ -117,7 +118,7 @@ export function PickerModal({ visible, onClose, title, options, selected, onChan
 }
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.canvas },
+  root: { flex: 1, backgroundColor: colors.background },
   search: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
   count: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   list: { paddingBottom: spacing.xxl },

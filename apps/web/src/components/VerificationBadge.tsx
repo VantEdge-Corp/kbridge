@@ -1,24 +1,14 @@
+import { LuBadgeCheck } from 'react-icons/lu';
 import { VERIFICATION_LABEL, type VerificationDimension } from '@peaches/core';
-import { Icon } from './icons';
+import { cn } from '@/lib/utils';
 
-/** Calm, understated verification indicator. Shown only for verified dimensions. */
-export function VerificationBadge({
-  dimension,
-  label,
-  size = 14,
-  className = '',
-}: {
-  dimension?: VerificationDimension;
-  label?: string | boolean;
-  size?: number;
-  className?: string;
-}) {
-  const text = typeof label === 'string' ? label : label === true ? (dimension ? VERIFICATION_LABEL[dimension] : 'Verified') : null;
+/** The verification seal, shown only for verified dimensions. With `label`, it reads "Verified" or the dimension's name. */
+export function VerificationBadge({ dimension, label, className }: { dimension?: VerificationDimension; label?: boolean; className?: string }) {
   const title = dimension ? `${VERIFICATION_LABEL[dimension]} verified` : 'Verified';
   return (
-    <span className={`inline-flex items-center gap-1 text-verified ${className}`} title={title} aria-label={title}>
-      <Icon name="verified" size={size} />
-      {text ? <span className="text-caption">{text}</span> : null}
+    <span role="img" aria-label={title} title={title} className={cn('inline-flex shrink-0 items-center gap-1 text-verified', className)}>
+      <LuBadgeCheck className="size-4" />
+      {label ? <span className="text-xs font-medium">{dimension ? VERIFICATION_LABEL[dimension] : 'Verified'}</span> : null}
     </span>
   );
 }

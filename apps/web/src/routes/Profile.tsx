@@ -1,41 +1,25 @@
-import { useState } from 'react';
+import { LuCheck, LuPencil, LuUserX } from 'react-icons/lu';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  CHILDREN_OPTIONS,
-  DRINKING_OPTIONS,
-  EXERCISE_OPTIONS,
-  INDUSTRY_OPTIONS,
-  LANGUAGE_OPTIONS,
-  RACE_ETHNICITY_OPTIONS,
-  RELATIONSHIP_INTENT_OPTIONS,
-  SMOKING_OPTIONS,
-  STUDENT_STATUS_OPTIONS,
-  VERIFICATION_LABEL,
-  countryName,
-  formatHeight,
-  labelFor,
-  nameAge,
-  timeAgo,
-} from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Button, IconButton, LinkButton } from '../components/Button';
-import { Menu } from '../components/Dialog';
-import { EmptyState } from '../components/EmptyState';
-import { Group, GroupSection, ROW_HAIRLINE, rowInset } from '../components/Group';
-import { Notice } from '../components/Field';
-import { Icon } from '../components/icons';
-import { IntroductionNoteDialog } from '../components/IntroductionNoteDialog';
-import { LoadingBlock } from '../components/Loading';
-import { ProfileMetadata } from '../components/ProfileMetadata';
-import { ProfilePhotoGallery } from '../components/ProfilePhotoGallery';
-import { ReportDialog } from '../components/ReportDialog';
-import { SectionHeader } from '../components/SectionHeader';
-import { TagChip } from '../components/TagChip';
-import { VerificationBadge } from '../components/VerificationBadge';
-import { useAsync } from '../hooks/useAsync';
-import { usePageTitle } from '../hooks/usePageTitle';
+import { VERIFICATION_LABEL, nameAge, profileDetails, profileMetaLine, profileVitals, timeAgo } from '@peaches/core';
+import { useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import { MoreMenu } from '@/components/ActionMenu';
+import { EmptyState } from '@/components/EmptyState';
+import { LoadingBlock } from '@/components/Loading';
+import { LoadError } from '@/components/Notice';
+import { PhotoGallery } from '@/components/PhotoGallery';
+import { DetailList, VitalBadges } from '@/components/ProfileFacts';
+import { Section } from '@/components/Section';
+import { RowGroup } from '@/components/SettingsRow';
+import { VerificationBadge } from '@/components/VerificationBadge';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Item, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
+import { useAsync } from '@/hooks/useAsync';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { usePersonActions } from '@/hooks/usePersonActions';
+import { api } from '@/lib/api';
 
 export function Profile() {
   const { id = '' } = useParams();
@@ -52,179 +36,130 @@ export function Profile() {
   }, [id, user.id]);
   const profile = data?.profile ?? null;
   usePageTitle(profile ? profile.firstName : 'Profile');
-  const [intro, setIntro] = useState(false);
-  const [menu, setMenu] = useState(false);
-  const [report, setReport] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-
-  const block = async () => {
-    if (!profile || !window.confirm(`Block ${profile.firstName}? You won't see each other anymore.`)) return;
-    try {
-      await api.safety.block(user.id, profile.id);
-      navigate('/home', { replace: true });
-    } catch (e) {
-      setActionError(errorMessage(e));
-    }
-  };
+  const { actionsFor, dialogs, requested, requestIntroduction } = usePersonActions({ onBlocked: () => navigate('/home', { replace: true }) });
 
   if (loading) return <LoadingBlock />;
-  if (error) return <Notice tone="danger">{error}</Notice>;
+  if (error) return <LoadError message={error} onRetry={reload} />;
   if (!profile) {
     return (
       <div>
         <PageHeader title="Profile" back="/home" />
-        <EmptyState title="This member isn't available." body="They may have left, or their profile is no longer visible." />
+        <EmptyState icon={LuUserX} title="This member isn't available." body="They may have left, or their profile is no longer visible." />
       </div>
     );
   }
 
-  const l = profile.lifestyle;
-  const disclosedRace = profile.raceEthnicityDisclosure === 'disclosed' && profile.raceEthnicities.length > 0;
+  const vitals = profileVitals(profile);
+  const details = profileDetails(profile);
+  const verified = profile.publicVerificationBadges.length > 0;
 
   return (
     <div data-testid="profile-view">
       <PageHeader
-        title={nameAge(profile.firstName, profile.age)}
-        eyebrow={profile.displayArea}
-        back={own ? '/me' : undefined}
+        title={
+          <span className="inline-flex items-center gap-2">
+            {nameAge(profile.firstName, profile.age)}
+            {verified ? <VerificationBadge className="[&>svg]:size-5" /> : null}
+          </span>
+        }
+        description={profileMetaLine(profile)}
+        back={own ? '/me' : { history: '/home' }}
         actions={
           own ? (
-            <LinkButton to="/me/edit" variant="secondary" size="sm">
-              Edit
-            </LinkButton>
+            <Link to="/me/edit" className={buttonVariants({ variant: 'outline' })}>
+              <LuPencil data-icon="inline-start" />
+              Edit profile
+            </Link>
           ) : (
-            <div className="relative">
-              <IconButton aria-label="More" onClick={() => setMenu((m) => !m)}>
-                <Icon name="more" />
-              </IconButton>
-              <Menu open={menu} onClose={() => setMenu(false)} items={[{ label: 'Report', onClick: () => setReport(true) }, { label: 'Block', onClick: () => void block(), danger: true }]} />
-            </div>
+            <MoreMenu actions={actionsFor(profile, { onProfile: true })} label={`More for ${profile.firstName}`} />
           )
         }
       />
-      {actionError ? (
-        <div className="mb-4">
-          <Notice tone="danger">{actionError}</Notice>
-        </div>
-      ) : null}
-      <div className="md:grid md:grid-cols-[360px_1fr] md:gap-10">
-        <div className="max-w-[420px] md:max-w-none">
-          <ProfilePhotoGallery name={profile.firstName} photos={profile.photos} />
-          <div className="mt-5">
-            {own ? (
-              <p className="text-body-sm text-text-muted">This is you.</p>
-            ) : data?.requested ? (
-              <Button variant="secondary" className="w-full" disabled>
-                Request sent
-              </Button>
-            ) : (
-              <Button className="w-full" onClick={() => setIntro(true)} data-testid="interested">
-                Interested
-              </Button>
-            )}
-          </div>
+      <div className="grid gap-8 md:grid-cols-[minmax(0,360px)_1fr] lg:grid-cols-[minmax(0,400px)_1fr] lg:gap-12">
+        <div className="grid content-start gap-4 md:sticky md:top-8 md:self-start">
+          <PhotoGallery name={profile.firstName} photos={profile.photos} />
+          {own ? (
+            <p className="text-sm text-muted-foreground">This is you, as other members see you.</p>
+          ) : data?.requested || requested.has(profile.id) ? (
+            <Button size="lg" variant="outline" className="w-full" disabled>
+              <LuCheck data-icon="inline-start" />
+              Request sent
+            </Button>
+          ) : (
+            <Button size="lg" className="w-full" onClick={() => requestIntroduction(profile)} data-testid="interested">
+              Interested
+            </Button>
+          )}
         </div>
 
-        <div className="mt-8 md:mt-0 space-y-8">
-          <section>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-body-sm text-text-secondary">
-              {profile.employmentDisplay ? <span>{profile.employmentDisplay}</span> : null}
-              {profile.height ? <span>{formatHeight(profile.height)}</span> : null}
-              {profile.publicVerificationBadges.map((d) => (
-                <VerificationBadge key={d} dimension={d} label />
-              ))}
-            </div>
-            {profile.bio ? <p className="mt-4 text-body text-text leading-relaxed whitespace-pre-wrap">{profile.bio}</p> : null}
-          </section>
-
-          <Group>
-          <GroupSection eyebrow="Background">
-            <ProfileMetadata
-              items={[
-                { label: 'Work', value: profile.employmentDisplay },
-                { label: 'Field', value: labelFor(INDUSTRY_OPTIONS, profile.industry) },
-                { label: 'Education', value: profile.educationDisplay },
-                { label: 'Standing', value: labelFor(STUDENT_STATUS_OPTIONS, profile.studentStatus) },
-                { label: 'Nationality', value: profile.nationalities.length ? profile.nationalities.map(countryName).join(', ') : '' },
-                { label: 'Ethnicity', value: disclosedRace ? profile.raceEthnicities.map((r) => labelFor(RACE_ETHNICITY_OPTIONS, r)).join(', ') : '' },
-                { label: 'Languages', value: profile.languages.length ? profile.languages.map((c) => labelFor(LANGUAGE_OPTIONS, c)).join(', ') : '' },
-                { label: 'Area', value: profile.displayArea },
-              ]}
-            />
-          </GroupSection>
-
-          {profile.relationshipIntent ? (
-            <GroupSection eyebrow="Intent">
-              <p className="text-body-sm text-text">{labelFor(RELATIONSHIP_INTENT_OPTIONS, profile.relationshipIntent)}</p>
-            </GroupSection>
+        <div className="grid content-start gap-8">
+          {profile.bio ? (
+            <Card>
+              <CardContent className="gap-2">
+                <p className="text-sm font-medium text-muted-foreground">About {profile.firstName}</p>
+                <p className="text-lg leading-relaxed whitespace-pre-wrap text-pretty">{profile.bio}</p>
+              </CardContent>
+            </Card>
           ) : null}
 
-          {l.drinking || l.smoking || l.exercise || l.children ? (
-            <GroupSection eyebrow="Lifestyle">
-              <ProfileMetadata
-                items={[
-                  { label: 'Drinking', value: l.drinking && l.drinking !== 'prefer_not_to_say' ? labelFor(DRINKING_OPTIONS, l.drinking) : '' },
-                  { label: 'Smoking', value: l.smoking && l.smoking !== 'prefer_not_to_say' ? labelFor(SMOKING_OPTIONS, l.smoking) : '' },
-                  { label: 'Exercise', value: labelFor(EXERCISE_OPTIONS, l.exercise) },
-                  { label: 'Children', value: l.children && l.children !== 'prefer_not_to_say' ? labelFor(CHILDREN_OPTIONS, l.children) : '' },
-                ]}
-              />
-            </GroupSection>
+          {vitals.length > 0 ? (
+            <Section title="At a glance">
+              <VitalBadges facts={vitals} />
+            </Section>
           ) : null}
-          </Group>
+
+          {details.length > 0 ? (
+            <Section title="Details">
+              <DetailList facts={details} />
+            </Section>
+          ) : null}
 
           {profile.interests.length > 0 ? (
-            <section>
-              <SectionHeader title="Interests" />
+            <Section title="Interests">
               <div className="flex flex-wrap gap-2">
                 {profile.interests.map((i) => (
-                  <TagChip key={i}>{i}</TagChip>
+                  <Badge key={i} variant="secondary" className="h-7 px-3 text-sm font-normal">
+                    {i}
+                  </Badge>
                 ))}
               </div>
-            </section>
+            </Section>
           ) : null}
 
-          <section>
-            <SectionHeader title="Verification" />
-            {profile.publicVerificationBadges.length === 0 ? (
-              <p className="text-body-sm text-text-muted">No verified details yet.</p>
+          <Section title="Verification" description={verified ? 'Confirmed by the committee from the details this member provided.' : undefined}>
+            {verified ? (
+              <div className="flex flex-wrap gap-2">
+                {profile.publicVerificationBadges.map((d) => (
+                  <Badge key={d} variant="outline" className="h-8 gap-1.5 px-3 text-sm font-normal [&>span>svg]:size-4!">
+                    <VerificationBadge dimension={d} />
+                    {VERIFICATION_LABEL[d]}
+                  </Badge>
+                ))}
+              </div>
             ) : (
-              <Group>
-                <ul>
-                  {profile.publicVerificationBadges.map((d) => (
-                    <li key={d} className={`${ROW_HAIRLINE} flex items-center gap-3 px-4 py-3 text-body-sm text-text`} style={rowInset(44)}>
-                      <VerificationBadge dimension={d} size={18} />
-                      {VERIFICATION_LABEL[d]} confirmed by the committee
-                    </li>
-                  ))}
-                </ul>
-              </Group>
+              <p className="text-sm text-muted-foreground">No verified details yet.</p>
             )}
-          </section>
+          </Section>
 
-          <section>
-            <SectionHeader title="Posts" />
+          <Section title="Posts">
             {data && data.posts.length === 0 ? (
-              <p className="text-body-sm text-text-muted">Nothing posted yet.</p>
+              <p className="text-sm text-muted-foreground">Nothing posted yet.</p>
             ) : (
-              <Group>
-                <ul>
-                  {data?.posts.map((p) => (
-                    <li key={p.id} className={ROW_HAIRLINE} style={rowInset(16)}>
-                      <Link to={`/post/${p.id}`} className="block px-4 py-3.5 motion hover:bg-surface-hover focus-ring">
-                        <p className="text-body-sm text-text line-clamp-3">{p.body}</p>
-                        <p className="mt-1 text-caption text-text-muted">{timeAgo(p.createdAt)}</p>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </Group>
+              <RowGroup>
+                {data?.posts.map((p) => (
+                  <Item key={p.id} render={<Link to={`/post/${p.id}`} />} className="rounded-none px-4 py-3.5 hover:bg-muted">
+                    <ItemContent>
+                      <ItemTitle className="line-clamp-3 font-normal leading-relaxed">{p.body}</ItemTitle>
+                      <ItemDescription className="text-xs">{timeAgo(p.createdAt)}</ItemDescription>
+                    </ItemContent>
+                  </Item>
+                ))}
+              </RowGroup>
             )}
-          </section>
+          </Section>
         </div>
       </div>
-      {!own ? <IntroductionNoteDialog open={intro} onClose={() => setIntro(false)} recipient={profile} onSent={reload} /> : null}
-      {!own ? <ReportDialog open={report} onClose={() => setReport(false)} reportedId={profile.id} reportedName={profile.firstName} /> : null}
+      {!own ? dialogs : null}
     </div>
   );
 }

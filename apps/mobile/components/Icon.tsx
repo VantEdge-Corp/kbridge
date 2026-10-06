@@ -1,12 +1,158 @@
-import { Feather } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
-import { iconSizes } from '@/constants/theme';
+import {
+  ArrowLeft,
+  ArrowUp,
+  Baby,
+  BadgeCheck,
+  Ban,
+  Bell,
+  Bookmark,
+  BookmarkCheck,
+  Briefcase,
+  Camera,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Cigarette,
+  CircleDashed,
+  CircleX,
+  Clock3,
+  Compass,
+  Copy,
+  Database,
+  Dumbbell,
+  Ellipsis,
+  Eye,
+  EyeOff,
+  Flag,
+  GraduationCap,
+  House,
+  ImagePlus,
+  Inbox,
+  Languages,
+  Link,
+  Lock,
+  LogOut,
+  Mail,
+  MapPin,
+  MessageCircle,
+  MessageSquareText,
+  MessagesSquare,
+  Minus,
+  Newspaper,
+  Pencil,
+  Plus,
+  Ruler,
+  SearchX,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Signpost,
+  SlidersHorizontal,
+  SquarePen,
+  SunMoon,
+  Tag,
+  Trash2,
+  User,
+  UserX,
+  Users,
+  Wine,
+  X,
+  type LucideIcon,
+} from 'lucide-react-native';
+import type { ProfileFactKind } from '@peaches/core';
+import { iconSizes, strokeWidth } from '@/constants/theme';
 import { useTheme } from '@/lib/theme';
 
-export type IconName = ComponentProps<typeof Feather>['name'];
+/**
+ * Lucide, the set shadcn/ui draws with. The web takes the same art from
+ * react-icons (`react-icons/lu`); react-icons renders DOM SVG, so the phone
+ * uses lucide-react-native. Names are Lucide's own.
+ */
+const ICONS = {
+  'arrow-left': ArrowLeft,
+  'arrow-up': ArrowUp,
+  baby: Baby,
+  'badge-check': BadgeCheck,
+  ban: Ban,
+  bell: Bell,
+  bookmark: Bookmark,
+  'bookmark-check': BookmarkCheck,
+  briefcase: Briefcase,
+  camera: Camera,
+  check: Check,
+  'chevron-down': ChevronDown,
+  'chevron-right': ChevronRight,
+  'chevron-up': ChevronUp,
+  cigarette: Cigarette,
+  'circle-dashed': CircleDashed,
+  'circle-x': CircleX,
+  'clock-3': Clock3,
+  compass: Compass,
+  copy: Copy,
+  database: Database,
+  dumbbell: Dumbbell,
+  ellipsis: Ellipsis,
+  eye: Eye,
+  'eye-off': EyeOff,
+  flag: Flag,
+  'graduation-cap': GraduationCap,
+  house: House,
+  'image-plus': ImagePlus,
+  inbox: Inbox,
+  languages: Languages,
+  link: Link,
+  lock: Lock,
+  'log-out': LogOut,
+  mail: Mail,
+  'map-pin': MapPin,
+  'message-circle': MessageCircle,
+  'message-square-text': MessageSquareText,
+  'messages-square': MessagesSquare,
+  minus: Minus,
+  newspaper: Newspaper,
+  pencil: Pencil,
+  plus: Plus,
+  ruler: Ruler,
+  'search-x': SearchX,
+  settings: Settings,
+  shield: Shield,
+  'shield-check': ShieldCheck,
+  signpost: Signpost,
+  'sliders-horizontal': SlidersHorizontal,
+  'square-pen': SquarePen,
+  'sun-moon': SunMoon,
+  tag: Tag,
+  'trash-2': Trash2,
+  user: User,
+  'user-x': UserX,
+  users: Users,
+  wine: Wine,
+  x: X,
+} satisfies Record<string, LucideIcon>;
 
-/** Thin, monochrome, outline icons. Defaults to 20px in the current muted tone. */
+export type IconName = keyof typeof ICONS;
+
+/** The same glyph per profile fact as the web (apps/web/src/components/ProfileFacts.tsx). */
+export const FACT_ICON: Record<ProfileFactKind, IconName> = {
+  height: 'ruler',
+  area: 'map-pin',
+  intent: 'signpost',
+  children: 'baby',
+  drinking: 'wine',
+  smoking: 'cigarette',
+  exercise: 'dumbbell',
+  work: 'briefcase',
+  education: 'graduation-cap',
+  field: 'tag',
+  nationality: 'flag',
+  languages: 'languages',
+  ethnicity: 'user',
+};
+
+/** A Lucide icon at shadcn's stroke. Defaults to 20px in the muted foreground. */
 export function Icon({ name, size = iconSizes.md, color }: { name: IconName; size?: number; color?: string }) {
   const { colors } = useTheme();
-  return <Feather name={name} size={size} color={color ?? colors.textSecondary} />;
+  const Glyph = ICONS[name];
+  return <Glyph size={size} color={color ?? colors.mutedForeground} strokeWidth={strokeWidth} />;
 }

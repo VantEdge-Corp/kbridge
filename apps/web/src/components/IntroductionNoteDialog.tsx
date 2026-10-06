@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { LIMITS, validateIntroNote, type PublicProfile } from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { useMember } from '../auth/AuthProvider';
-import { Button } from './Button';
-import { Dialog } from './Dialog';
-import { Notice, TextArea } from './Field';
+import { useMember } from '@/auth/AuthProvider';
+import { TextareaField } from '@/components/form';
+import { Notice } from '@/components/Notice';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/ui/toast';
+import { api, errorMessage } from '@/lib/api';
 
 /** "Interested" / "Request conversation": one restrained note, then a pending request. */
 export function IntroductionNoteDialog({
@@ -36,6 +39,7 @@ export function IntroductionNoteDialog({
     try {
       await api.introductions.request({ viewerId: user.id, recipientId: recipient.id, note, postId: postId ?? null });
       setNote('');
+      toast.add({ title: 'Request sent', description: `${recipient.firstName} will see your note in their inbox.`, type: 'success' });
       onSent?.();
       onClose();
     } catch (e) {
@@ -46,38 +50,32 @@ export function IntroductionNoteDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title={`Introduce yourself to ${recipient.firstName}`}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose} disabled={busy}>
+    <Dialog open={open} onOpenChange={(next) => (next ? undefined : onClose())}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Introduce yourself to {recipient.firstName}</DialogTitle>
+          <DialogDescription>{recipient.firstName} will see your note with your profile and can accept or decline. A short, specific note reads best.</DialogDescription>
+        </DialogHeader>
+        <TextareaField
+          label="Your note"
+          hint={`${note.trim().length}/${LIMITS.introNoteMax}`}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          maxLength={LIMITS.introNoteMax}
+          rows={5}
+          placeholder="What caught your attention, and what would you like to talk about?"
+        />
+        {error ? <Notice tone="danger">{error}</Notice> : null}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>
             Cancel
           </Button>
           <Button onClick={() => void submit()} disabled={busy || !!problem}>
-            {busy ? 'Sending' : 'Send request'}
+            {busy ? <Spinner data-icon="inline-start" /> : null}
+            Send request
           </Button>
-        </>
-      }
-    >
-      <p className="text-body-sm text-text-muted mb-3">
-        {recipient.firstName} will see your note with your profile and can accept or decline. A short, specific note reads best.
-      </p>
-      <TextArea
-        label="Your note"
-        hint={`${note.trim().length}/${LIMITS.introNoteMax}`}
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        maxLength={LIMITS.introNoteMax}
-        rows={5}
-        placeholder="What caught your attention, and what would you like to talk about?"
-      />
-      {error ? (
-        <div className="mt-3">
-          <Notice tone="danger">{error}</Notice>
-        </div>
-      ) : null}
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }

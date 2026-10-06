@@ -67,11 +67,11 @@ export function IntroductionNoteSheet({ visible, onClose, recipientFirstName, on
           autoFocus
         />
         <View style={styles.footer}>
-          <Text style={[text.caption, note.length > 0 && !problem && { color: colors.textSecondary }]}>
+          <Text style={[text.caption, note.length > 0 && !problem && { color: colors.foreground }]}>
             {note.trim().length}/{LIMITS.introNoteMax}
             {problem && note.length > 0 ? ` · ${problem}` : ''}
           </Text>
-          <Button title="Send request" onPress={submit} loading={sending} disabled={!!problem} size="small" />
+          <Button title="Send request" onPress={submit} loading={sending} disabled={!!problem} size="sm" />
         </View>
       </KeyboardAvoidingView>
     </Sheet>

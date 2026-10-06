@@ -1,9 +1,11 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { buttonVariants } from '@/components/ui/button';
 
 interface State {
   error: Error | null;
 }
 
+/** Last resort for a render crash. Plain elements only: nothing here may depend on providers that could be the cause. */
 export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   override state: State = { error: null };
 
@@ -18,19 +20,15 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   override render(): ReactNode {
     if (!this.state.error) return this.props.children;
     return (
-      <main className="min-h-screen bg-canvas text-text flex items-center justify-center px-6">
-        <div className="max-w-md w-full border border-border rounded-lg bg-surface p-6">
-          <p className="font-display text-heading mb-2">Something went wrong.</p>
-          <p className="text-text-secondary text-body-sm whitespace-pre-wrap">{this.state.error.message}</p>
-          <div className="mt-5 flex gap-3">
-            <button
-              type="button"
-              className="h-11 px-4 rounded-md bg-ivory text-on-ivory text-body font-medium"
-              onClick={() => window.location.reload()}
-            >
+      <main className="flex min-h-dvh items-center justify-center bg-background px-6 text-foreground">
+        <div className="w-full max-w-md rounded-xl border bg-card p-6 shadow-xs">
+          <p className="text-lg font-semibold tracking-tight">Something went wrong.</p>
+          <p className="mt-2 text-sm whitespace-pre-wrap text-muted-foreground">{this.state.error.message}</p>
+          <div className="mt-6 flex gap-2">
+            <button type="button" className={buttonVariants()} onClick={() => window.location.reload()}>
               Try again
             </button>
-            <a href="/" className="h-11 px-4 rounded-md border border-border text-text inline-flex items-center">
+            <a href="/" className={buttonVariants({ variant: 'outline' })}>
               Return home
             </a>
           </div>

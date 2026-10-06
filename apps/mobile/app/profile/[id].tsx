@@ -182,12 +182,14 @@ export default function ProfileView() {
         }
         right={
           !own ? (
-            <HeaderIconButton name="more-horizontal" label="More options" onPress={() => setMoreOpen(true)} />
+            <HeaderIconButton name="ellipsis" label="More options" onPress={() => setMoreOpen(true)} />
           ) : (
-            <Button title="Edit" size="small" variant="ghost" onPress={() => router.push('/me/edit')} />
+            <Button title="Edit" size="sm" variant="ghost" onPress={() => router.push('/me/edit')} />
           )
         }
       />
+      {/* The bar's edge appears with the name, once the page has scrolled under it. */}
+      <Animated.View style={[styles.headerDivider, { opacity: headerNameOpacity }]} />
       <Animated.ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: (own ? 24 : 96) + insets.bottom }]}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
@@ -216,7 +218,7 @@ export default function ProfileView() {
             <Button title="Request sent" fullWidth disabled />
           ) : relationship.kind === 'incoming' ? (
             <View style={styles.decision}>
-              <Button title="Decline" variant="secondary" onPress={decline} disabled={busy} style={{ flex: 1 }} />
+              <Button title="Decline" variant="outline" onPress={decline} disabled={busy} style={{ flex: 1 }} />
               <Button title="Accept" onPress={accept} loading={busy} style={{ flex: 2 }} />
             </View>
           ) : (
@@ -230,8 +232,8 @@ export default function ProfileView() {
         visible={moreOpen}
         onClose={() => setMoreOpen(false)}
         actions={[
-          { label: 'Report', destructive: true, onPress: () => setReportOpen(true) },
-          { label: `Block ${profile.firstName}`, destructive: true, onPress: block },
+          { label: `Report ${profile.firstName}`, icon: 'flag', destructive: true, onPress: () => setReportOpen(true) },
+          { label: `Block ${profile.firstName}`, icon: 'ban', destructive: true, onPress: block },
         ]}
       />
       <ReportSheet visible={reportOpen} onClose={() => setReportOpen(false)} onSelect={fileReport} title={`Report ${profile.firstName}`} />
@@ -244,6 +246,7 @@ const makeStyles = ({ colors }: Theme) =>
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
     content: { paddingTop: spacing.xs, gap: spacing.lg },
     headerName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    headerDivider: { height: 1, backgroundColor: colors.border },
     decision: { flexDirection: 'row', gap: spacing.md },
-    actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.canvas, borderTopWidth: 1, borderTopColor: colors.border },
+    actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border },
   });

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   AREAS,
   CHILDREN_OPTIONS,
@@ -42,6 +42,7 @@ import { PickerModal, type PickerOption } from '@/components/PickerModal';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SettingsRow } from '@/components/SettingsRow';
+import { Switch } from '@/components/Switch';
 import { ChipRow, TagChip } from '@/components/TagChip';
 import { spacing } from '@/constants/theme';
 import { useTheme } from '@/lib/theme';
@@ -286,7 +287,7 @@ export default function EditProfile() {
   return (
     <Screen edges={['top', 'bottom']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <Header back title="Edit profile" right={<Button title="Save" size="small" variant="ghost" onPress={save} loading={saving} />} />
+        <Header back title="Edit profile" right={<Button title="Save" size="sm" variant="ghost" onPress={save} loading={saving} />} />
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <SectionHeader title="Basics" first />
           <View style={styles.fields}>
@@ -314,7 +315,7 @@ export default function EditProfile() {
             <SettingsRow label="Employment status" value={labelFor(EMPLOYMENT_STATUS_OPTIONS, form.employmentStatus) || 'Choose'} onPress={() => setOpen('employmentStatus')} />
             <SettingsRow label="Field of work" value={labelFor(INDUSTRY_OPTIONS, form.industry) || 'Choose'} onPress={() => setOpen('industry')} />
             <SettingsRow label="Student or professional" value={labelFor(STUDENT_STATUS_OPTIONS, form.studentStatus) || 'Choose'} onPress={() => setOpen('studentStatus')} />
-            <SettingsRow label="Show employer on profile" chevron={false} right={<Switch value={form.employerDisplayEnabled} onValueChange={(v) => set('employerDisplayEnabled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
+            <SettingsRow label="Show employer on profile" chevron={false} right={<Switch value={form.employerDisplayEnabled} onValueChange={(v) => set('employerDisplayEnabled', v)} />} />
           </Group>
 
           <SectionHeader title="Education" />
@@ -325,8 +326,8 @@ export default function EditProfile() {
           </View>
           <Group>
             <SettingsRow label="Degree level" value={labelFor(DEGREE_LEVEL_OPTIONS, form.degreeLevel) || 'Choose'} onPress={() => setOpen('degreeLevel')} />
-            <SettingsRow label="Currently enrolled" chevron={false} right={<Switch value={form.currentlyEnrolled} onValueChange={(v) => set('currentlyEnrolled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
-            <SettingsRow label="Show education on profile" chevron={false} right={<Switch value={form.educationDisplayEnabled} onValueChange={(v) => set('educationDisplayEnabled', v)} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />} />
+            <SettingsRow label="Currently enrolled" chevron={false} right={<Switch value={form.currentlyEnrolled} onValueChange={(v) => set('currentlyEnrolled', v)} />} />
+            <SettingsRow label="Show education on profile" chevron={false} right={<Switch value={form.educationDisplayEnabled} onValueChange={(v) => set('educationDisplayEnabled', v)} />} />
           </Group>
 
           <SectionHeader title="Background" />
@@ -343,7 +344,7 @@ export default function EditProfile() {
               label="Prefer not to say"
               description="Hides race/ethnicity and never uses it in matching."
               chevron={false}
-              right={<Switch value={form.preferNotToSay} onValueChange={(v) => setForm((f) => (f ? { ...f, preferNotToSay: v, raceEthnicities: v ? [] : f.raceEthnicities } : f))} trackColor={{ true: colors.ivory, false: colors.borderStrong }} thumbColor={colors.canvas} />}
+              right={<Switch value={form.preferNotToSay} onValueChange={(v) => setForm((f) => (f ? { ...f, preferNotToSay: v, raceEthnicities: v ? [] : f.raceEthnicities } : f))} />}
             />
             <View>
               <SettingsRow label="Languages" value={form.languages.length ? `${form.languages.length} selected` : 'Add'} onPress={() => setOpen('languages')} />

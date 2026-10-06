@@ -1,14 +1,18 @@
 import { useState, type FormEvent } from 'react';
+import { LuImagePlus, LuX } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 import { LIMITS } from '@peaches/core';
-import { api, errorMessage } from '../lib/api';
-import { useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Button } from '../components/Button';
-import { Notice, TextArea } from '../components/Field';
-import { Group, GroupSection } from '../components/Group';
-import { Icon } from '../components/icons';
-import { usePageTitle } from '../hooks/usePageTitle';
+import { useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import { TextareaField } from '@/components/form';
+import { Notice } from '@/components/Notice';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/ui/toast';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { api, errorMessage } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 export function PostNew() {
   usePageTitle('New post');
@@ -32,6 +36,7 @@ export function PostNew() {
     setError(null);
     try {
       await api.posts.create(user.id, body, file ? { body: file, contentType: file.type, size: file.size } : null);
+      toast.add({ title: 'Posted', type: 'success' });
       navigate('/feed', { replace: true });
     } catch (err) {
       setError(errorMessage(err));
@@ -41,42 +46,49 @@ export function PostNew() {
   };
 
   return (
-    <div className="max-w-[720px]">
+    <div className="mx-auto max-w-[680px]">
       <PageHeader title="New post" back="/feed" />
-      <form onSubmit={(e) => void onSubmit(e)} className="space-y-5">
-        <Group>
-          <GroupSection>
-            <div className="space-y-4">
-              <TextArea label="What's on your mind" hint={`${body.length}/${LIMITS.postBodyMax}`} maxLength={LIMITS.postBodyMax} rows={5} value={body} onChange={(e) => setBody(e.target.value)} autoFocus placeholder="A plan, a question, something you noticed around town." />
-              <div>
-                {preview ? (
-                  <div className="relative aspect-[4/3] rounded-md overflow-hidden mb-3">
-                    <img src={preview} alt="" className="h-full w-full object-cover" />
-                    <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-1 ring-inset ring-image-ring" />
-                    <Button size="sm" variant="secondary" className="absolute top-2 right-2 bg-canvas" onClick={() => choose(null)}>
-                      Remove
-                    </Button>
-                  </div>
-                ) : null}
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="inline-flex items-center gap-2 h-10 px-3.5 rounded-md border border-border text-body-sm text-text-secondary motion hover:bg-surface-hover hover:border-border-strong cursor-pointer">
-                    <Icon name="camera" size={18} />
-                    {file ? 'Change photo' : 'Add a photo'}
-                    <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => choose(e.target.files?.[0] ?? null)} />
-                  </label>
-                  <span className="text-body-sm text-text-muted">Optional. JPEG, PNG, or WebP up to 8 MB.</span>
-                </div>
+      <form onSubmit={(e) => void onSubmit(e)} className="grid gap-6">
+        <Card>
+          <CardContent className="gap-5">
+            <TextareaField
+              label="What's on your mind"
+              hint={`${body.length}/${LIMITS.postBodyMax}`}
+              maxLength={LIMITS.postBodyMax}
+              rows={5}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              autoFocus
+              placeholder="A plan, a question, something you noticed around town."
+            />
+            {preview ? (
+              <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+                <img src={preview} alt="" className="size-full object-cover" />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-foreground/10 ring-inset" />
+                <Button type="button" size="sm" variant="secondary" className="absolute top-2 right-2 shadow-sm" onClick={() => choose(null)}>
+                  <LuX data-icon="inline-start" />
+                  Remove
+                </Button>
               </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              <label className={cn(buttonVariants({ variant: 'outline' }), 'cursor-pointer has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50')}>
+                <LuImagePlus data-icon="inline-start" />
+                {file ? 'Change photo' : 'Add a photo'}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => choose(e.target.files?.[0] ?? null)} />
+              </label>
+              <span className="text-sm text-muted-foreground">Optional. JPEG, PNG, or WebP up to 8 MB.</span>
             </div>
-          </GroupSection>
-        </Group>
+          </CardContent>
+        </Card>
         {error ? <Notice tone="danger">{error}</Notice> : null}
-        <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => navigate('/feed')}>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={() => navigate('/feed')}>
             Cancel
           </Button>
           <Button type="submit" disabled={busy || !body.trim()}>
-            {busy ? 'Posting' : 'Post'}
+            {busy ? <Spinner data-icon="inline-start" /> : null}
+            Post
           </Button>
         </div>
       </form>

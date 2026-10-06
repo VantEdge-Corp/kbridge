@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { BRAND, LEGAL_PAGES, type LegalPageKey } from '@peaches/core';
-import { LegalLinks } from '../components/LegalLinks';
-import { Wordmark } from '../components/Wordmark';
-import { usePageTitle } from '../hooks/usePageTitle';
+import { LEGAL_PAGES, type LegalPageKey } from '@peaches/core';
+import { PublicFooter, PublicHeader } from '@/components/PublicChrome';
+import { buttonVariants } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const LINKABLE = /([\w.+-]+@[\w-]+(?:\.[\w-]+)+)|(\b(?:[a-z0-9-]+\.)+(?:org|gov)\b)|(\b1-800-\d{3}-\d{4}\b)/gi;
-const LINK_CLASS = 'text-text underline underline-offset-4 decoration-1 break-words';
+const LINK_CLASS = 'font-medium text-foreground underline underline-offset-4 break-words';
 
 /** Document text with its email addresses, web addresses, and phone numbers made tappable. */
 function Linkified({ text }: { text: string }) {
@@ -17,11 +18,23 @@ function Linkified({ text }: { text: string }) {
     const at = m.index ?? 0;
     if (at > last) parts.push(text.slice(last, at));
     if (email) {
-      parts.push(<a key={at} href={`mailto:${email}`} className={LINK_CLASS}>{match}</a>);
+      parts.push(
+        <a key={at} href={`mailto:${email}`} className={LINK_CLASS}>
+          {match}
+        </a>,
+      );
     } else if (site) {
-      parts.push(<a key={at} href={`https://${site}`} target="_blank" rel="noreferrer" className={LINK_CLASS}>{match}</a>);
+      parts.push(
+        <a key={at} href={`https://${site}`} target="_blank" rel="noreferrer" className={LINK_CLASS}>
+          {match}
+        </a>,
+      );
     } else {
-      parts.push(<a key={at} href={`tel:+${match.replace(/\D/g, '')}`} className={LINK_CLASS}>{match}</a>);
+      parts.push(
+        <a key={at} href={`tel:+${match.replace(/\D/g, '')}`} className={LINK_CLASS}>
+          {match}
+        </a>,
+      );
     }
     last = at + match.length;
   }
@@ -34,28 +47,28 @@ export function Legal({ doc }: { doc: LegalPageKey }) {
   const document = LEGAL_PAGES[doc];
   usePageTitle(document.title);
   return (
-    <div className="min-h-dvh flex flex-col">
-      <header className="sticky top-0 z-30 h-16 px-5 md:px-10 flex items-center justify-between bg-canvas/80 backdrop-blur-md border-b border-border/60">
-        <Wordmark to="/" />
-        <Link to="/" className="text-body-sm text-text-muted hover:text-text motion">
+    <div className="flex min-h-dvh flex-col">
+      <PublicHeader>
+        <Link to="/" className={buttonVariants({ variant: 'ghost' })}>
           Back to start
         </Link>
-      </header>
-      <main className="flex-1 w-full max-w-[720px] mx-auto px-5 pb-20">
-        <h1 className="font-display text-title leading-[34px] text-text text-balance mt-10 md:mt-16">{document.title}</h1>
-        <p className="mt-2 text-caption text-text-muted">
+      </PublicHeader>
+      <main className="mx-auto w-full max-w-[720px] flex-1 px-4 pt-10 pb-20 md:pt-16">
+        <h1 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">{document.title}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
           Effective {document.effectiveDate}
           {document.version ? ` · Version ${document.version}` : ''}
         </p>
-        <p className="mt-6 text-body text-text-secondary leading-relaxed text-pretty">
+        <p className="mt-6 text-lg leading-relaxed text-muted-foreground text-pretty">
           <Linkified text={document.intro} />
         </p>
-        <div className="mt-10 space-y-10">
+        <Separator className="my-10" />
+        <div className="grid gap-10">
           {document.sections.map((s) => (
             <section key={s.h}>
-              <h2 className="font-display text-subheading text-text">{s.h}</h2>
+              <h2 className="text-xl font-semibold tracking-tight">{s.h}</h2>
               {s.p.map((paragraph, i) => (
-                <p key={i} className="mt-3 text-body text-text-secondary leading-relaxed text-pretty">
+                <p key={i} className="mt-3 leading-7 text-muted-foreground text-pretty">
                   <Linkified text={paragraph} />
                 </p>
               ))}
@@ -63,12 +76,7 @@ export function Legal({ doc }: { doc: LegalPageKey }) {
           ))}
         </div>
       </main>
-      <footer className="py-6 px-5 md:px-10 flex flex-wrap items-center justify-between gap-4 text-caption text-text-muted border-t border-border">
-        <span>
-          &copy; {new Date().getFullYear()} {BRAND.company}
-        </span>
-        <LegalLinks current={doc} />
-      </footer>
+      <PublicFooter current={doc} />
     </div>
   );
 }

@@ -16,12 +16,13 @@ test.describe('public', () => {
     await page.getByLabel('Email', { exact: true }).fill(email);
     await page.getByLabel('First name', { exact: true }).fill('Casey');
     await page.getByLabel('Age', { exact: true }).fill('29');
-    await page.getByLabel('Area', { exact: true }).selectOption({ label: 'Decatur' });
+    await page.getByRole('combobox', { name: 'Area' }).fill('Deca');
+    await page.getByRole('option', { name: 'Decatur' }).click();
     await page.getByLabel('Occupation', { exact: true }).fill('Landscape architect');
     await page.getByLabel('Employer', { exact: true }).fill('Perkins&Will');
     await page.getByLabel(/Why Peaches/).fill('I would rather be introduced than browsed, and I am ready for something real.');
-    await page.getByLabel(/18 years of age/).check();
-    await page.getByLabel(/read and agree/).check();
+    await page.getByRole('checkbox', { name: /18 years of age/ }).check();
+    await page.getByRole('checkbox', { name: /read and agree/ }).check();
     await page.getByRole('button', { name: 'Submit application' }).click();
     await expect(page).toHaveURL(/\/status\/[a-f0-9]+$/, { timeout: 20_000 });
     const status = page.getByTestId('status-page');
@@ -77,10 +78,11 @@ test.describe('member', () => {
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole('radiogroup', { name: 'Nationality strength' })).toBeVisible();
-    await dialog.getByRole('button', { name: /^Nationality:/ }).click();
-    const inner = page.getByRole('dialog').last();
-    await expect(inner.getByLabel('Search Nationality')).toBeVisible();
+    const nationality = dialog.getByRole('combobox', { name: 'Nationality' });
+    await nationality.fill('Nig');
+    await expect(page.getByRole('option', { name: 'Nigeria' })).toBeVisible();
     await page.keyboard.press('Escape');
+    await expect(page.getByRole('option', { name: 'Nigeria' })).toHaveCount(0);
     await expect(page.getByRole('dialog')).toHaveCount(1);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -120,6 +122,32 @@ test.describe('member', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
+  test('a card opens the same member menu on right-click as from its ⋯ button', async ({ page }) => {
+    await login(page, REVIEWER);
+    const card = page.getByTestId('person-card').first();
+    await card.click({ button: 'right' });
+    const menu = page.getByRole('menu');
+    await expect(menu.getByRole('menuitem', { name: 'View profile' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: /^Block / })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await card.hover();
+    await page.getByRole('button', { name: /^More for / }).first().click();
+    await expect(page.getByRole('menu').getByRole('menuitem', { name: /^Report / })).toBeVisible();
+    await page.keyboard.press('Escape');
+  });
+
+  test('appearance follows the choice in settings', async ({ page }) => {
+    await login(page, REVIEWER);
+    await page.goto('/settings/appearance');
+    await page.getByRole('radio', { name: /^Light/ }).click();
+    await expect(page.locator('html')).not.toHaveClass(/dark/);
+    await page.getByRole('radio', { name: /^Dark/ }).click();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await page.reload();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    await page.getByRole('radio', { name: /^System/ }).click();
+  });
+
   test('me shows completeness and the settings gear', async ({ page }) => {
     await login(page, REVIEWER);
     await page.goto('/me');
@@ -127,8 +155,9 @@ test.describe('member', () => {
     await page.getByTestId('settings-gear').click();
     await expect(page).toHaveURL(/\/settings$/);
     await expect(page.getByTestId('settings')).toBeVisible();
-    for (const label of ['Account', 'Privacy', 'Discovery Preferences', 'Notifications', 'Verification', 'Blocked Users', 'Safety', 'Data & Account', 'Logout']) {
-      await expect(page.getByText(label, { exact: true })).toBeVisible();
+    const settings = page.getByTestId('settings');
+    for (const label of ['Account', 'Appearance', 'Privacy', 'Discovery Preferences', 'Notifications', 'Verification', 'Blocked Users', 'Safety', 'Data & Account', 'Log out']) {
+      await expect(settings.getByText(label, { exact: true })).toBeVisible();
     }
   });
 });

@@ -1,84 +1,57 @@
 /**
- * Peaches design tokens. Platform-agnostic values; the web maps them to CSS
- * variables and Tailwind, the mobile app to StyleSheet values.
+ * Peaches design tokens: the shadcn/ui Neutral theme
+ * (https://ui.shadcn.com/colors) in light and dark, with shadcn's semantic
+ * names. The web reads the same palette as oklch CSS variables in
+ * apps/web/src/index.css; the phone app reads these hex equivalents (React
+ * Native cannot parse oklch). Keep the two in step.
  *
- * Two palettes share one set of semantic names. Dark is the brand default:
- * 90-95% dark surfaces (near-black, charcoal, graphite, a very dark warm
- * gray) with warm ivory reserved for text, selected controls, small buttons,
- * and important information. Light keeps the same restraint on warm
- * off-white: white cards, near-black ink where dark uses ivory.
- *
- * `ivory` / `onIvory` name the primary control color and the text on it:
- * warm ivory with near-black text in dark mode, near-black ink with warm
- * off-white text in light mode.
+ * `verified` is the one Peaches addition: the color of verification marks.
  */
-export const darkColors = {
-  /** Page background: near-black. */
-  canvas: '#0b0b0c',
-  /** Default surface: charcoal. */
-  surface: '#131315',
-  /** Elevated surface: graphite. */
-  surfaceElevated: '#1b1b1e',
-  /** Very dark warm gray, used for warm sections and the wordmark ground. */
-  surfaceWarm: '#171512',
-  /** Subtle borders and separators. */
-  border: '#26262a',
-  borderStrong: '#36363b',
-  /** Warm ivory. Primary text and selected controls. */
-  ivory: '#f1ece2',
-  text: '#f1ece2',
-  textSecondary: '#b7b1a6',
-  textMuted: '#7f7a71',
-  textFaint: '#55524c',
-  /** Text on an ivory control. */
-  onIvory: '#0f0f10',
-  /** Verification: calm, understated, professional. */
-  verified: '#9db8a5',
-  /** Attention, muted. Never bright red. */
-  danger: '#c9908a',
-  /** Pressed/hover states. */
-  surfaceHover: '#1f1f23',
-  overlay: 'rgba(11, 11, 12, 0.72)',
-  /** 2px focus ring around inputs and controls. */
-  focusRing: 'rgba(241, 236, 226, 0.08)',
-  /** Hairline inner ring on photos and portraits. */
-  imageRing: 'rgba(241, 236, 226, 0.06)',
-  /** Hover state of a primary (ivory) button. */
-  ivoryHover: '#e6e0d4',
-  /** Placeholder portrait ground tones (warm, desaturated). */
-  portraitA: '#2a2622',
-  portraitB: '#3a3129',
+export const lightColors = {
+  background: '#ffffff',
+  foreground: '#0a0a0a',
+  card: '#ffffff',
+  cardForeground: '#0a0a0a',
+  popover: '#ffffff',
+  popoverForeground: '#0a0a0a',
+  primary: '#171717',
+  primaryForeground: '#fafafa',
+  secondary: '#f5f5f5',
+  secondaryForeground: '#171717',
+  muted: '#f5f5f5',
+  mutedForeground: '#737373',
+  accent: '#f5f5f5',
+  accentForeground: '#171717',
+  destructive: '#e7000b',
+  border: '#e5e5e5',
+  input: '#e5e5e5',
+  ring: '#a1a1a1',
+  verified: '#179765',
 } as const;
 
-export type ColorTokens = { readonly [K in keyof typeof darkColors]: string };
+export type ColorTokens = { readonly [K in keyof typeof lightColors]: string };
 
-/** Light palette: the same semantic tokens on warm off-white. */
-export const lightColors: ColorTokens = {
-  canvas: '#f7f5f1',
-  surface: '#ffffff',
-  surfaceElevated: '#f3f0ea',
-  surfaceWarm: '#f1ede5',
-  border: '#e7e3dc',
-  borderStrong: '#d6d1c8',
-  ivory: '#161513',
-  text: '#161513',
-  textSecondary: '#5f5a52',
-  textMuted: '#8b857b',
-  textFaint: '#b8b2a8',
-  onIvory: '#f7f5f1',
-  verified: '#4c7c5c',
-  danger: '#b2544a',
-  surfaceHover: '#efece6',
-  overlay: 'rgba(22, 21, 19, 0.4)',
-  focusRing: 'rgba(22, 21, 19, 0.08)',
-  imageRing: 'rgba(22, 21, 19, 0.06)',
-  ivoryHover: '#2b2925',
-  portraitA: '#d9d1c5',
-  portraitB: '#ebe4d8',
+export const darkColors: ColorTokens = {
+  background: '#0a0a0a',
+  foreground: '#fafafa',
+  card: '#171717',
+  cardForeground: '#fafafa',
+  popover: '#171717',
+  popoverForeground: '#fafafa',
+  primary: '#e5e5e5',
+  primaryForeground: '#171717',
+  secondary: '#262626',
+  secondaryForeground: '#fafafa',
+  muted: '#262626',
+  mutedForeground: '#a1a1a1',
+  accent: '#262626',
+  accentForeground: '#fafafa',
+  destructive: '#ff6467',
+  border: 'rgba(255, 255, 255, 0.1)',
+  input: 'rgba(255, 255, 255, 0.15)',
+  ring: '#737373',
+  verified: '#5ecd97',
 };
-
-/** The brand default palette. The web reads this; the mobile app picks per scheme. */
-export const colors = darkColors;
 
 export const spacing = {
   xxs: 2,
@@ -91,50 +64,47 @@ export const spacing = {
   xxxl: 48,
 } as const;
 
+/** shadcn's scale from `--radius: 0.625rem`: sm 60%, md 80%, lg 100%, xl 140%, 2xl 180%. */
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 6,
+  md: 8,
+  lg: 10,
+  xl: 14,
+  xxl: 18,
   pill: 999,
 } as const;
 
 /**
- * Georgia is used intentionally and selectively: the PEACHES wordmark, major
- * screen titles, important profile names, and selected editorial headings.
- * Everything else is the platform's modern sans-serif.
+ * The Tailwind type scale shadcn/ui is built on. Georgia is the brand mark
+ * only (the PEACHES wordmark and the monogram); every piece of UI text is the
+ * sans: Geist on the web, the platform font on phones.
  */
 export const typography = {
   families: {
-    /** Serif for wordmark, titles, profile names. */
     display: 'Georgia',
-    /** Modern system sans for navigation, metadata, buttons, filters, body. */
     sans: 'system',
   },
   sizes: {
-    wordmark: 20,
-    title: 28,
-    heading: 22,
-    subheading: 18,
-    name: 17,
-    body: 15,
-    bodySmall: 13,
-    caption: 12,
-    micro: 11,
+    xs: 12,
+    sm: 14,
+    base: 16,
+    lg: 18,
+    xl: 20,
+    xxl: 24,
+    xxxl: 30,
   },
   lineHeights: {
-    title: 34,
-    heading: 28,
-    subheading: 24,
-    body: 22,
-    bodySmall: 18,
-    caption: 16,
+    xs: 16,
+    sm: 20,
+    base: 24,
+    lg: 28,
+    xl: 28,
+    xxl: 32,
+    xxxl: 36,
   },
-  letterSpacing: {
-    wordmark: 4,
-    eyebrow: 1.2,
-    normal: 0,
-  },
+  /** `tracking-tight`, in ems; multiply by the font size on phones. */
+  tightTracking: -0.025,
+  wordmarkTracking: 4,
   weights: {
     regular: '400',
     medium: '500',
@@ -142,15 +112,15 @@ export const typography = {
   },
 } as const;
 
-/** Icons are small, thin, monochrome, and outline-based. */
+/** Lucide icons at stroke 2, the shadcn default. 16 inside controls, 20 standalone, 24 in the phone tab bar. */
 export const iconSizes = {
-  sm: 18,
+  sm: 16,
   md: 20,
-  lg: 22,
-  nav: 20,
+  lg: 24,
+  nav: 24,
 } as const;
 
-export const strokeWidth = 1.5;
+export const strokeWidth = 2;
 
 export const card = {
   /** Portrait proportion for person cards: width 3, height 4. */
@@ -158,7 +128,7 @@ export const card = {
   columns: 2,
   gap: 12,
   pagePadding: 16,
-  imageRadius: 16,
+  imageRadius: radius.xl,
 } as const;
 
 export const avatar = {
@@ -171,5 +141,5 @@ export const touch = {
   minTarget: 44,
 } as const;
 
-export const tokens = { colors, spacing, radius, typography, iconSizes, strokeWidth, card, avatar, touch } as const;
+export const tokens = { lightColors, darkColors, spacing, radius, typography, iconSizes, strokeWidth, card, avatar, touch } as const;
 export type Tokens = typeof tokens;

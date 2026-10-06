@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LuSearch, LuUsers } from 'react-icons/lu';
 import {
   DEGREE_LEVEL_OPTIONS,
   VERIFICATION_DIMENSIONS,
@@ -13,16 +14,25 @@ import {
   type VerificationDimension,
   type VerificationState,
 } from '@peaches/core';
-import { api, errorMessage } from '../../lib/api';
-import { Button } from '../../components/Button';
-import { EmptyState } from '../../components/EmptyState';
-import { Checkbox, Notice, inputClass } from '../../components/Field';
-import { Icon } from '../../components/icons';
-import { LoadingBlock } from '../../components/Loading';
-import { useAsync } from '../../hooks/useAsync';
-import { usePageTitle } from '../../hooks/usePageTitle';
+import { PageHeader } from '@/components/AppShell';
+import { useConfirm } from '@/components/ConfirmProvider';
+import { EmptyState } from '@/components/EmptyState';
+import { CheckboxField, SelectField } from '@/components/form';
+import { RowsSkeleton } from '@/components/Loading';
+import { LoadError, Notice } from '@/components/Notice';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
+import { useAsync } from '@/hooks/useAsync';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { api, errorMessage } from '@/lib/api';
+import { cn } from '@/lib/utils';
+
+const STATE_OPTIONS = VERIFICATION_STATES.map((s) => ({ value: s, label: VERIFICATION_STATE_LABEL[s] }));
 
 function MemberCard({ member, onChanged }: { member: AdminMember; onChanged: () => void }) {
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const run = async (fn: () => Promise<void>) => {
@@ -37,64 +47,63 @@ function MemberCard({ member, onChanged }: { member: AdminMember; onChanged: () 
       setBusy(false);
     }
   };
+  const suspend = async () => {
+    const ok = await confirm({ title: `Suspend ${member.firstName}?`, description: 'They will disappear from discovery and the feed until reinstated.', confirmLabel: 'Suspend', destructive: true });
+    if (ok) void run(() => api.verification.admin.setSuspended(member.id, true));
+  };
   const pending = VERIFICATION_DIMENSIONS.filter((d) => member.verification[d] === 'pending');
   return (
-    <article className={`border rounded-lg bg-surface p-5 ${member.suspended ? 'border-danger/60' : 'border-border'}`} data-testid="member-card">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-display text-name text-text">{member.firstName}</span>
-        <span className="text-caption text-text-muted">{member.memberNumber}</span>
-        <span className="text-body-sm text-text-muted">{[member.occupation, member.employer, member.displayArea].filter(Boolean).join(' · ')}</span>
-        {member.suspended ? <span className="text-caption text-danger">Suspended</span> : null}
-        {pending.length > 0 ? <span className="text-caption text-verified">{pending.length} pending review</span> : null}
-      </div>
-      <dl className="mt-2 grid sm:grid-cols-2 gap-x-6 gap-y-1 text-body-sm">
-        <div className="flex gap-2">
-          <dt className="text-text-muted w-24 shrink-0">Education</dt>
-          <dd className="text-text">{[member.school, member.degreeLevel ? labelFor(DEGREE_LEVEL_OPTIONS, member.degreeLevel as DegreeLevel) : '', member.fieldOfStudy].filter(Boolean).join(' · ') || '—'}</dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="text-text-muted w-24 shrink-0">Joined</dt>
-          <dd className="text-text">
-            {member.createdAt ? longDate(member.createdAt) : '—'} · active {member.lastActiveAt ? timeAgo(member.lastActiveAt) : '—'} · {member.photoCount} photos
-          </dd>
-        </div>
-      </dl>
-      <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {VERIFICATION_DIMENSIONS.map((d: VerificationDimension) => (
-          <label key={d} className="block">
-            <span className="block text-caption text-text-muted mb-1">{VERIFICATION_LABEL[d]}</span>
-            <select
-              className={`${inputClass} h-10 ${member.verification[d] === 'verified' ? 'text-verified' : member.verification[d] === 'pending' ? 'text-text' : 'text-text-secondary'}`}
+    <Card size="sm" className={cn(member.suspended && 'ring-destructive/40')} data-testid="member-card">
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {member.firstName}
+          <span className="text-xs font-normal text-muted-foreground tabular-nums">{member.memberNumber}</span>
+          {member.suspended ? <Badge variant="destructive">Suspended</Badge> : null}
+          {pending.length > 0 ? <Badge variant="secondary">{pending.length} pending review</Badge> : null}
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">{[member.occupation, member.employer, member.displayArea].filter(Boolean).join(' · ')}</p>
+      </CardHeader>
+      <CardContent className="gap-5">
+        <dl className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+          <div className="flex gap-2">
+            <dt className="w-24 shrink-0 text-muted-foreground">Education</dt>
+            <dd>{[member.school, member.degreeLevel ? labelFor(DEGREE_LEVEL_OPTIONS, member.degreeLevel as DegreeLevel) : '', member.fieldOfStudy].filter(Boolean).join(' · ') || 'Not given'}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="w-24 shrink-0 text-muted-foreground">Joined</dt>
+            <dd>
+              {member.createdAt ? longDate(member.createdAt) : 'Unknown'} · active {member.lastActiveAt ? timeAgo(member.lastActiveAt) : 'never'} · {member.photoCount} photos
+            </dd>
+          </div>
+        </dl>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {VERIFICATION_DIMENSIONS.map((d: VerificationDimension) => (
+            <SelectField
+              key={d}
+              label={VERIFICATION_LABEL[d]}
+              options={STATE_OPTIONS}
               value={member.verification[d]}
               disabled={busy}
-              onChange={(e) => void run(() => api.verification.admin.set(member.id, d, e.target.value as VerificationState))}
-            >
-              {VERIFICATION_STATES.map((s) => (
-                <option key={s} value={s}>
-                  {VERIFICATION_STATE_LABEL[s]}
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
-      </div>
-      {error ? (
-        <div className="mt-3">
-          <Notice tone="danger">{error}</Notice>
+              onValueChange={(v) => {
+                if (v && v !== member.verification[d]) void run(() => api.verification.admin.set(member.id, d, v as VerificationState));
+              }}
+            />
+          ))}
         </div>
-      ) : null}
-      <div className="mt-4 flex justify-end">
+        {error ? <Notice tone="danger">{error}</Notice> : null}
+      </CardContent>
+      <CardFooter className="justify-end border-t">
         {member.suspended ? (
-          <Button size="sm" variant="secondary" disabled={busy} onClick={() => void run(() => api.verification.admin.setSuspended(member.id, false))}>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(() => api.verification.admin.setSuspended(member.id, false))}>
             Reinstate
           </Button>
         ) : (
-          <Button size="sm" variant="danger" disabled={busy} onClick={() => window.confirm(`Suspend ${member.firstName}? They will disappear from discovery and the feed.`) && void run(() => api.verification.admin.setSuspended(member.id, true))}>
+          <Button size="sm" variant="destructive" disabled={busy} onClick={() => void suspend()}>
             Suspend
           </Button>
         )}
-      </div>
-    </article>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -105,22 +114,24 @@ export function AdminMembers() {
   const { data, loading, error, reload } = useAsync(() => api.verification.admin.listMembers({ search, pendingOnly }), [search, pendingOnly]);
   return (
     <div data-testid="admin-members">
-      <h1 className="font-display text-title leading-[34px] text-text mb-6">Members</h1>
-      <div className="flex flex-wrap items-center gap-4 mb-4">
-        <div className="relative max-w-sm flex-1">
-          <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-          <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, employer, school, area" aria-label="Search members" className={`${inputClass} h-11 pl-10`} />
-        </div>
-        <Checkbox label="Pending review only" checked={pendingOnly} onChange={(e) => setPendingOnly(e.target.checked)} className="min-h-0 py-0" />
+      <PageHeader title="Members" description="Verification is set one dimension at a time. Only verified dimensions are ever shown to members." />
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <InputGroup className="sm:max-w-xs">
+          <InputGroupInput type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, employer, school, area" aria-label="Search members" />
+          <InputGroupAddon>
+            <LuSearch />
+          </InputGroupAddon>
+        </InputGroup>
+        <CheckboxField label="Pending review only" checked={pendingOnly} onCheckedChange={setPendingOnly} className="w-auto" />
       </div>
       {loading ? (
-        <LoadingBlock />
+        <RowsSkeleton avatar={false} />
       ) : error ? (
-        <Notice tone="danger">{error}</Notice>
+        <LoadError message={error} onRetry={reload} />
       ) : !data || data.length === 0 ? (
-        <EmptyState title="No members match." />
+        <EmptyState icon={LuUsers} title="No members match." />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3">
           {data.map((m) => (
             <MemberCard key={m.id} member={m} onChanged={reload} />
           ))}

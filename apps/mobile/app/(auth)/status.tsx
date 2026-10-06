@@ -9,16 +9,16 @@ import { Header } from '@/components/Header';
 import { Icon, type IconName } from '@/components/Icon';
 import { Loading } from '@/components/Loading';
 import { Screen } from '@/components/Screen';
-import { radius, spacing } from '@/constants/theme';
+import { fonts, radius, spacing } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { errorMessage } from '@/lib/errors';
 import { loadStatusToken, saveStatusToken } from '@/lib/storage';
 
 const VIEW: Record<PublicApplicationStatus, { icon: IconName; eyebrow: string; title: string; body: string }> = {
-  pending: { icon: 'clock', eyebrow: 'Under review', title: 'Your application is with the committee.', body: 'Applications are read by a person, typically within a few days. Check back here any time.' },
-  waitlisted: { icon: 'clock', eyebrow: 'Deferred', title: "We'd like a bit more time.", body: 'Your application is still open. We will revisit it as the community grows.' },
-  approved: { icon: 'check-circle', eyebrow: 'Admitted', title: 'Welcome.', body: 'Create your account to join the community.' },
+  pending: { icon: 'clock-3', eyebrow: 'Under review', title: 'Your application is with the committee.', body: 'Applications are read by a person, typically within a few days. Check back here any time.' },
+  waitlisted: { icon: 'clock-3', eyebrow: 'Deferred', title: "We'd like a bit more time.", body: 'Your application is still open. We will revisit it as the community grows.' },
+  approved: { icon: 'badge-check', eyebrow: 'Admitted', title: 'Welcome.', body: 'Create your account to join the community.' },
   claimed: { icon: 'check', eyebrow: 'Active member', title: "You're a member.", body: 'Sign in with your email and password.' },
 };
 
@@ -90,7 +90,7 @@ export default function Status() {
         ) : error ? (
           <>
             <ErrorText message={error} flush />
-            <Button title="Try another token" variant="secondary" onPress={reset} fullWidth />
+            <Button title="Try another token" variant="outline" onPress={reset} fullWidth />
             <Button title="Submit a new application" variant="ghost" onPress={() => router.replace('/(auth)/apply')} fullWidth />
           </>
         ) : record && view ? (
@@ -105,7 +105,7 @@ export default function Status() {
               </View>
             ) : null}
             <View style={styles.statusRow}>
-              <Icon name={view.icon} size={18} color={record.status === 'approved' || record.status === 'claimed' ? colors.verified : colors.textSecondary} />
+              <Icon name={view.icon} size={18} color={record.status === 'approved' || record.status === 'claimed' ? colors.verified : colors.mutedForeground} />
               <Text style={text.eyebrow}>{view.eyebrow}</Text>
             </View>
             <Text style={text.title}>
@@ -125,7 +125,7 @@ export default function Status() {
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
-  tokenBox: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
-  token: { color: colors.ivory, fontSize: 15, fontFamily: 'Menlo', letterSpacing: 0.5 },
+  tokenBox: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.sm },
+  token: { color: colors.foreground, fontSize: 15, fontFamily: fonts.mono, letterSpacing: 0.5 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

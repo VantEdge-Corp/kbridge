@@ -4,13 +4,14 @@ import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { messageTime, type Connection, type Message } from '@peaches/core';
 import { Avatar } from '@/components/Avatar';
-import { Header } from '@/components/Header';
+import { Header, HeaderIconButton } from '@/components/Header';
 import { Icon } from '@/components/Icon';
 import { Loading } from '@/components/Loading';
 import { ReportSheet } from '@/components/ReportSheet';
 import { Screen } from '@/components/Screen';
 import { ActionSheet } from '@/components/Sheet';
-import { radius, spacing, touch } from '@/constants/theme';
+import { VerificationBadge } from '@/components/VerificationBadge';
+import { radius, spacing } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
@@ -132,24 +133,29 @@ export default function Chat() {
     <Screen edges={['top']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={styles.header}>
-          <Header
-            back
-            right={
-              <Pressable accessibilityRole="button" accessibilityLabel="More options" onPress={() => setMoreOpen(true)} style={styles.more} hitSlop={6}>
-                <Icon name="more-horizontal" size={20} color={colors.textSecondary} />
-              </Pressable>
-            }
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${other.firstName}'s profile`}
-            onPress={() => router.push({ pathname: '/profile/[id]', params: { id: other.id } })}
-            style={styles.person}
-          >
-            <Avatar uri={other.photos[0] ?? null} firstName={other.firstName} size={28} />
-            <Text style={[text.name, { fontSize: 18 }]}>{other.firstName}</Text>
-            <Text style={text.caption}>{other.displayArea}</Text>
-          </Pressable>
+          <Header back right={<HeaderIconButton name="ellipsis" label="More options" onPress={() => setMoreOpen(true)} />}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${other.firstName}'s profile`}
+              onPress={() => router.push({ pathname: '/profile/[id]', params: { id: other.id } })}
+              style={({ pressed }) => [styles.person, pressed && { opacity: 0.7 }]}
+            >
+              <Avatar uri={other.photos[0] ?? null} firstName={other.firstName} size={36} />
+              <View style={styles.personText}>
+                <View style={styles.personName}>
+                  <Text style={text.name} numberOfLines={1}>
+                    {other.firstName}
+                  </Text>
+                  {other.publicVerificationBadges.length > 0 ? <VerificationBadge size={14} /> : null}
+                </View>
+                {other.displayArea ? (
+                  <Text style={text.caption} numberOfLines={1}>
+                    {other.displayArea}
+                  </Text>
+                ) : null}
+              </View>
+            </Pressable>
+          </Header>
         </View>
 
         <FlatList
@@ -165,7 +171,7 @@ export default function Chat() {
             return (
               <View style={[styles.bubbleRow, mine && styles.bubbleRowMine]}>
                 <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                  <Text style={text.body}>{item.body}</Text>
+                  <Text style={[text.body, mine && { color: colors.primaryForeground }]}>{item.body}</Text>
                 </View>
                 {showTime ? <Text style={[text.micro, styles.time, mine && { textAlign: 'right' }]}>{messageTime(item.createdAt)}</Text> : null}
               </View>
@@ -175,7 +181,7 @@ export default function Chat() {
             connection.introductionNote ? (
               <View style={styles.intro}>
                 <Text style={text.eyebrow}>{connection.introducedBy === 'viewer' ? 'Your introduction' : `${other.firstName}'s introduction`}</Text>
-                <Text style={[text.bodySecondary, { marginTop: 6 }]}>{connection.introductionNote}</Text>
+                <Text style={[text.body, { marginTop: 6 }]}>{connection.introductionNote}</Text>
               </View>
             ) : (
               <View style={styles.intro}>
@@ -191,7 +197,7 @@ export default function Chat() {
             value={draft}
             onChangeText={setDraft}
             placeholder={`Message ${other.firstName}`}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.mutedForeground}
             multiline
             style={styles.input}
             keyboardAppearance={isDark ? 'dark' : 'light'}
@@ -204,7 +210,7 @@ export default function Chat() {
             disabled={!draft.trim() || sending}
             style={[styles.send, (!draft.trim() || sending) && { opacity: 0.4 }]}
           >
-            <Icon name="send" size={16} color={colors.onIvory} />
+            <Icon name="arrow-up" size={20} color={colors.primaryForeground} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -213,9 +219,9 @@ export default function Chat() {
         visible={moreOpen}
         onClose={() => setMoreOpen(false)}
         actions={[
-          { label: `View ${other.firstName}'s profile`, onPress: () => router.push({ pathname: '/profile/[id]', params: { id: other.id } }) },
-          { label: 'Report', destructive: true, onPress: () => setReportOpen(true) },
-          { label: `Block ${other.firstName}`, destructive: true, onPress: block },
+          { label: `View ${other.firstName}'s profile`, icon: 'user', onPress: () => router.push({ pathname: '/profile/[id]', params: { id: other.id } }) },
+          { label: `Report ${other.firstName}`, icon: 'flag', destructive: true, onPress: () => setReportOpen(true) },
+          { label: `Block ${other.firstName}`, icon: 'ban', destructive: true, onPress: block },
         ]}
       />
       <ReportSheet visible={reportOpen} onClose={() => setReportOpen(false)} onSelect={fileReport} title={`Report ${other.firstName}`} />
@@ -225,18 +231,19 @@ export default function Chat() {
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  header: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: spacing.sm },
-  more: { width: touch.minTarget, height: touch.minTarget, alignItems: 'flex-end', justifyContent: 'center' },
-  person: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, minHeight: 36 },
+  header: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  person: { flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'flex-start', maxWidth: '100%' },
+  personText: { flexShrink: 1 },
+  personName: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   list: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 6 },
   bubbleRow: { alignItems: 'flex-start', maxWidth: '82%' },
   bubbleRowMine: { alignSelf: 'flex-end', alignItems: 'flex-end' },
-  bubble: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.lg },
-  bubbleMine: { backgroundColor: colors.surfaceElevated, borderBottomRightRadius: radius.sm },
-  bubbleTheirs: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: radius.sm },
+  bubble: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.xxl },
+  bubbleMine: { backgroundColor: colors.primary, borderBottomRightRadius: radius.sm },
+  bubbleTheirs: { backgroundColor: colors.muted, borderBottomLeftRadius: radius.sm },
   time: { marginTop: 3, paddingHorizontal: 4 },
-  intro: { marginBottom: spacing.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface },
-  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.canvas },
-  input: { flex: 1, minHeight: 44, maxHeight: 120, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, color: colors.text, fontSize: 15, lineHeight: 20 },
-  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
+  intro: { marginBottom: spacing.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, backgroundColor: colors.card },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background },
+  input: { flex: 1, minHeight: 44, maxHeight: 120, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, backgroundColor: colors.inputBackground, borderWidth: 1, borderColor: colors.input, borderRadius: 22, color: colors.foreground, fontSize: 16, lineHeight: 20 },
+  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
 });

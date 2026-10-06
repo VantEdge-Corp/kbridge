@@ -1,15 +1,18 @@
+import { LuCamera, LuEye, LuPencil, LuPlus, LuSettings, LuSlidersHorizontal } from 'react-icons/lu';
 import { Link } from 'react-router-dom';
-import { INDUSTRY_OPTIONS, LIMITS, RELATIONSHIP_INTENT_OPTIONS, STUDENT_STATUS_OPTIONS, countryName, formatHeight, labelFor, nameAge, profileCompleteness } from '@peaches/core';
-import { useAuth, useMember } from '../auth/AuthProvider';
-import { PageHeader } from '../components/AppShell';
-import { Group, GroupSection } from '../components/Group';
-import { Icon } from '../components/icons';
-import { MonogramPortrait } from '../components/MonogramPortrait';
-import { ProfileMetadata } from '../components/ProfileMetadata';
-import { SectionHeader } from '../components/SectionHeader';
-import { SettingsRow } from '../components/SettingsRow';
-import { VerificationStatusList } from '../components/VerificationStatusList';
-import { usePageTitle } from '../hooks/usePageTitle';
+import { LIMITS, nameAge, profileCompleteness, profileMetaLine } from '@peaches/core';
+import { useAuth, useMember } from '@/auth/AuthProvider';
+import { PageHeader } from '@/components/AppShell';
+import { PersonAvatar, Portrait } from '@/components/PersonAvatar';
+import { Section } from '@/components/Section';
+import { RowGroup, SettingsRow } from '@/components/SettingsRow';
+import { VerificationBadge } from '@/components/VerificationBadge';
+import { VerificationStatusList } from '@/components/VerificationStatusList';
+import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { cn } from '@/lib/utils';
 
 export function Me() {
   usePageTitle('Me');
@@ -27,103 +30,100 @@ export function Me() {
     interests: profile.interests.length,
     displayArea: profile.displayArea === 'Metro Atlanta' ? '' : profile.displayArea,
   });
+  const meta = profileMetaLine(profile);
 
   return (
-    <div className="max-w-[720px]" data-testid="me">
+    <div className="mx-auto max-w-[720px]" data-testid="me">
       <PageHeader
-        title={nameAge(profile.firstName, profile.age)}
-        eyebrow={profile.displayArea}
+        title="Me"
         actions={
-          <Link to="/settings" aria-label="Settings" className="w-11 h-11 inline-flex items-center justify-center rounded-md text-text-secondary motion hover:text-text hover:bg-surface-hover focus-ring" data-testid="settings-gear">
-            <Icon name="settings" />
+          <Link to="/settings" aria-label="Settings" className={buttonVariants({ variant: 'ghost', size: 'icon' })} data-testid="settings-gear">
+            <LuSettings />
           </Link>
         }
       />
 
-      <section className="mb-8">
-        <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className="flex items-center gap-5">
+        <Link to="/me/photos" aria-label={profile.photos.length > 0 ? 'Edit photos' : 'Add photos'} className="group/portrait relative shrink-0 rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+          <PersonAvatar name={profile.firstName} src={profile.photos[0] ?? null} className="size-20 sm:size-24" fallbackClassName="text-2xl" />
+          <span className="absolute -right-0.5 -bottom-0.5 flex size-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground transition-transform group-hover/portrait:scale-105">
+            {profile.photos.length > 0 ? <LuPencil className="size-3.5" /> : <LuPlus className="size-3.5" />}
+          </span>
+        </Link>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-xl font-semibold tracking-tight">{nameAge(profile.firstName, profile.age)}</h2>
+            {profile.publicVerificationBadges.length > 0 ? <VerificationBadge className="[&>svg]:size-5" /> : null}
+          </div>
+          {meta ? <p className="mt-0.5 truncate text-sm text-muted-foreground">{meta}</p> : null}
+          <Link to={`/profile/${profile.id}`} className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline">
+            <LuEye className="size-4" />
+            View as others see you
+          </Link>
+        </div>
+      </div>
+
+      <Card className="mt-8" aria-label="Profile completeness">
+        <CardContent className="gap-3">
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm font-medium">Profile completeness</span>
+            <span className="text-sm text-muted-foreground tabular-nums" data-testid="completeness">
+              {completeness}%
+            </span>
+          </div>
+          <Progress value={completeness} aria-label="Profile completeness" />
+          <p className="text-sm text-muted-foreground">
+            {completeness < 100 ? (
+              <>
+                Complete profiles are shown more and read better.{' '}
+                <Link to="/me/edit" className="font-medium text-foreground underline underline-offset-4">
+                  Finish yours
+                </Link>
+              </>
+            ) : (
+              'Your profile is complete.'
+            )}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Section title="Photos" description={`${profile.photos.length} of ${LIMITS.photos}. The first is your portrait on cards.`} className="mt-10" action={
+        <Link to="/me/photos" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+          Manage
+        </Link>
+      }>
+        <div className="flex gap-3 overflow-x-auto p-0.5 pb-1">
           {profile.photos.length === 0 ? (
-            <MonogramPortrait name={profile.firstName} className="w-[96px] h-[128px] rounded-md shrink-0" fontSize={36} />
+            <Portrait name={profile.firstName} className="aspect-[3/4] w-24 shrink-0 rounded-lg" initialClassName="text-3xl" />
           ) : (
-            profile.photos.map((p, i) => (
-              <span key={p} className="relative w-[96px] h-[128px] rounded-md overflow-hidden shrink-0">
-                <img src={p} alt={`Your photo ${i + 1}`} className="h-full w-full object-cover" />
-                <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-md ring-1 ring-inset ring-image-ring" />
-              </span>
-            ))
+            profile.photos.map((p, i) => <Portrait key={p} name={profile.firstName} src={p} alt={`Your photo ${i + 1}`} className="aspect-[3/4] w-24 shrink-0 rounded-lg" />)
           )}
           {profile.photos.length < LIMITS.photos ? (
-            <Link to="/me/photos" className="w-[96px] h-[128px] rounded-md border border-dashed border-border-strong shrink-0 flex flex-col items-center justify-center gap-1 text-text-muted motion hover:text-text hover:border-ivory focus-ring">
-              <Icon name="plus" size={18} />
-              <span className="text-caption">Add photo</span>
+            <Link
+              to="/me/photos"
+              className={cn(
+                'flex aspect-[3/4] w-24 shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed text-sm text-muted-foreground outline-none transition-colors hover:border-foreground/30 hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50',
+              )}
+            >
+              <LuPlus className="size-4" />
+              Add photo
             </Link>
           ) : null}
         </div>
-      </section>
+      </Section>
 
-      <section className="mb-8" aria-label="Profile completeness">
-        <Group>
-          <GroupSection>
-            <div className="flex items-baseline justify-between mb-2.5">
-              <span className="text-body-sm text-text-secondary">Profile completeness</span>
-              <span className="text-body-sm text-text" data-testid="completeness">
-                {completeness}%
-              </span>
-            </div>
-            <div className="h-1 rounded-full bg-surface-elevated overflow-hidden">
-              <div className="h-full bg-ivory rounded-full motion" style={{ width: `${completeness}%` }} />
-            </div>
-            {completeness < 100 ? (
-              <p className="mt-2.5 text-body-sm text-text-muted">
-                Complete profiles are shown more and read better.{' '}
-                <Link to="/me/edit" className="text-text underline underline-offset-4 decoration-1">
-                  Finish yours
-                </Link>
-              </p>
-            ) : null}
-          </GroupSection>
-        </Group>
-      </section>
+      <Section title="Profile" className="mt-10">
+        <RowGroup>
+          <SettingsRow to="/me/edit" icon={LuPencil} label="Edit profile" description="Basics, background, intent, lifestyle, interests" />
+          <SettingsRow to="/me/preferences" icon={LuSlidersHorizontal} label="Discovery preferences" description="Area, distance, and what matters to you" />
+          <SettingsRow to="/me/photos" icon={LuCamera} label="Photos" description={`${profile.photos.length} of ${LIMITS.photos}`} />
+          <SettingsRow to={`/profile/${profile.id}`} icon={LuEye} label="Preview your profile" description="How other members see you" />
+        </RowGroup>
+      </Section>
 
-      <section className="mb-8">
-        <Group>
-          <GroupSection
-            eyebrow="Basics"
-            action={
-              <Link to="/me/edit" className="text-text-secondary hover:text-text motion">
-                Edit
-              </Link>
-            }
-          >
-            <ProfileMetadata
-              items={[
-                { label: 'Work', value: profile.employmentDisplay },
-                { label: 'Field', value: labelFor(INDUSTRY_OPTIONS, profile.industry) },
-                { label: 'Education', value: profile.educationDisplay },
-                { label: 'Standing', value: labelFor(STUDENT_STATUS_OPTIONS, profile.studentStatus) },
-                { label: 'Height', value: profile.height ? formatHeight(profile.height) : '' },
-                { label: 'Nationality', value: profile.nationalities.map(countryName).join(', ') },
-                { label: 'Intent', value: labelFor(RELATIONSHIP_INTENT_OPTIONS, profile.relationshipIntent) },
-              ]}
-            />
-            {profile.bio ? <p className="mt-4 text-body-sm text-text-secondary whitespace-pre-wrap">{profile.bio}</p> : <p className="mt-4 text-body-sm text-text-muted">No bio yet.</p>}
-          </GroupSection>
-        </Group>
-      </section>
-
-      <section className="mb-8">
-        <SectionHeader title="Verification" />
+      <Section title="Verification" description="Each detail is reviewed on its own by the committee. Only confirmed ones are shown to others." className="mt-10">
         <VerificationStatusList verification={profile.verification} onChanged={() => void refreshProfile()} />
-      </section>
-
-      <section>
-        <Group>
-          <SettingsRow to="/me/edit" icon="pencil" label="Edit profile" description="Basics, background, intent, lifestyle, interests" />
-          <SettingsRow to="/me/preferences" icon="sliders" label="Discovery preferences" description="Area, distance, and what matters to you" />
-          <SettingsRow to="/me/photos" icon="camera" label="Photos" description={`${profile.photos.length} of ${LIMITS.photos}`} />
-          <SettingsRow to={`/profile/${profile.id}`} icon="user" label="Preview your profile" description="How other members see you" />
-        </Group>
-      </section>
+      </Section>
     </div>
   );
 }

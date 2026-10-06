@@ -44,7 +44,7 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { userId } = useMember();
-  const { viewer, areaId, candidates, loading, error, refresh, reload, reportImpressions, removeCandidate, adoptFilters } = useCandidates();
+  const { viewer, areaId, candidates, loading, error, reload, reportImpressions, removeCandidate, adoptFilters } = useCandidates();
   const { incoming, reload: reloadInbox } = useInboxSummary();
   const [section, setSection] = useState<HomeSection>('for_you');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -52,7 +52,7 @@ export default function Home() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [dismissSignal, setDismissSignal] = useState(0);
-  useRefreshOnFocus(() => Promise.all([refresh(), reloadInbox()]));
+  useRefreshOnFocus(() => Promise.all([reload(), reloadInbox()]));
 
   const ranked = useMemo(() => (viewer ? rankSection(section, viewer, candidates).map((c) => c.profile) : []), [section, viewer, candidates]);
   const current: PublicProfile | undefined = ranked[0];
@@ -113,7 +113,7 @@ export default function Home() {
 
   return (
     <Screen>
-      <Header wordmark right={<HeaderIconButton name="sliders" label="Filters" onPress={() => setFiltersOpen(true)} />} />
+      <Header wordmark right={<HeaderIconButton name="sliders-horizontal" label="Filters" onPress={() => setFiltersOpen(true)} />} />
       <SegmentedTabs items={HOME_SECTIONS} value={section} onChange={setSection} />
       <RequestsRow requests={incoming} onPress={openRequests} />
       {loading ? (
@@ -121,7 +121,7 @@ export default function Home() {
       ) : error ? (
         <View style={styles.errorWrap}>
           <ErrorText message={error} />
-          <Button title="Try again" variant="secondary" size="small" onPress={reload} />
+          <Button title="Try again" variant="outline" size="sm" onPress={reload} />
         </View>
       ) : !areaId ? (
         <EmptyState
@@ -143,7 +143,7 @@ export default function Home() {
             dismissSignal={dismissSignal}
           />
           <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-            <Button title="Not now" variant="secondary" onPress={() => setDismissSignal((n) => n + 1)} style={{ flex: 1 }} />
+            <Button title="Not now" variant="outline" onPress={() => setDismissSignal((n) => n + 1)} style={{ flex: 1 }} />
             <Button title="Interested" onPress={() => setNoteOpen(true)} style={{ flex: 2 }} />
           </View>
         </View>
@@ -163,9 +163,9 @@ export default function Home() {
         visible={moreOpen}
         onClose={() => setMoreOpen(false)}
         actions={[
-          { label: 'View full profile', onPress: openProfile },
-          { label: 'Report', destructive: true, onPress: () => setReportOpen(true) },
-          { label: `Block ${current?.firstName ?? ''}`, destructive: true, onPress: block },
+          { label: 'View full profile', icon: 'user', onPress: openProfile },
+          { label: `Report ${current?.firstName ?? ''}`, icon: 'flag', destructive: true, onPress: () => setReportOpen(true) },
+          { label: `Block ${current?.firstName ?? ''}`, icon: 'ban', destructive: true, onPress: block },
         ]}
       />
       <ReportSheet visible={reportOpen} onClose={() => setReportOpen(false)} onSelect={fileReport} title={`Report ${current?.firstName ?? ''}`} />
@@ -186,7 +186,7 @@ const makeStyles = ({ colors }: Theme) =>
       gap: spacing.md,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.background,
       borderTopWidth: 1,
       borderTopColor: colors.border,
     },

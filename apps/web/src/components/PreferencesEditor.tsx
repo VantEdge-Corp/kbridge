@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
   AGE,
   AREAS,
@@ -7,6 +7,7 @@ import {
   DEGREE_LEVEL_OPTIONS,
   DISTANCE_OPTIONS_MILES,
   DRINKING_OPTIONS,
+  HEIGHT_CM,
   INDUSTRY_OPTIONS,
   INTERESTS,
   LANGUAGE_OPTIONS,
@@ -21,10 +22,12 @@ import {
   type Preferences,
   type RangePreferenceKey,
 } from '@peaches/core';
-import { Eyebrow, Select } from './Field';
-import { FilterRow } from './FilterRow';
-import { Group } from './Group';
-import { MultiSelect, type MultiOption } from './MultiSelect';
+import { MultiSelectField, SearchSelectField, SelectField, type Option } from '@/components/form';
+import { PreferenceStrengthSelector } from '@/components/PreferenceStrengthSelector';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
 
 export interface LocationSettings {
   areaId: string | null;
@@ -34,19 +37,18 @@ export interface LocationSettings {
 interface MultiDimension {
   key: MultiPreferenceKey;
   label: string;
-  options: ReadonlyArray<MultiOption>;
-  searchable?: boolean;
+  options: ReadonlyArray<Option>;
 }
 
-const noPreferNotToSay = <T extends { value: string; label: string }>(opts: ReadonlyArray<T>) => opts.filter((o) => o.value !== 'prefer_not_to_say');
+const noPreferNotToSay = <T extends Option>(opts: ReadonlyArray<T>) => opts.filter((o) => o.value !== 'prefer_not_to_say');
 
 const BACKGROUND_DIMENSIONS: ReadonlyArray<MultiDimension> = [
-  { key: 'nationalities', label: 'Nationality', options: COUNTRIES.map((c) => ({ value: c.code, label: c.name })), searchable: true },
+  { key: 'nationalities', label: 'Nationality', options: COUNTRIES.map((c) => ({ value: c.code, label: c.name })) },
   { key: 'raceEthnicities', label: 'Race / ethnicity', options: RACE_ETHNICITY_OPTIONS },
   { key: 'education', label: 'Education', options: DEGREE_LEVEL_OPTIONS },
   { key: 'occupation', label: 'Occupation', options: INDUSTRY_OPTIONS },
   { key: 'studentStatus', label: 'Student / professional', options: STUDENT_STATUS_OPTIONS },
-  { key: 'languages', label: 'Languages', options: LANGUAGE_OPTIONS, searchable: true },
+  { key: 'languages', label: 'Languages', options: LANGUAGE_OPTIONS },
 ];
 
 const INTENT_DIMENSIONS: ReadonlyArray<MultiDimension> = [
@@ -56,12 +58,10 @@ const INTENT_DIMENSIONS: ReadonlyArray<MultiDimension> = [
   { key: 'children', label: 'Children', options: noPreferNotToSay(CHILDREN_OPTIONS) },
 ];
 
-const INTEREST_DIMENSION: MultiDimension = { key: 'interests', label: 'Interests', options: INTERESTS.map((i) => ({ value: i, label: i })), searchable: true };
+const INTEREST_DIMENSION: MultiDimension = { key: 'interests', label: 'Interests', options: INTERESTS.map((i) => ({ value: i, label: i })) };
 
-const AGE_OPTIONS = Array.from({ length: AGE.max - AGE.min + 1 }, (_, i) => String(AGE.min + i)).map((v) => ({ value: v, label: v }));
-const HEIGHT_OPTIONS = Array.from({ length: 85 - 56 + 1 }, (_, i) => Math.round((56 + i) * 2.54)).map((cm) => ({ value: String(cm), label: formatHeight(cm) }));
 const AREA_OPTIONS = AREAS.map((a) => ({ value: a.id, label: a.name }));
-const DISTANCE_OPTIONS = DISTANCE_OPTIONS_MILES.map((m) => ({ value: String(m), label: `${m} miles` }));
+const DISTANCE_OPTIONS = DISTANCE_OPTIONS_MILES.map((m) => ({ value: String(m), label: `Within ${m} miles` }));
 
 export function withMulti(prefs: Preferences, key: MultiPreferenceKey, patch: Partial<MultiPreference<string>>): Preferences {
   const current = prefs[key] as MultiPreference<string>;
@@ -72,50 +72,75 @@ export function withRange(prefs: Preferences, key: RangePreferenceKey, patch: Pa
   return { ...prefs, [key]: { ...prefs[key], ...patch } };
 }
 
-function RangeSelects({
-  label,
-  min,
-  max,
-  options,
-  onChange,
-}: {
-  label: string;
-  min: number;
-  max: number;
-  options: ReadonlyArray<MultiOption>;
-  onChange: (min: number, max: number) => void;
-}) {
-  const nearest = (value: number) => {
-    let best = options[0];
-    for (const o of options) {
-      if (Math.abs(Number(o.value) - value) < Math.abs(Number(best?.value ?? 0) - value)) best = o;
-    }
-    return best?.value ?? String(value);
-  };
+/** A label with its own strength control, then the value control. "Any" dims the control: it is left out of matching. */
+function PreferenceRow({ label, hint, strength, onStrength, children }: { label: string; hint?: ReactNode; strength?: PreferenceStrength; onStrength?: (s: PreferenceStrength) => void; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <Select aria-label={`${label} minimum`} options={options} value={nearest(min)} onChange={(e) => onChange(Math.min(Number(e.target.value), max), max)} />
-      <Select aria-label={`${label} maximum`} options={options} value={nearest(max)} onChange={(e) => onChange(min, Math.max(Number(e.target.value), min))} />
+    <div className="grid gap-3">
+      <div className="flex min-h-8 items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{label}</p>
+          {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        </div>
+        {strength && onStrength ? <PreferenceStrengthSelector value={strength} onChange={onStrength} label={label} /> : null}
+      </div>
+      <div className={cn('transition-opacity', strength === 'any' && 'opacity-60')}>{children}</div>
     </div>
   );
 }
 
-/** A grouped container of filter rows with an eyebrow title inside. */
-function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
+function RangeRow({ label, min, max, bounds, step = 1, format, onChange }: { label: string; min: number; max: number; bounds: { min: number; max: number }; step?: number; format: (v: number) => string; onChange: (min: number, max: number) => void }) {
+  const noun = label.toLowerCase();
   return (
-    <Group>
-      <div className="px-4 pt-4 pb-1">
-        <Eyebrow>{title}</Eyebrow>
-      </div>
-      {children}
-    </Group>
+    <div className="grid gap-3 pt-1">
+      <p className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
+        {format(min)} to {format(max)}
+      </p>
+      <Slider
+        value={[min, max]}
+        min={bounds.min}
+        max={bounds.max}
+        step={step}
+        minStepsBetweenValues={0}
+        onValueChange={(value) => {
+          if (Array.isArray(value) && value.length === 2) onChange(value[0] ?? min, value[1] ?? max);
+        }}
+        getAriaLabel={(index) => (index === 0 ? `Minimum ${noun}` : `Maximum ${noun}`)}
+        getAriaValueText={(_formatted, value) => format(value)}
+      />
+    </div>
+  );
+}
+
+function PreferenceCard({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        {description ? <CardDescription>{description}</CardDescription> : null}
+      </CardHeader>
+      <CardContent className="gap-0">{children}</CardContent>
+    </Card>
+  );
+}
+
+/** Rows inside a card, separated by hairlines. */
+function Rows({ children }: { children: ReactNode[] }) {
+  return (
+    <div className="grid gap-4">
+      {children.map((child, i) => (
+        <div key={i} className="grid gap-4">
+          {i > 0 ? <Separator /> : null}
+          {child}
+        </div>
+      ))}
+    </div>
   );
 }
 
 /**
- * The full preference set, one strength control per dimension, in grouped
- * sections. Location and distance are not preferences: distance is a hard
- * boundary and the area is the member's private location.
+ * The full preference set, one strength control per dimension, in cards.
+ * Location and distance are not preferences: distance is a hard boundary and
+ * the area is the member's private location.
  */
 export function PreferencesEditor({
   prefs,
@@ -131,38 +156,47 @@ export function PreferencesEditor({
   const multiRow = (dim: MultiDimension) => {
     const pref = prefs[dim.key] as MultiPreference<string>;
     return (
-      <FilterRow key={dim.key} label={dim.label} strength={pref.strength} onStrength={(s: PreferenceStrength) => onChange(withMulti(prefs, dim.key, { strength: s }))}>
-        <MultiSelect label={dim.label} options={dim.options} values={pref.values} onChange={(values) => onChange(withMulti(prefs, dim.key, { values }))} searchable={dim.searchable} />
-      </FilterRow>
+      <PreferenceRow key={dim.key} label={dim.label} strength={pref.strength} onStrength={(s) => onChange(withMulti(prefs, dim.key, { strength: s }))}>
+        <MultiSelectField aria-label={dim.label} options={dim.options} values={pref.values} onValuesChange={(values) => onChange(withMulti(prefs, dim.key, { values }))} />
+      </PreferenceRow>
     );
   };
 
-  const distanceValue = useMemo(() => {
-    const v = location.maxDistanceMiles;
-    return DISTANCE_OPTIONS_MILES.includes(v) ? String(v) : String(DISTANCE_OPTIONS_MILES.find((d) => d >= v) ?? DISTANCE_OPTIONS_MILES[DISTANCE_OPTIONS_MILES.length - 1]);
-  }, [location.maxDistanceMiles]);
+  const distanceValue = DISTANCE_OPTIONS_MILES.includes(location.maxDistanceMiles)
+    ? String(location.maxDistanceMiles)
+    : String(DISTANCE_OPTIONS_MILES.find((d) => d >= location.maxDistanceMiles) ?? DISTANCE_OPTIONS_MILES[DISTANCE_OPTIONS_MILES.length - 1]);
 
   return (
-    <div className="space-y-4">
-      <FilterGroup title="Location">
-        <FilterRow label="Your area" hint="Only the area name is shown to others">
-          <Select aria-label="Your area" options={AREA_OPTIONS} placeholder="Choose your area" value={location.areaId ?? ''} onChange={(e) => onLocationChange({ ...location, areaId: e.target.value || null })} />
-        </FilterRow>
-        <FilterRow label="Distance" hint="Hard boundary">
-          <Select aria-label="Maximum distance" options={DISTANCE_OPTIONS} value={distanceValue} onChange={(e) => onLocationChange({ ...location, maxDistanceMiles: Number(e.target.value) })} />
-        </FilterRow>
-      </FilterGroup>
-      <FilterGroup title="Basics">
-        <FilterRow label="Age" strength={prefs.ageRange.strength} onStrength={(s) => onChange(withRange(prefs, 'ageRange', { strength: s }))}>
-          <RangeSelects label="Age" min={prefs.ageRange.min} max={prefs.ageRange.max} options={AGE_OPTIONS} onChange={(min, max) => onChange(withRange(prefs, 'ageRange', { min, max }))} />
-        </FilterRow>
-        <FilterRow label="Height" strength={prefs.height.strength} onStrength={(s) => onChange(withRange(prefs, 'height', { strength: s }))}>
-          <RangeSelects label="Height" min={prefs.height.min} max={prefs.height.max} options={HEIGHT_OPTIONS} onChange={(min, max) => onChange(withRange(prefs, 'height', { min, max }))} />
-        </FilterRow>
-      </FilterGroup>
-      <FilterGroup title="Background">{BACKGROUND_DIMENSIONS.map(multiRow)}</FilterGroup>
-      <FilterGroup title="Intent & lifestyle">{INTENT_DIMENSIONS.map(multiRow)}</FilterGroup>
-      <FilterGroup title="Interests">{multiRow(INTEREST_DIMENSION)}</FilterGroup>
+    <div className="grid gap-4">
+      <PreferenceCard title="Location" description="Others only ever see your area's name. Distance is a hard boundary.">
+        <Rows>
+          {[
+            <SearchSelectField key="area" label="Your area" aria-label="Your area" options={AREA_OPTIONS} placeholder="Choose your area" value={location.areaId ?? ''} onValueChange={(v) => onLocationChange({ ...location, areaId: v || null })} />,
+            <SelectField key="distance" label="Distance" aria-label="Maximum distance" options={DISTANCE_OPTIONS} value={distanceValue} onValueChange={(v) => onLocationChange({ ...location, maxDistanceMiles: Number(v || location.maxDistanceMiles) })} />,
+          ]}
+        </Rows>
+      </PreferenceCard>
+      <PreferenceCard title="Basics">
+        <Rows>
+          {[
+            <PreferenceRow key="age" label="Age" strength={prefs.ageRange.strength} onStrength={(s) => onChange(withRange(prefs, 'ageRange', { strength: s }))}>
+              <RangeRow label="Age" min={prefs.ageRange.min} max={prefs.ageRange.max} bounds={AGE} format={String} onChange={(min, max) => onChange(withRange(prefs, 'ageRange', { min, max }))} />
+            </PreferenceRow>,
+            <PreferenceRow key="height" label="Height" strength={prefs.height.strength} onStrength={(s) => onChange(withRange(prefs, 'height', { strength: s }))}>
+              <RangeRow label="Height" min={prefs.height.min} max={prefs.height.max} bounds={HEIGHT_CM} step={1} format={formatHeight} onChange={(min, max) => onChange(withRange(prefs, 'height', { min, max }))} />
+            </PreferenceRow>,
+          ]}
+        </Rows>
+      </PreferenceCard>
+      <PreferenceCard title="Background">
+        <Rows>{BACKGROUND_DIMENSIONS.map(multiRow)}</Rows>
+      </PreferenceCard>
+      <PreferenceCard title="Intent and lifestyle">
+        <Rows>{INTENT_DIMENSIONS.map(multiRow)}</Rows>
+      </PreferenceCard>
+      <PreferenceCard title="Interests">
+        <Rows>{[multiRow(INTEREST_DIMENSION)]}</Rows>
+      </PreferenceCard>
     </div>
   );
 }

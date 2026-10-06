@@ -17,6 +17,7 @@ import { SegmentedTabs } from '@/components/SegmentedTabs';
 import { GRID_GAP, PAGE_PADDING, cardWidthFor } from '@/constants/layout';
 import { spacing } from '@/constants/theme';
 import { useTheme } from '@/lib/theme';
+import { usePersonActions } from '@/hooks/usePersonActions';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { api } from '@/lib/api';
 import { useMember } from '@/lib/auth';
@@ -75,6 +76,8 @@ export default function Inbox() {
     void load();
   }, [load]);
   useRefreshOnFocus(load);
+  // Everyone here has written to the viewer or connected already, so the menu offers no new introduction.
+  const person = usePersonActions({ onBlocked: () => void load(), canRequest: () => false });
   useEffect(() => api.introductions.subscribeIncoming(userId, () => void load()), [userId, load]);
   const matchIds = useMemo(() => connections.map((c) => c.matchId), [connections]);
   useEffect(() => api.connections.subscribeInbox(matchIds, () => void load()), [matchIds, load]);
@@ -111,6 +114,7 @@ export default function Inbox() {
       avatarSize={CONVERSATION_AVATAR}
       onPress={() => openChat(c.matchId)}
       onAvatarPress={() => openProfile(c.counterpart.id)}
+      onLongPress={() => person.open(c.counterpart)}
     />
   );
 
@@ -130,7 +134,7 @@ export default function Inbox() {
       ) : (
         <ScrollView
           contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load('refresh')} tintColor={colors.textSecondary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load('refresh')} tintColor={colors.mutedForeground} />}
         >
           <ErrorText message={error} />
           {section === 'requests' ? (
@@ -153,6 +157,7 @@ export default function Inbox() {
                       caption={`“${truncate(req.note, 80)}”`}
                       captionLines={2}
                       onPress={() => openProfile(req.counterpart.id)}
+                      onLongPress={() => person.open(req.counterpart)}
                     />
                   ))}
                 </View>
@@ -171,7 +176,7 @@ export default function Inbox() {
                         onAvatarPress={() => openProfile(req.counterpart.id)}
                       >
                         <View style={styles.actionsRight}>
-                          <Button title="Withdraw" size="small" variant="ghost" onPress={() => withdraw(req)} loading={busy === req.id} />
+                          <Button title="Withdraw" size="sm" variant="ghost" onPress={() => withdraw(req)} loading={busy === req.id} />
                         </View>
                       </InboxRow>
                     ))}
@@ -180,7 +185,7 @@ export default function Inbox() {
               ) : null}
             </>
           ) : connections.length === 0 ? (
-            <EmptyState icon="message-circle" title="No conversations yet" body="Accepted introductions become conversations here." />
+            <EmptyState icon="messages-square" title="No conversations yet" body="Accepted introductions become conversations here." />
           ) : (
             <>
               {yourTurn.length > 0 ? (
@@ -197,6 +202,7 @@ export default function Inbox() {
           )}
         </ScrollView>
       )}
+      {person.sheets}
     </Screen>
   );
 }

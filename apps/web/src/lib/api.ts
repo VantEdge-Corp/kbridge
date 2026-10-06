@@ -1,5 +1,5 @@
 import { createApi } from '@peaches/core';
-import { supabase } from './supabase';
+import { supabase } from '@/lib/supabase';
 
 export const api = createApi(supabase);
 

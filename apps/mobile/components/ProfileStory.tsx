@@ -1,9 +1,8 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { VERIFICATION_LABEL, nameAge, timeAgo, type Post, type PublicProfile } from '@peaches/core';
+import { VERIFICATION_LABEL, nameAge, profileDetails, profileMetaLine, profileVitals, timeAgo, type Post, type PublicProfile } from '@peaches/core';
 import { radius, spacing } from '@/constants/theme';
-import { detailsFor, metaLineFor, vitalsFor } from '@/lib/profileCopy';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { GROUP_INSET, Group } from './Group';
 import { HeaderIconButton } from './Header';
@@ -40,9 +39,9 @@ export function ProfileStory({ profile, width, posts = [], afterIdentity, leadWi
   const { colors, text } = useTheme();
   const router = useRouter();
   const verified = profile.publicVerificationBadges.length > 0;
-  const meta = metaLineFor(profile);
-  const vitals = vitalsFor(profile);
-  const details = detailsFor(profile);
+  const meta = profileMetaLine(profile);
+  const vitals = profileVitals(profile);
+  const details = profileDetails(profile);
 
   const photos: Array<string | null> = profile.photos.length > 0 ? profile.photos : [null];
   const photoBlock = (i: number) => <ProfilePhoto key={`photo-${i}`} uri={photos[i] ?? null} firstName={profile.firstName} index={i} width={width} />;
@@ -58,12 +57,12 @@ export function ProfileStory({ profile, width, posts = [], afterIdentity, leadWi
       >
         <View style={styles.nameRow}>
           <Text style={[text.title, styles.name]}>{nameAge(profile.firstName, profile.age)}</Text>
-          {verified ? <VerificationBadge size={18} /> : null}
+          {verified ? <VerificationBadge size={20} /> : null}
         </View>
         {meta ? <Text style={text.bodySecondary}>{meta}</Text> : null}
         {own ? <Text style={[text.caption, { marginTop: spacing.xs }]}>This is you, as other members see you.</Text> : null}
       </Pressable>
-      {onMore ? <HeaderIconButton name="more-horizontal" label="More options" onPress={onMore} /> : null}
+      {onMore ? <HeaderIconButton name="ellipsis" label="More options" onPress={onMore} /> : null}
     </View>
   );
 
@@ -73,8 +72,8 @@ export function ProfileStory({ profile, width, posts = [], afterIdentity, leadWi
   if (details.length > 0) {
     later.push(
       <Group key="details" inset={GROUP_INSET.icon}>
-        {details.map((d) => (
-          <DetailRow key={d.label} icon={d.icon} label={d.label} value={d.value} />
+        {details.map((fact) => (
+          <DetailRow key={fact.kind} fact={fact} />
         ))}
       </Group>,
     );
@@ -95,7 +94,7 @@ export function ProfileStory({ profile, width, posts = [], afterIdentity, leadWi
       <ProfileSection key="verification" title="Verification">
         <View style={styles.verificationCard}>
           {profile.publicVerificationBadges.map((b) => (
-            <VerificationBadge key={b} label={`${VERIFICATION_LABEL[b]} verified`} size={15} />
+            <VerificationBadge key={b} label={`${VERIFICATION_LABEL[b]} verified`} size={16} />
           ))}
           <Text style={[text.caption, { marginTop: spacing.xs }]}>Verified means our team reviewed the details this member provided.</Text>
         </View>
@@ -111,12 +110,12 @@ export function ProfileStory({ profile, width, posts = [], afterIdentity, leadWi
               key={p.id}
               onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })}
               accessibilityRole="button"
-              style={({ pressed }) => [styles.postRow, pressed && { backgroundColor: colors.surfaceHover }]}
+              style={({ pressed }) => [styles.postRow, pressed && { backgroundColor: colors.accent }]}
             >
               <Text style={text.body} numberOfLines={3}>
                 {p.body}
               </Text>
-              <Text style={text.micro}>{timeAgo(p.createdAt)}</Text>
+              <Text style={text.caption}>{timeAgo(p.createdAt)}</Text>
             </Pressable>
           ))}
         </Group>
@@ -143,6 +142,6 @@ const makeStyles = ({ colors }: Theme) =>
     identityText: { flex: 1, gap: spacing.xs },
     nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     name: { flexShrink: 1 },
-    verificationCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
+    verificationCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, padding: spacing.lg, gap: 10 },
     postRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 4 },
   });

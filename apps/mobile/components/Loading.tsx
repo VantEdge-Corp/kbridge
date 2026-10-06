@@ -6,7 +6,7 @@ export function Loading({ inline }: { inline?: boolean }) {
   const { colors } = useTheme();
   return (
     <View style={inline ? styles.inline : styles.full}>
-      <ActivityIndicator color={colors.textSecondary} />
+      <ActivityIndicator color={colors.mutedForeground} />
     </View>
   );
 }

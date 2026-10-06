@@ -150,7 +150,9 @@ export default function PostDetail() {
           />
           </View>
           <View style={styles.comments}>
-            <Text style={text.eyebrow}>{comments.length === 0 ? 'No comments yet' : `${comments.length} ${comments.length === 1 ? 'comment' : 'comments'}`}</Text>
+            <Text style={text.section} accessibilityRole="header">
+              {comments.length === 0 ? 'No comments yet' : `${comments.length} ${comments.length === 1 ? 'comment' : 'comments'}`}
+            </Text>
             {comments.map((c) => (
               <View key={c.id} style={styles.comment}>
                 <Pressable onPress={() => router.push({ pathname: '/profile/[id]', params: { id: c.author.id } })} accessibilityRole="button" accessibilityLabel={`Open ${c.author.firstName}'s profile`}>
@@ -158,8 +160,8 @@ export default function PostDetail() {
                 </Pressable>
                 <View style={styles.commentBody}>
                   <View style={styles.commentHead}>
-                    <Text style={[text.bodySmall, { color: colors.text, fontWeight: '500' }]}>{c.author.firstName}</Text>
-                    <Text style={text.micro}>{timeAgo(c.createdAt)}</Text>
+                    <Text style={[text.bodySmall, { color: colors.foreground, fontWeight: '600' }]}>{c.author.firstName}</Text>
+                    <Text style={text.caption}>{timeAgo(c.createdAt)}</Text>
                   </View>
                   <Text style={text.body}>{c.body}</Text>
                 </View>
@@ -172,7 +174,7 @@ export default function PostDetail() {
             value={draft}
             onChangeText={setDraft}
             placeholder="Add a comment"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.mutedForeground}
             multiline
             maxLength={LIMITS.commentBodyMax}
             style={styles.input}
@@ -180,7 +182,7 @@ export default function PostDetail() {
             accessibilityLabel="Comment"
           />
           <Pressable accessibilityRole="button" accessibilityLabel="Send comment" onPress={send} disabled={!draft.trim() || sending} style={[styles.send, (!draft.trim() || sending) && { opacity: 0.4 }]}>
-            <Icon name="send" size={16} color={colors.onIvory} />
+            <Icon name="arrow-up" size={20} color={colors.primaryForeground} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -191,8 +193,11 @@ export default function PostDetail() {
         onClose={() => setMore(false)}
         actions={
           post.own
-            ? [{ label: 'Delete post', destructive: true, onPress: deletePost }]
-            : [{ label: 'Report post', destructive: true, onPress: () => setReport(true) }]
+            ? [{ label: 'Delete post', icon: 'trash-2', destructive: true, onPress: deletePost }]
+            : [
+                { label: `View ${post.author.firstName}'s profile`, icon: 'user', onPress: () => router.push({ pathname: '/profile/[id]', params: { id: post.author.id } }) },
+                { label: 'Report post', icon: 'flag', destructive: true, onPress: () => setReport(true) },
+              ]
         }
       />
       <ReportSheet visible={report} onClose={() => setReport(false)} onSelect={fileReport} title="Report this post" />
@@ -208,7 +213,7 @@ const makeStyles = ({ colors }: Theme) => StyleSheet.create({
   comment: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
   commentBody: { flex: 1, gap: 2 },
   commentHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.canvas },
-  input: { flex: 1, minHeight: 44, maxHeight: 100, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, color: colors.text, fontSize: 15, lineHeight: 20 },
-  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background },
+  input: { flex: 1, minHeight: 44, maxHeight: 100, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, backgroundColor: colors.inputBackground, borderWidth: 1, borderColor: colors.input, borderRadius: 22, color: colors.foreground, fontSize: 16, lineHeight: 20 },
+  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
 });

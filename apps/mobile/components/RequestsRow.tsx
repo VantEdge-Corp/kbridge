@@ -44,7 +44,7 @@ export function RequestsRow({ requests, onPress }: { requests: readonly Introduc
       <Text style={[text.body, styles.headline]} numberOfLines={2} lineBreakStrategyIOS="push-out">
         {headline}
       </Text>
-      <Icon name="chevron-right" size={iconSizes.sm} color={colors.textMuted} />
+      <Icon name="chevron-right" size={iconSizes.sm} color={colors.mutedForeground} />
     </Pressable>
   );
 }
@@ -62,15 +62,15 @@ const makeStyles = ({ colors }: Theme) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.card,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: radius.lg,
+      borderRadius: radius.xl,
     },
     pressed: { opacity: 0.8 },
     faces: { flexDirection: 'row' },
     /** A ring in the row's own color separates overlapping faces. */
-    face: { borderRadius: avatar.small / 2 + RING, borderWidth: RING, borderColor: colors.surface },
+    face: { borderRadius: avatar.small / 2 + RING, borderWidth: RING, borderColor: colors.card },
     overlap: { marginLeft: -OVERLAP },
-    headline: { flex: 1, fontWeight: '500' },
+    headline: { flex: 1, fontWeight: '600' },
   });

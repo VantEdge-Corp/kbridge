@@ -127,21 +127,21 @@ export default function Apply() {
             exists until you are admitted.
           </Text>
 
-          <Text style={[text.eyebrow, styles.firstSection]}>Contact</Text>
+          <Text style={[text.section, styles.firstSection]} accessibilityRole="header">Contact</Text>
           <Field label="Email" value={form.email} onChangeText={(v) => set('email', v)} error={show('email')} autoCapitalize="none" keyboardType="email-address" autoCorrect={false} />
           <View style={styles.pair}>
             <Field label="First name" containerStyle={{ flex: 2 }} value={form.firstName} onChangeText={(v) => set('firstName', v)} error={show('firstName')} autoCapitalize="words" />
             <Field label="Age" containerStyle={{ flex: 1 }} value={form.age} onChangeText={(v) => set('age', v.replace(/[^0-9]/g, ''))} error={show('age')} keyboardType="number-pad" />
           </View>
 
-          <Text style={[text.eyebrow, styles.section]}>Where you live</Text>
+          <Text style={[text.section, styles.section]} accessibilityRole="header">Where you live</Text>
           <Group flush>
             <SettingsRow label="Area" value={areaById(form.areaId)?.name ?? 'Choose'} onPress={() => setAreaOpen(true)} />
           </Group>
           {show('areaId') ? <Text style={styles.err}>{errors.areaId}</Text> : null}
           <Text style={text.caption}>Other members only ever see a coarse label like &quot;Duluth area&quot;.</Text>
 
-          <Text style={[text.eyebrow, styles.section]}>Work</Text>
+          <Text style={[text.section, styles.section]} accessibilityRole="header">Work</Text>
           <Field label="What you do" placeholder="e.g. Product designer" value={form.occupation} onChangeText={(v) => set('occupation', v)} error={show('occupation')} />
           <Field label="Employer (optional)" value={form.employer} onChangeText={(v) => set('employer', v)} />
           <View style={styles.pair}>
@@ -149,15 +149,15 @@ export default function Apply() {
           </View>
           <Field label="LinkedIn (optional)" value={form.linkedinUrl} onChangeText={(v) => set('linkedinUrl', v)} error={show('linkedinUrl')} autoCapitalize="none" keyboardType="url" autoCorrect={false} />
 
-          <Text style={[text.eyebrow, styles.section]}>Education</Text>
+          <Text style={[text.section, styles.section]} accessibilityRole="header">Education</Text>
           <Field label="School (optional)" value={form.school} onChangeText={(v) => set('school', v)} />
           <Field label="Degree (optional)" placeholder="e.g. B.S. Computer Science" value={form.degree} onChangeText={(v) => set('degree', v)} />
 
-          <Text style={[text.eyebrow, styles.section]}>About you</Text>
+          <Text style={[text.section, styles.section]} accessibilityRole="header">About you</Text>
           <Field label="A short summary (optional)" multiline value={form.bio} onChangeText={(v) => set('bio', v)} maxLength={LIMITS.bioMax} helper={`${form.bio.length}/${LIMITS.bioMax}`} />
           <Field label={`Why ${BRAND.name}?`} multiline value={form.why} onChangeText={(v) => set('why', v)} error={show('why')} maxLength={WHY_MAX} helper={`${form.why.length}/${WHY_MAX}`} />
 
-          <Text style={[text.eyebrow, styles.section]}>Consent</Text>
+          <Text style={[text.section, styles.section]} accessibilityRole="header">Consent</Text>
           <Checkbox checked={form.age18} onChange={(v) => set('age18', v)} accessibilityLabel="I am 18 years of age or older">
             <Text style={text.bodySmall}>I am 18 years of age or older.</Text>
             {show('age18') ? <Text style={styles.err}>{errors.age18}</Text> : null}
@@ -192,6 +192,6 @@ const makeStyles = ({ colors, text }: Theme) => StyleSheet.create({
   pair: { flexDirection: 'row', gap: spacing.md },
   firstSection: { marginTop: spacing.sm },
   section: { marginTop: spacing.lg },
-  err: { ...text.caption, color: colors.danger },
-  link: { color: colors.ivory, textDecorationLine: 'underline' },
+  err: { fontSize: 13, lineHeight: 18, color: colors.destructive },
+  link: { color: colors.foreground, fontWeight: '500', textDecorationLine: 'underline' },
 });

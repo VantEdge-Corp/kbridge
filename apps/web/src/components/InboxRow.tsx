@@ -1,12 +1,18 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ROW_HAIRLINE, rowInset } from './Group';
-import { Avatar } from './MonogramPortrait';
-import { VerificationBadge } from './VerificationBadge';
+import { ActionContextMenu, type MenuAction } from '@/components/ActionMenu';
+import { PersonAvatar } from '@/components/PersonAvatar';
+import { VerificationBadge } from '@/components/VerificationBadge';
+import { Badge } from '@/components/ui/badge';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { cn } from '@/lib/utils';
 
-/** Compact inbox row inside a Group: 40px avatar, name, one secondary line, time, optional unread pill. */
+/**
+ * One person in an inbox list: a 40px avatar, the name, one line of preview,
+ * the time, and an unread count. The whole row opens `to` (or runs `onClick`);
+ * right-click or long-press shows `actions`.
+ */
 export function InboxRow({
-  profileId,
   name,
   photo,
   verified,
@@ -14,12 +20,13 @@ export function InboxRow({
   time,
   unread = 0,
   active = false,
-  onClick,
+  emphasize = false,
   to,
+  onClick,
+  actions = [],
   children,
   testId,
 }: {
-  profileId: string;
   name: string;
   photo?: string | null;
   verified?: boolean;
@@ -27,48 +34,51 @@ export function InboxRow({
   time?: string;
   unread?: number;
   active?: boolean;
-  onClick?: () => void;
+  /** Draw the name and preview at full strength: it's the member's turn. */
+  emphasize?: boolean;
   to?: string;
+  onClick?: () => void;
+  actions?: MenuAction[];
   children?: ReactNode;
   testId?: string;
 }) {
   const body = (
     <>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className={`text-body truncate ${unread ? 'text-text font-medium' : 'text-text'}`}>{name}</span>
+      <ItemMedia>
+        <PersonAvatar name={name} src={photo} className="size-10" />
+      </ItemMedia>
+      <ItemContent className="min-w-0 gap-0.5">
+        <ItemTitle className="w-full">
+          <span className={cn('truncate', emphasize || unread ? 'font-semibold' : 'font-medium')}>{name}</span>
           {verified ? <VerificationBadge /> : null}
-        </div>
-        <div className={`text-body-sm truncate ${unread ? 'text-text-secondary' : 'text-text-muted'}`}>{secondary}</div>
-      </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        {time ? <span className="text-caption text-text-muted">{time}</span> : null}
+        </ItemTitle>
+        <ItemDescription className={cn('line-clamp-1', (emphasize || unread) && 'text-foreground')}>{secondary}</ItemDescription>
+      </ItemContent>
+      <ItemActions className="flex-col items-end gap-1 self-start pt-0.5">
+        {time ? <span className="text-xs text-muted-foreground tabular-nums">{time}</span> : null}
         {unread ? (
-          <span className="min-w-5 h-5 px-1.5 rounded-full bg-ivory text-on-ivory text-micro font-medium inline-flex items-center justify-center" aria-label={`${unread} unread`}>
+          <Badge className="h-5 min-w-5 justify-center px-1.5 tabular-nums" aria-label={`${unread} unread`}>
             {unread}
-          </span>
+          </Badge>
         ) : null}
-      </div>
+      </ItemActions>
     </>
   );
-  const rowClass = 'flex items-center gap-3 flex-1 min-w-0 text-left min-h-16 py-2 pr-4 rounded-md focus-ring';
+  const itemClass = cn('rounded-lg px-3 py-3 hover:bg-muted', active && 'bg-muted');
   return (
-    <div className={`${ROW_HAIRLINE} motion ${active ? 'bg-surface-elevated' : 'hover:bg-surface-hover'}`} style={rowInset(68)} data-testid={testId}>
-      <div className="flex items-center gap-3 pl-4">
-        <Link to={`/profile/${profileId}`} aria-label={`${name}'s profile`} className="shrink-0 rounded-full focus-ring">
-          <Avatar name={name} src={photo} size={40} />
-        </Link>
+    <ActionContextMenu actions={actions} className="w-full" >
+      <div data-testid={testId}>
         {to ? (
-          <Link to={to} className={rowClass} aria-current={active ? 'page' : undefined}>
+          <Item render={<Link to={to} aria-current={active ? 'page' : undefined} />} className={itemClass}>
             {body}
-          </Link>
+          </Item>
         ) : (
-          <button type="button" onClick={onClick} className={rowClass}>
+          <Item render={<button type="button" onClick={onClick} />} className={cn(itemClass, 'cursor-pointer text-left')}>
             {body}
-          </button>
+          </Item>
         )}
+        {children ? <div className="pt-1 pr-3 pb-3 pl-[4.25rem]">{children}</div> : null}
       </div>
-      {children ? <div className="pl-[68px] pr-4 pb-4">{children}</div> : null}
-    </div>
+    </ActionContextMenu>
   );
 }

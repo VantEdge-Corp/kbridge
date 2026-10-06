@@ -93,7 +93,7 @@ function ProfileProblem() {
         <Text style={[text.caption, styles.problemText]}>Run supabase/migrations/013_peaches.sql on that project, then try again.</Text>
       ) : null}
       <View style={styles.problemActions}>
-        <Button title={retrying ? 'Checking…' : 'Try again'} variant="secondary" onPress={() => void retry()} disabled={retrying} />
+        <Button title={retrying ? 'Checking…' : 'Try again'} variant="outline" onPress={() => void retry()} disabled={retrying} />
         <Button title="Sign out" variant="ghost" onPress={() => void signOut()} />
       </View>
     </View>
@@ -116,7 +116,7 @@ function RootStack() {
   if (signedIn && !profileReady) return <Splash />;
   if (signedIn && !profile) return <ProfileProblem />;
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="index" />
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
@@ -141,11 +141,11 @@ function RootStack() {
 const styles = StyleSheet.create({ root: { flex: 1 } });
 
 const makeStyles = ({ colors }: Theme) => StyleSheet.create({
-  splash: { flex: 1, backgroundColor: colors.canvas, alignItems: 'center', justifyContent: 'center' },
-  problem: { flex: 1, backgroundColor: colors.canvas, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.lg },
-  problemText: { textAlign: 'center', color: colors.textSecondary, maxWidth: 360 },
+  splash: { flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
+  problem: { flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.lg },
+  problemText: { textAlign: 'center', color: colors.mutedForeground, maxWidth: 360 },
   problemDetail: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radius.md,

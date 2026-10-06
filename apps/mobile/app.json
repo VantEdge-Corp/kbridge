@@ -7,14 +7,14 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#0b0b0c",
+    "backgroundColor": "#0a0a0a",
     "newArchEnabled": true,
     "splash": {
-      "backgroundColor": "#f7f5f1",
+      "backgroundColor": "#ffffff",
       "resizeMode": "contain",
       "image": "./assets/splash-icon.png",
       "dark": {
-        "backgroundColor": "#0b0b0c",
+        "backgroundColor": "#0a0a0a",
         "image": "./assets/splash-icon.png"
       }
     },
@@ -31,7 +31,7 @@
         "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#0b0b0c",
+        "backgroundColor": "#0a0a0a",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Appearance, StyleSheet, View, useColorScheme } from 'react-native';
-import { darkColors, lightColors, type ColorTokens } from '@peaches/core';
-import { makeText, type TextStyles } from '@/constants/theme';
+import { darkColors, lightColors } from '@peaches/core';
+import { makePalette, makeText, type Palette, type TextStyles } from '@/constants/theme';
 
 export type Scheme = 'light' | 'dark';
 /** What the member chose in Settings > Appearance. `system` follows the device. */
 export type ThemePreference = 'system' | Scheme;
 
 export interface Theme {
-  colors: ColorTokens;
+  colors: Palette;
   text: TextStyles;
   scheme: Scheme;
   isDark: boolean;
@@ -19,15 +19,18 @@ export interface Theme {
 
 export const THEME_PREFERENCES: ReadonlyArray<{ value: ThemePreference; label: string; description: string }> = [
   { value: 'system', label: 'System', description: 'Follows the device setting' },
-  { value: 'light', label: 'Light', description: 'Warm off-white' },
-  { value: 'dark', label: 'Dark', description: 'Near-black, the Peaches default' },
+  { value: 'light', label: 'Light', description: 'White with near-black text' },
+  { value: 'dark', label: 'Dark', description: 'Near-black with white text' },
 ];
 
 const STORAGE_KEY = 'peaches.theme';
-const PALETTES: Record<Scheme, { colors: ColorTokens; text: TextStyles }> = {
-  dark: { colors: darkColors, text: makeText(darkColors) },
-  light: { colors: lightColors, text: makeText(lightColors) },
-};
+function palette(scheme: Scheme): { colors: Palette; text: TextStyles } {
+  const colors = makePalette(scheme === 'dark' ? darkColors : lightColors, scheme);
+  return { colors, text: makeText(colors) };
+}
+
+/** The shadcn/ui Neutral theme, light and dark (packages/core/src/theme/tokens.ts). */
+const PALETTES: Record<Scheme, { colors: Palette; text: TextStyles }> = { dark: palette('dark'), light: palette('light') };
 
 const ThemeContext = createContext<Theme | null>(null);
 
@@ -74,7 +77,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [scheme, preference, setPreference],
   );
 
-  if (!preference) return <View style={[StyleSheet.absoluteFill, { backgroundColor: PALETTES[scheme].colors.canvas }]} />;
+  if (!preference) return <View style={[StyleSheet.absoluteFill, { backgroundColor: PALETTES[scheme].colors.background }]} />;
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 

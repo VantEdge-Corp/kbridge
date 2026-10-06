@@ -15,12 +15,13 @@ import { TagChip } from '@/components/TagChip';
 import { radius, spacing } from '@/constants/theme';
 import { useStyles, useTheme, type Theme } from '@/lib/theme';
 import { useCandidates } from '@/hooks/useCandidates';
+import { usePersonActions } from '@/hooks/usePersonActions';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 
 interface ActiveFilter {
   key: string;
   label: string;
-  /** Required filters are drawn as selected (ivory) chips, preferred ones as outline chips. */
+  /** Required filters are drawn as filled chips, preferred ones as outline chips. */
   required: boolean;
 }
 
@@ -54,8 +55,9 @@ function activeFilters(prefs: Preferences, maxDistanceMiles: number): ActiveFilt
 export default function Explore() {
   const styles = useStyles(makeStyles);
   const { colors, text } = useTheme();
-  const { viewer, areaId, candidates, loading, refreshing, error, refresh, reload, reportImpressions, adoptFilters } = useCandidates();
-  useRefreshOnFocus(refresh);
+  const { viewer, areaId, candidates, loading, refreshing, error, refresh, reload, reportImpressions, adoptFilters, removeCandidate } = useCandidates();
+  const person = usePersonActions({ onBlocked: removeCandidate });
+  useRefreshOnFocus(reload);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const people = useMemo(() => (viewer ? rankForYou(viewer, candidates).map((c) => c.profile) : []), [viewer, candidates]);
@@ -69,7 +71,7 @@ export default function Explore() {
       ) : error ? (
         <View style={styles.errorWrap}>
           <ErrorText message={error} />
-          <Button title="Try again" variant="secondary" size="small" onPress={reload} />
+          <Button title="Try again" variant="outline" size="sm" onPress={reload} />
         </View>
       ) : (
         <PeopleGrid
@@ -77,6 +79,7 @@ export default function Explore() {
           refreshing={refreshing}
           onRefresh={refresh}
           onViewed={reportImpressions}
+          onPersonLongPress={person.open}
           ListHeaderComponent={
             <View style={styles.filters}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
@@ -86,10 +89,10 @@ export default function Explore() {
                   onPress={() => setFiltersOpen(true)}
                   style={({ pressed }) => [styles.slidersChip, pressed && { opacity: 0.8 }]}
                 >
-                  <Icon name="sliders" size={16} color={colors.ivory} />
+                  <Icon name="sliders-horizontal" size={16} color={colors.foreground} />
                 </Pressable>
                 {filters.map((f) => (
-                  <TagChip key={f.key} label={f.label} selected={f.required} onPress={() => setFiltersOpen(true)} />
+                  <TagChip key={f.key} label={f.label} variant={f.required ? 'default' : 'outline'} onPress={() => setFiltersOpen(true)} />
                 ))}
               </ScrollView>
               <Text style={[text.caption, styles.summary]}>
@@ -97,19 +100,31 @@ export default function Explore() {
               </Text>
             </View>
           }
-          ListEmptyComponent={<EmptyState title="No one matches every requirement." body="Relax a required filter to Preferred to see more people." actionTitle="Edit filters" onAction={() => setFiltersOpen(true)} />}
+          ListEmptyComponent={
+            <EmptyState icon="search-x" title="No one matches every requirement." body="Relax a required filter to Preferred to see more people." actionTitle="Edit filters" onAction={() => setFiltersOpen(true)} />
+          }
         />
       )}
 
       <FiltersSheet visible={filtersOpen} onClose={() => setFiltersOpen(false)} viewer={viewer} areaId={areaId} onApplied={adoptFilters} />
+      {person.sheets}
     </Screen>
   );
 }
 
-const makeStyles = ({ colors }: Theme) => StyleSheet.create({
+const makeStyles = ({ colors, isDark }: Theme) => StyleSheet.create({
   errorWrap: { alignItems: 'center', gap: spacing.md, paddingTop: spacing.xl },
   filters: { marginTop: -spacing.sm, gap: spacing.sm, paddingBottom: spacing.xs },
   chips: { paddingHorizontal: spacing.lg, gap: spacing.sm, alignItems: 'center' },
-  slidersChip: { width: 32, height: 32, borderRadius: radius.pill, backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  slidersChip: {
+    width: 30,
+    height: 30,
+    borderRadius: radius.pill,
+    backgroundColor: isDark ? colors.inputBackground : colors.background,
+    borderWidth: 1,
+    borderColor: isDark ? colors.input : colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   summary: { paddingHorizontal: spacing.lg },
 });
