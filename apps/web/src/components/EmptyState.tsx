@@ -13,7 +13,7 @@ export function EmptyState({ icon: Icon, title, body, action, className }: { ico
             <Icon />
           </EmptyMedia>
         ) : null}
-        <EmptyTitle className="font-display text-[1.75rem] leading-tight font-normal tracking-normal">{title}</EmptyTitle>
+        <EmptyTitle className="font-display text-[1.875rem] leading-tight font-semibold tracking-normal">{title}</EmptyTitle>
         {body ? <EmptyDescription>{body}</EmptyDescription> : null}
       </EmptyHeader>
       {action ? <EmptyContent>{action}</EmptyContent> : null}

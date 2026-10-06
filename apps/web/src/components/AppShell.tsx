@@ -338,7 +338,7 @@ export function PageHeader({
         ) : back ? (
           <HistoryBackButton fallback={back.history} />
         ) : null}
-        <h1 className={cn('min-w-0 flex-1 truncate py-0.5 font-display text-[2rem] leading-tight font-normal md:text-[2.5rem]', titleClassName)}>{title}</h1>
+        <h1 className={cn('min-w-0 flex-1 truncate py-0.5 font-display text-[2.25rem] leading-tight font-medium md:text-[2.75rem]', titleClassName)}>{title}</h1>
         {actions ? <div className="flex shrink-0 items-center gap-2 pl-2">{actions}</div> : null}
       </div>
       {description ? <p className={cn('mt-1 max-w-[62ch] text-sm text-muted-foreground text-pretty', back && 'pl-9')}>{description}</p> : null}

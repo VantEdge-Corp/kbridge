@@ -99,7 +99,7 @@ export function ChatPane({ matchId, showBack = false }: { matchId: string; showB
           <PersonAvatar name={counterpart.firstName} src={counterpart.photos[0] ?? null} className="size-9" />
           <span className="grid min-w-0 leading-tight">
             <span className="flex items-center gap-1.5">
-              <span className="truncate font-display text-xl leading-tight font-normal">{counterpart.firstName}</span>
+              <span className="truncate font-display text-2xl leading-tight font-semibold">{counterpart.firstName}</span>
               {counterpart.publicVerificationBadges.length > 0 ? <VerificationBadge /> : null}
             </span>
             <span className="truncate text-xs text-muted-foreground">{counterpart.displayArea}</span>

@@ -53,7 +53,7 @@ export function IntroductionNoteDialog({
     <Dialog open={open} onOpenChange={(next) => (next ? undefined : onClose())}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-display text-[1.75rem] leading-tight font-normal">Introduce yourself to {recipient.firstName}</DialogTitle>
+          <DialogTitle className="font-display text-[1.875rem] leading-tight font-semibold">Introduce yourself to {recipient.firstName}</DialogTitle>
           <DialogDescription>{recipient.firstName} will see your note with your profile and can accept or decline. A short, specific note reads best.</DialogDescription>
         </DialogHeader>
         <TextareaField

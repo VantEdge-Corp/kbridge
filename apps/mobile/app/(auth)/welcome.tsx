@@ -17,7 +17,7 @@ export default function Welcome() {
     <Screen edges={['top', 'bottom']}>
       <View style={styles.body}>
         <View style={styles.top}>
-          <Wordmark size={22} />
+          <Wordmark size={25} />
         </View>
         <View style={styles.hero}>
           <View style={styles.kicker}>

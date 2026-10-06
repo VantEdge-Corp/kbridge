@@ -2,7 +2,7 @@ import { Text, type StyleProp, type TextStyle } from 'react-native';
 import { BRAND } from '@peaches/core';
 import { useTheme } from '@/lib/theme';
 
-export function Wordmark({ size = 20, style }: { size?: number; style?: StyleProp<TextStyle> }) {
+export function Wordmark({ size = 23, style }: { size?: number; style?: StyleProp<TextStyle> }) {
   const { text } = useTheme();
   return (
     <Text

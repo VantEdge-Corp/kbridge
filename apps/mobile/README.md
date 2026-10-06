@@ -34,7 +34,7 @@ app/settings/             index, [section]
 components/               DiscoverCard, ProfileStory, PersonCard, Button, Field, Sheet, ...
 components/Icon.tsx       Lucide icons (lucide-react-native) by name, as on the web
 constants/theme.ts        palettes from the shared shadcn Neutral tokens, spacing, radii, text styles
-                          (Instrument Serif display styles, loaded in app/_layout.tsx)
+                          (Cormorant Garamond display styles, loaded in app/_layout.tsx)
 lib/theme.tsx             ThemeProvider, useTheme, useStyles: light and dark palettes, System / Light / Dark preference
 lib/                      supabase client, api binding, auth context, inbox summary, image picking
 hooks/                    useCandidates, useRefreshOnFocus
@@ -62,7 +62,7 @@ time.
   `10.0.2.2`, not `127.0.0.1`; a phone needs the computer's LAN address.
 - Worth checking on Android specifically: the keyboard over the chat composer,
   the apply form, and the introduction note; the back button inside sheets;
-  the Instrument Serif titles and names (loaded at launch, so check the splash
+  the Cormorant Garamond titles and names (loaded at launch, so check the splash
   hands over cleanly).
 - Permissions are kept to internet, vibration, and storage on Android 12 and
   older (for the photo picker). `app.json` blocks the microphone, camera, and

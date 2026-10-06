@@ -12,7 +12,7 @@ export function Avatar({ uri, firstName, size }: { uri: string | null | undefine
       {uri ? (
         <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={120} accessibilityLabel={`${firstName}'s photo`} />
       ) : (
-        <Text style={[styles.initial, { fontSize: Math.round(size * 0.48), lineHeight: Math.round(size * 0.62) }]} accessibilityLabel={`${firstName}'s initial`}>
+        <Text style={[styles.initial, { fontSize: Math.round(size * 0.52), lineHeight: Math.round(size * 0.66) }]} accessibilityLabel={`${firstName}'s initial`}>
           {initials(firstName) || '·'}
         </Text>
       )}
@@ -24,6 +24,6 @@ export function Avatar({ uri, firstName, size }: { uri: string | null | undefine
 const makeStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     circle: { overflow: 'hidden', backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
-    initial: { fontFamily: fonts.display, color: colors.mutedForeground },
+    initial: { fontFamily: fonts.displayStrong, color: colors.mutedForeground },
     ring: { ...StyleSheet.absoluteFill, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.imageRing },
   });

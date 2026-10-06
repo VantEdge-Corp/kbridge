@@ -54,7 +54,7 @@ export function Legal({ doc }: { doc: LegalPageKey }) {
         </Link>
       </PublicHeader>
       <main className="mx-auto w-full max-w-[720px] flex-1 px-4 pt-10 pb-20 md:pt-16">
-        <h1 className="font-display text-[2.75rem] leading-[1.05] font-normal text-balance md:text-[3.25rem]">{document.title}</h1>
+        <h1 className="font-display text-5xl leading-[1.05] font-medium text-balance md:text-[3.5rem]">{document.title}</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Effective {document.effectiveDate}
           {document.version ? ` · Version ${document.version}` : ''}

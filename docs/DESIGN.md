@@ -15,11 +15,11 @@ that exists there.
 
 ## Brand
 
-- Name: **Peaches**. Wordmark: `PEACHES` in Instrument Serif, letter-spaced
-  (0.22em on the web, 0.2em on the phone), in `foreground`.
-- Monogram: an Instrument Serif `P` in `#fafafa` on `#0a0a0a`, used for the
-  favicon, the app icon, and the splash. `scripts/generate-icons.mjs` takes
-  the letter's outline from the font file and renders them all.
+- Name: **Peaches**. Wordmark: `PEACHES` in Cormorant Garamond SemiBold,
+  letter-spaced 0.2em, in `foreground`.
+- Monogram: a Cormorant Garamond SemiBold `P` in `#fafafa` on `#0a0a0a`, used
+  for the favicon, the app icon, and the splash. `scripts/generate-icons.mjs`
+  takes the letter's outline from the font file and renders them all.
 - Line: *People worth meeting.* As a headline, its one word in italic
   (`taglineParts()` in `@peaches/core`): People *worth* meeting.
 - Never: peach emoji, peach illustrations, pink, big hearts, flames, Cupid,
@@ -76,12 +76,16 @@ shadcn's Neutral values, plus one Peaches token, `verified`.
 
 Three voices, each with one job:
 
-- **Display: Instrument Serif**, regular and italic (`@fontsource/instrument-serif`
-  on the web, `@expo-google-fonts/instrument-serif` on the phone, loaded before
-  the splash screen hides). The wordmark, page and screen titles, member
-  names, headlines, dialog and sheet titles, empty-state titles, and bios.
-  Always at regular weight: it has no bold. Italic marks at most one word or
-  phrase per headline (People *worth* meeting.).
+- **Display: Cormorant Garamond**, a classic high-contrast Garamond
+  (`@fontsource-variable/cormorant-garamond` on the web;
+  `@expo-google-fonts/cormorant-garamond` on the phone, Medium, Medium Italic,
+  and SemiBold, loaded before the splash screen hides). The wordmark, page and
+  screen titles, member names, headlines, dialog and sheet titles,
+  empty-state titles, and bios. Weight 500 from 36px up, 600 below, where its
+  fine hairlines need the extra weight on screen. Always lining figures
+  (`lnum` on the web, `fontVariant: ['lining-nums']` on the phone): its
+  default old-style digits make an age like 31 read as "3ı". Italic marks at
+  most one word or phrase per headline (People *worth* meeting.).
 - **Kicker: small capitals** in the sans, medium weight, `muted-foreground`
   (11px with 0.18em tracking on the web via the `kicker` utility, 12px with
   1.8 tracking on the phone as `text.section` and `text.eyebrow`). Section
@@ -90,11 +94,12 @@ Three voices, each with one job:
 - **Text: the sans**. Geist on the web, the platform font on the phone.
   Everything else: body copy, controls, rows, metadata.
 
-Sizes. Web: page titles 32px (40 from `md`), a profile's name 52 from `md`,
-landing headlines 56 to 104, dialog and empty-state titles 28, card names 22.
-Phone: display 52/58, title 34/42, heading 27/34, name 21/27, bio 22/30;
-body 15/22; small 14/20 and caption 12/16 in `muted-foreground`; label 14/20
-medium. Serif line heights stay at 1.2 or more, since the face is 1.3em tall.
+Sizes. The face is small on its body (x-height 0.39em), so it is set larger
+than a sans in the same role. Web: page titles 36px (44 from `md`), a
+profile's name 56 from `md`, landing headlines 60 to 104, dialog and
+empty-state titles 30, card names and the chat header 24, bios 28. Phone:
+display 56/62, title 38/46, heading 30/37, name 24/30, bio 24/32; body 15/22;
+small 14/20 and caption 12/16 in `muted-foreground`; label 14/20 medium.
 
 - Labels, buttons, and headings are sentence case (kickers are set in capitals
   by style, not typed that way). The Settings list keeps its product names
@@ -330,13 +335,13 @@ conflict with an earlier line, these win on the phone.
 - Photo cards are inset 16px, 4:5, radius xl, with the hairline image ring.
   The main photo is the first thing on the screen. A member without photos
   gets the monogram portrait in the same frame.
-- Identity block: name and age in the display serif (34/42) with the
+- Identity block: name and age in the display serif (38/46) with the
   verification mark to the right, then one metadata line (`Product designer ·
   Midtown Atlanta`) in 15px `muted-foreground`. As the block scrolls under
-  the header, the name fades into the header (serif 21, centered) over 24px
+  the header, the name fades into the header (serif 24, centered) over 24px
   of travel, and the header's bottom border fades in with it.
 - Bio card: `card`, 1px `border`, radius xl, 20px padding, a kicker
-  (`About Priya`) and the bio in the display serif, 22/30, like a pull-quote.
+  (`About Priya`) and the bio in the display serif, 24/32, like a pull-quote.
 - Vitals strip: one horizontally scrolling `card`, radius xl. Items are an
   18px icon and a 15px value with 16px padding, separated by 1px vertical
   `border` lines. Contents, when present: height, area, relationship intent,

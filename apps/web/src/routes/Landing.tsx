@@ -70,7 +70,7 @@ export function Landing() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[720px] bg-spotlight" />
           <div className="mx-auto flex max-w-[920px] flex-col items-center px-4 pt-24 pb-24 text-center md:pt-36 md:pb-32">
             <RuledKicker>{`Members only · ${BRAND.market}`}</RuledKicker>
-            <h1 className="mt-8 font-display text-[3.5rem] leading-[0.95] font-normal tracking-[-0.02em] text-balance sm:text-7xl md:text-[6.5rem]">
+            <h1 className="mt-8 font-display text-[3.75rem] leading-[0.98] font-medium tracking-[-0.01em] text-balance sm:text-7xl md:text-[6.5rem]">
               {before}
               <em>{emphasis}</em>
               {after}
@@ -113,7 +113,7 @@ export function Landing() {
           <div className="mx-auto grid max-w-[1120px] gap-12 px-4 py-24 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-16 md:px-8 md:py-32">
             <div>
               <p className="kicker text-muted-foreground">Membership</p>
-              <h2 id="membership" className="mt-4 font-display text-5xl leading-[1.02] font-normal text-balance md:text-6xl">
+              <h2 id="membership" className="mt-4 font-display text-5xl leading-[1.04] font-medium text-balance md:text-6xl">
                 Introduced, <em>not</em> browsed.
               </h2>
               <p className="mt-6 max-w-[44ch] text-muted-foreground text-pretty">Three steps, each read by a person. Nobody can be seen until they are admitted.</p>
@@ -121,7 +121,7 @@ export function Landing() {
             <ol className="divide-y border-y">
               {STEPS.map((s) => (
                 <li key={s.numeral} className="grid grid-cols-[3rem_minmax(0,1fr)] gap-4 py-8 sm:grid-cols-[4rem_minmax(0,1fr)]">
-                  <span aria-hidden="true" className="font-display text-4xl leading-none text-muted-foreground italic">
+                  <span aria-hidden="true" className="font-display text-4xl leading-none font-medium text-muted-foreground italic">
                     {s.numeral}
                   </span>
                   <div>
@@ -138,7 +138,7 @@ export function Landing() {
           <div className="mx-auto max-w-[1120px] px-4 py-24 md:px-8 md:py-32">
             <div className="max-w-[680px]">
               <p className="kicker text-muted-foreground">Verification</p>
-              <h2 id="verification" className="mt-4 font-display text-5xl leading-[1.02] font-normal text-balance md:text-6xl">
+              <h2 id="verification" className="mt-4 font-display text-5xl leading-[1.04] font-medium text-balance md:text-6xl">
                 Confirmed by people, <em>one detail at a time.</em>
               </h2>
               <p className="mt-6 max-w-[56ch] text-muted-foreground text-pretty">
@@ -151,7 +151,7 @@ export function Landing() {
                 return (
                   <div key={d} className="border-t pt-6">
                     <Icon className="size-5 text-muted-foreground" />
-                    <dt className="mt-5 font-display text-[1.75rem] leading-tight font-normal">{VERIFICATION_LABEL[d]}</dt>
+                    <dt className="mt-5 font-display text-[1.875rem] leading-tight font-semibold">{VERIFICATION_LABEL[d]}</dt>
                     <dd className="mt-2 text-sm leading-relaxed text-muted-foreground text-pretty">{VERIFICATION_COPY[d].body}</dd>
                   </div>
                 );
@@ -164,7 +164,7 @@ export function Landing() {
           <div className="mx-auto grid max-w-[1120px] gap-12 px-4 py-24 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-16 md:px-8 md:py-32">
             <div>
               <p className="kicker text-muted-foreground">Privacy</p>
-              <h2 id="discreet" className="mt-4 font-display text-5xl leading-[1.02] font-normal text-balance md:text-6xl">
+              <h2 id="discreet" className="mt-4 font-display text-5xl leading-[1.04] font-medium text-balance md:text-6xl">
                 Discreet <em>by design.</em>
               </h2>
               <p className="mt-6 max-w-[44ch] text-muted-foreground text-pretty">
@@ -186,7 +186,7 @@ export function Landing() {
         <section className="border-t" aria-labelledby="apply">
           <div className="mx-auto flex max-w-[760px] flex-col items-center px-4 py-24 text-center md:py-32">
             <RuledKicker>By application</RuledKicker>
-            <h2 id="apply" className="mt-6 font-display text-5xl leading-[1.02] font-normal text-balance md:text-6xl">
+            <h2 id="apply" className="mt-6 font-display text-5xl leading-[1.04] font-medium text-balance md:text-6xl">
               Ready to be <em>introduced?</em>
             </h2>
             <p className="mt-6 max-w-[46ch] text-muted-foreground text-pretty">The application takes a few minutes. A person reads every one, and the link we give you shows where yours stands.</p>

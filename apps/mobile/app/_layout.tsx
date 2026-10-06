@@ -1,4 +1,8 @@
-import { InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic, useFonts } from '@expo-google-fonts/instrument-serif';
+// One import per weight: the package's index requires all ten files, which would ship ~5 MB of fonts.
+import { CormorantGaramond_500Medium } from '@expo-google-fonts/cormorant-garamond/500Medium';
+import { CormorantGaramond_500Medium_Italic } from '@expo-google-fonts/cormorant-garamond/500Medium_Italic';
+import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond/600SemiBold';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -20,7 +24,7 @@ import { ThemeProvider } from '@/lib/theme';
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({ InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic });
+  const [fontsLoaded, fontError] = useFonts({ CormorantGaramond_500Medium, CormorantGaramond_500Medium_Italic, CormorantGaramond_600SemiBold });
   const ready = fontsLoaded || !!fontError;
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync().catch(() => {});
@@ -51,7 +55,7 @@ function Splash() {
   const { text } = useTheme();
   return (
     <View style={styles.splash}>
-      <Wordmark size={24} />
+      <Wordmark size={27} />
       <Text style={[text.caption, { marginTop: 10 }]}>{BRAND.tagline}</Text>
     </View>
   );
@@ -89,7 +93,7 @@ function ProfileProblem() {
   };
   return (
     <View style={styles.problem}>
-      <Wordmark size={22} />
+      <Wordmark size={25} />
       <Text style={[text.body, styles.problemText]}>
         {profileError
           ? schemaProblem

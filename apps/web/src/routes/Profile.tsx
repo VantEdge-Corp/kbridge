@@ -63,7 +63,7 @@ export function Profile() {
           </span>
         }
         description={profileMetaLine(profile)}
-        titleClassName="md:text-[3.25rem]"
+        titleClassName="md:text-[3.5rem]"
         back={own ? '/me' : { history: '/home' }}
         actions={
           own ? (
@@ -104,7 +104,7 @@ export function Profile() {
             <Card>
               <CardContent className="gap-3">
                 <p className="kicker text-muted-foreground">About {profile.firstName}</p>
-                <p className="font-display text-[1.625rem] leading-snug whitespace-pre-wrap text-pretty">{profile.bio}</p>
+                <p className="font-display text-[1.75rem] leading-snug font-medium whitespace-pre-wrap text-pretty">{profile.bio}</p>
               </CardContent>
             </Card>
           ) : null}

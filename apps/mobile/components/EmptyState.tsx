@@ -42,6 +42,6 @@ const makeStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     wrap: { paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xl, alignItems: 'center' },
     tile: { width: 40, height: 40, borderRadius: radius.lg, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
-    title: { fontFamily: fonts.display, fontSize: 27, lineHeight: 33, color: colors.foreground, textAlign: 'center', maxWidth: 320 },
+    title: { fontFamily: fonts.displayStrong, fontSize: 29, lineHeight: 35, fontVariant: ['lining-nums'], color: colors.foreground, textAlign: 'center', maxWidth: 320 },
     body: { textAlign: 'center', maxWidth: 300, marginTop: spacing.sm },
   });

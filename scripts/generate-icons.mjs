@@ -2,9 +2,9 @@
 /**
  * Draws the Peaches "P" monogram assets in the shadcn/ui Neutral palette:
  * the app icon, splash mark, Android adaptive layers, and favicons. The
- * letter is Instrument Serif, the display face, taken as an outline straight
- * from the font file (opentype.js), so no installed font is involved and the
- * SVG favicon needs no font at all.
+ * letter is Cormorant Garamond SemiBold, the display face, taken as an
+ * outline straight from the font file (opentype.js), so no installed font is
+ * involved and the SVG favicon needs no font at all.
  *
  *   node scripts/generate-icons.mjs
  *
@@ -25,8 +25,9 @@ const opentype = require('opentype.js');
 const INK = '#0a0a0a';
 const PAPER = '#fafafa';
 
-const fontDir = path.dirname(require.resolve('@expo-google-fonts/instrument-serif/package.json'));
-const fontBytes = readFileSync(path.join(fontDir, '400Regular', 'InstrumentSerif_400Regular.ttf'));
+const mobileRequire = createRequire(path.join(root, 'apps/mobile/package.json'));
+const fontDir = path.dirname(mobileRequire.resolve('@expo-google-fonts/cormorant-garamond/package.json'));
+const fontBytes = readFileSync(path.join(fontDir, '600SemiBold', 'CormorantGaramond_600SemiBold.ttf'));
 const font = opentype.parse(fontBytes.buffer.slice(fontBytes.byteOffset, fontBytes.byteOffset + fontBytes.byteLength));
 
 /** Where to draw the letter so its ink box is `share` of `size` tall and centered in a `size` square. */

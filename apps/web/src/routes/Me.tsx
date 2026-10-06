@@ -52,7 +52,7 @@ export function Me() {
         </Link>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="truncate py-0.5 font-display text-[2rem] leading-tight font-normal">{nameAge(profile.firstName, profile.age)}</h2>
+            <h2 className="truncate py-0.5 font-display text-[2.25rem] leading-tight font-medium">{nameAge(profile.firstName, profile.age)}</h2>
             {profile.publicVerificationBadges.length > 0 ? <VerificationBadge className="[&>svg]:size-5" /> : null}
           </div>
           {meta ? <p className="mt-0.5 truncate text-sm text-muted-foreground">{meta}</p> : null}
@@ -94,7 +94,7 @@ export function Me() {
       }>
         <div className="flex gap-3 overflow-x-auto p-0.5 pb-1">
           {profile.photos.length === 0 ? (
-            <Portrait name={profile.firstName} className="aspect-[3/4] w-24 shrink-0 rounded-lg" initialClassName="text-3xl" />
+            <Portrait name={profile.firstName} className="aspect-[3/4] w-24 shrink-0 rounded-lg" initialClassName="text-4xl" />
           ) : (
             profile.photos.map((p, i) => <Portrait key={p} name={profile.firstName} src={p} alt={`Your photo ${i + 1}`} className="aspect-[3/4] w-24 shrink-0 rounded-lg" />)
           )}

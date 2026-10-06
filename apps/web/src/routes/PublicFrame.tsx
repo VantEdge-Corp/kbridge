@@ -18,7 +18,7 @@ export function PublicFrame({ children, title, lede, kicker = 'Members only', wi
       </PublicHeader>
       <main className={cn('mx-auto w-full flex-1 px-4 pt-10 pb-20 md:pt-16', wide ? 'max-w-[720px]' : 'max-w-[560px]')}>
         <p className="kicker text-muted-foreground">{kicker}</p>
-        <h1 className="mt-3 font-display text-[2.75rem] leading-[1.05] font-normal text-balance md:text-[3.25rem]">{title}</h1>
+        <h1 className="mt-3 font-display text-5xl leading-[1.05] font-medium text-balance md:text-[3.5rem]">{title}</h1>
         {lede ? <p className="mt-3 text-muted-foreground text-pretty">{lede}</p> : null}
         <div className="mt-10">{children}</div>
       </main>

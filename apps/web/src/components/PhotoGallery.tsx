@@ -8,7 +8,7 @@ export function PhotoGallery({ name, photos }: { name: string; photos: ReadonlyA
   const current = photos[index] ?? photos[0] ?? null;
   return (
     <div className="grid gap-3">
-      <Portrait name={name} src={current} alt={current ? `${name}'s photo ${index + 1}` : ''} className="aspect-[4/5] w-full rounded-xl" initialClassName="text-7xl" />
+      <Portrait name={name} src={current} alt={current ? `${name}'s photo ${index + 1}` : ''} className="aspect-[4/5] w-full rounded-xl" initialClassName="text-9xl" />
       {photos.length > 1 ? (
         <div className="flex gap-2 overflow-x-auto p-0.5" role="tablist" aria-label="Photos">
           {photos.map((photo, i) => (

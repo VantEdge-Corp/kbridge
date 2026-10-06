@@ -1,16 +1,18 @@
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, type TextStyle } from 'react-native';
 import { avatar, card, iconSizes, radius, spacing, strokeWidth, touch, typography, type ColorTokens } from '@peaches/core';
 
 /**
- * Instrument Serif, regular and italic (loaded in app/_layout.tsx before the
- * splash screen hides), is the display face: the wordmark, screen titles,
- * names, headlines, and bios. Everything else is the platform sans
- * (fontFamily undefined), as Geist is on the web. The serif has no bold, so
- * a display style never sets fontWeight.
+ * Cormorant Garamond (loaded in app/_layout.tsx before the splash screen
+ * hides) is the display face: the wordmark, screen titles, names, headlines,
+ * and bios. Each weight is its own family, so display styles pick a family and
+ * never set fontWeight: `display` (500) from 36pt up, `displayStrong` (600)
+ * below, where the fine hairlines need the extra weight. Everything else is
+ * the platform sans (fontFamily undefined), as Geist is on the web.
  */
 export const fonts = {
-  display: 'InstrumentSerif_400Regular',
-  displayItalic: 'InstrumentSerif_400Regular_Italic',
+  display: 'CormorantGaramond_500Medium',
+  displayItalic: 'CormorantGaramond_500Medium_Italic',
+  displayStrong: 'CormorantGaramond_600SemiBold',
   sans: undefined as string | undefined,
   mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }) as string,
 };
@@ -49,6 +51,9 @@ export function alpha(hex: string, opacity: number): string {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
+/** Lining figures in the display face: its default old-style digits make an age like "31" read as "3ı". */
+const lining: TextStyle = { fontVariant: ['lining-nums'] };
+
 /** A small-caps label, as the web's `kicker` utility: section labels and labels inside cards. */
 const kicker = { fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 1.8, textTransform: 'uppercase' } as const;
 
@@ -56,22 +61,22 @@ const kicker = { fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing:
 export function makeText(colors: Palette) {
   return StyleSheet.create({
     wordmark: {
-      fontFamily: fonts.display,
-      fontSize: 22,
+      fontFamily: fonts.displayStrong,
+      fontSize: 24,
       letterSpacing: typography.wordmarkTracking,
       color: colors.foreground,
     },
     /** The welcome headline. Pair with `displayItalic` for its emphasized word. */
-    display: { fontFamily: fonts.display, fontSize: 52, lineHeight: 58, letterSpacing: -0.8, color: colors.foreground },
+    display: { ...lining, fontFamily: fonts.display, fontSize: 56, lineHeight: 62, letterSpacing: -0.3, color: colors.foreground },
     displayItalic: { fontFamily: fonts.displayItalic },
     /** Screen titles and the name on a profile. */
-    title: { fontFamily: fonts.display, fontSize: 34, lineHeight: 42, letterSpacing: -0.2, color: colors.foreground },
+    title: { ...lining, fontFamily: fonts.display, fontSize: 38, lineHeight: 46, color: colors.foreground },
     /** Sheet titles, empty-state titles, the name on Me. */
-    heading: { fontFamily: fonts.display, fontSize: 27, lineHeight: 34, color: colors.foreground },
+    heading: { ...lining, fontFamily: fonts.displayStrong, fontSize: 30, lineHeight: 37, color: colors.foreground },
     /** Names on cards and in headers. */
-    name: { fontFamily: fonts.display, fontSize: 21, lineHeight: 27, color: colors.foreground },
+    name: { ...lining, fontFamily: fonts.displayStrong, fontSize: 24, lineHeight: 30, color: colors.foreground },
     /** A member's bio, read like a pull-quote. */
-    quote: { fontFamily: fonts.display, fontSize: 22, lineHeight: 30, color: colors.foreground },
+    quote: { ...lining, fontFamily: fonts.display, fontSize: 24, lineHeight: 32, color: colors.foreground },
     /** Section labels above a group of rows. */
     section: { ...kicker, color: colors.mutedForeground },
     /** Small label inside a card ("About Priya", "Your introduction"). */

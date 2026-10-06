@@ -7,7 +7,7 @@ export function PersonAvatar({ name, src, className, fallbackClassName }: { name
   return (
     <Avatar className={className}>
       {src ? <AvatarImage src={src} alt="" /> : null}
-      <AvatarFallback className={cn('font-display text-base font-normal', fallbackClassName)}>{initials(name)}</AvatarFallback>
+      <AvatarFallback className={cn('font-display text-lg font-semibold', fallbackClassName)}>{initials(name)}</AvatarFallback>
     </Avatar>
   );
 }
@@ -37,7 +37,7 @@ export function Portrait({
       {src ? (
         <img src={src} alt={alt} loading={loading} className="size-full object-cover" />
       ) : (
-        <div aria-hidden="true" className={cn('flex size-full items-center justify-center font-display text-7xl font-normal text-muted-foreground/60 italic select-none', initialClassName)}>
+        <div aria-hidden="true" className={cn('flex size-full items-center justify-center font-display text-8xl font-medium text-muted-foreground/60 italic select-none', initialClassName)}>
           {initials(name)}
         </div>
       )}

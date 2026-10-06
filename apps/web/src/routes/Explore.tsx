@@ -120,7 +120,7 @@ export function Explore() {
         <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
           <SheetContent side="bottom" className="max-h-[92dvh] gap-0 rounded-t-xl">
             <SheetHeader className="border-b">
-              <SheetTitle className="font-display text-[1.75rem] leading-tight font-normal">Filters</SheetTitle>
+              <SheetTitle className="font-display text-[1.875rem] leading-tight font-semibold">Filters</SheetTitle>
               <SheetDescription>Required excludes anyone who doesn&apos;t match. Preferred ranks matches first.</SheetDescription>
             </SheetHeader>
             <div className="overflow-y-auto p-4">{editor ?? <LoadingBlock />}</div>
